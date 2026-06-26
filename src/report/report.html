@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Claude Usage Report</title>
+    <link rel="stylesheet" href="report.css" />
+  </head>
+  <!-- 데이터 주입 스크립트는 body 끝에서 로드(아래) -->
+
+  <body>
+    <!-- R2 4페이지(§4.2). PDF는 EN/KO만(§10). 실데이터·차트 주입은 PDF-020~050. -->
+
+    <!-- p1 표지+요약 -->
+    <section class="page" id="p1">
+      <div class="report-title" id="r-title">Claude Usage Report</div>
+      <div class="report-sub" id="r-period">Period</div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-cap" data-i18n="totalCost">Total cost</div><div class="kpi-num" id="k1"></div></div>
+        <div class="kpi-card"><div class="kpi-cap" data-i18n="totalTokens">Total tokens</div><div class="kpi-num" id="k2"></div></div>
+        <div class="kpi-card"><div class="kpi-cap" data-i18n="dailyAvg">Daily average</div><div class="kpi-num" id="k3"></div></div>
+        <div class="kpi-card"><div class="kpi-cap" data-i18n="vsLastMonth">vs last month</div><div class="kpi-num" id="k4"></div></div>
+      </div>
+      <div class="summary-line" id="p1-summary"></div>
+      <footer class="page-footer">
+        <span class="r-generated"></span>
+        <span data-i18n="pricingSource">Pricing source: ccusage</span>
+        <span>1 / 4</span>
+      </footer>
+    </section>
+
+    <!-- p2 추세 -->
+    <section class="page" id="p2">
+      <h2 class="section-title" data-i18n="dailyTrend">Daily Trend</h2>
+      <div id="p2-chart" class="report-chart"></div>
+      <table class="r-table"><thead><tr><th data-i18n="date">Date</th><th data-i18n="cost">Cost</th><th data-i18n="tokens">Tokens</th></tr></thead><tbody id="p2-table"></tbody></table>
+      <footer class="page-footer">
+        <span class="r-generated"></span>
+        <span data-i18n="pricingSource">Pricing source: ccusage</span>
+        <span>2 / 4</span>
+      </footer>
+    </section>
+
+    <!-- p3 분해 -->
+    <section class="page" id="p3">
+      <h2 class="section-title" data-i18n="breakdown">Breakdown</h2>
+      <div class="cols-2">
+        <div>
+          <div class="sub-title" data-i18n="byModel">By model</div>
+          <div id="p3-donut" class="report-donut"></div>
+          <table class="r-table"><thead><tr><th data-i18n="model">Model</th><th data-i18n="cost">Cost</th></tr></thead><tbody id="p3-models"></tbody></table>
+        </div>
+        <div>
+          <div class="sub-title" data-i18n="tokenComposition">Token composition</div>
+          <table class="r-table"><thead><tr><th data-i18n="kind">Kind</th><th data-i18n="tokens">Tokens</th></tr></thead><tbody id="p3-tokens"></tbody></table>
+          <div class="sub-title" data-i18n="cacheEfficiency">Cache efficiency</div>
+          <div class="metric-big" id="p3-cache"></div>
+          <div class="metric-cap" data-i18n="cacheFormula">cache read / total input</div>
+        </div>
+      </div>
+      <footer class="page-footer">
+        <span class="r-generated"></span>
+        <span data-i18n="pricingSource">Pricing source: ccusage</span>
+        <span>3 / 4</span>
+      </footer>
+    </section>
+
+    <!-- p4 프로젝트 -->
+    <section class="page" id="p4">
+      <h2 class="section-title" data-i18n="projectsSessions">Projects &amp; Sessions</h2>
+      <div class="sub-title" data-i18n="topProjects">Top projects</div>
+      <div id="p4-projects" class="report-chart"></div>
+      <div class="sub-title" id="p4-sessions-head"></div>
+      <table class="r-table"><thead><tr><th data-i18n="project">Project</th><th data-i18n="cost">Cost</th><th data-i18n="tokens">Tokens</th></tr></thead><tbody id="p4-sessions"></tbody></table>
+      <footer class="page-footer">
+        <span class="r-generated"></span>
+        <span data-i18n="pricingSource">Pricing source: ccusage</span>
+        <span>4 / 4</span>
+      </footer>
+    </section>
+
+    <script src="../../node_modules/echarts/dist/echarts.min.js"></script>
+    <script src="../renderer/echartsTheme.js"></script>
+    <script src="../renderer/trendChart.js"></script>
+    <script src="../renderer/modelDonut.js"></script>
+    <script src="../renderer/projectBars.js"></script>
+    <script src="../renderer/format.js"></script>
+    <script src="reportData.js"></script>
+    <script src="verdict.js"></script>
+    <script src="reportLabels.js"></script>
+    <script>
+      // 보고서 데이터 주입(§4.2 p1). PDF-050에서 실데이터·로케일 전달, 지금은 샘플로 셸 검증.
+      // 일자별 — 토큰 4축 포함(p3 구성용). 합계 totals는 daily에서 파생.
+      const sampleDaily = Array.from({ length: 31 }, (_, i) => ({
+        period: '2026-05-' + String(i + 1).padStart(2, '0'),
+        totalCost: 30 + i,
+        totalTokens: 40000 + i * 1000,
+        inputTokens: 4000 + i * 100,
+        outputTokens: 1000 + i * 50,
+        cacheCreationTokens: 6000 + i * 150,
+        cacheReadTokens: 29000 + i * 700,
+      }));
+      const sample = {
+        title: 'Claude Usage Report',
+        period: 'May 2026 (2026-05-01 ~ 2026-05-31)',
+        generated: '2026-06-01 09:00 (KST)',
+        locale: 'en',
+        krwPerUsd: 1380,
+        daily: sampleDaily,
+        prevMonthCost: 980,
+        models: [
+          { modelName: 'claude-opus-4-8', cost: 980 },
+          { modelName: 'claude-sonnet-4-6', cost: 320 },
+          { modelName: 'claude-haiku-4-5-20251001', cost: 95 },
+        ],
+        // ponytail: 프로젝트·세션은 ccusage --instances 부재로 샘플(OPEN[08]).
+        projects: [
+          { project: 'claude-usage', totalCost: 520 },
+          { project: 'pantology', totalCost: 310 },
+          { project: 'humanize-korean', totalCost: 240 },
+          { project: 'studyvault', totalCost: 160 },
+          { project: 'cate', totalCost: 95 },
+          { project: 'misc-a', totalCost: 70 },
+        ],
+        sessions: [
+          { project: 'claude-usage', totalCost: 88, totalTokens: 1200000 },
+          { project: 'pantology', totalCost: 64, totalTokens: 880000 },
+          { project: 'humanize-korean', totalCost: 51, totalTokens: 640000 },
+          { project: 'cate', totalCost: 22, totalTokens: 210000 },
+        ],
+      };
+      const theme = window.EChartsTheme.makeEchartsTheme();
+      const F = window.Fmt;
+      // 재초기화 안전: 이미 init된 DOM이면 기존 인스턴스 재사용(printToPDF 주입 시 중복 init 방지).
+      const chartOf = (el) => echarts.getInstanceByDom(el) || echarts.init(el);
+
+      // 정적 라벨을 로케일로 채움(PDF-060, EN/KO §10). data-i18n 키 → 카탈로그 문자열.
+      let L = window.ReportLabels.reportLabels('en');
+      function applyLabels(locale) {
+        L = window.ReportLabels.reportLabels(locale);
+        document.documentElement.lang = locale === 'ko' ? 'ko' : 'en';
+        document.querySelectorAll('[data-i18n]').forEach((e) => {
+          const v = L[e.getAttribute('data-i18n')];
+          if (v != null) e.textContent = v;
+        });
+      }
+
+      function fillP1(d) {
+        const s = window.ReportData.monthSummary(d.daily);
+        const comp = window.ReportData.tokenComposition(d.daily);
+        document.getElementById('r-title').textContent = d.title;
+        document.getElementById('r-period').textContent = d.period;
+        document.getElementById('k1').textContent = F.fmtUsdKrw(s.totalCost, d.krwPerUsd);
+        document.getElementById('k2').textContent = F.fmtTokens(s.totalTokens);
+        document.getElementById('k3').textContent = F.fmtUsdKrw(s.avgDailyCost, d.krwPerUsd);
+        const mom = window.ReportData.momChangePct(s.totalCost, d.prevMonthCost);
+        document.getElementById('k4').textContent = mom == null ? '—' : (mom > 0 ? '+' : '') + mom + '%';
+        document.querySelectorAll('.r-generated').forEach((e) => (e.textContent = L.generated.replace('{t}', d.generated)));
+        const rate = window.Verdict.cacheHitRate({
+          inputTokens: comp.input, cacheCreationTokens: comp.cacheCreate, cacheReadTokens: comp.cacheRead,
+        });
+        document.getElementById('p1-summary').textContent =
+          window.Verdict.buildVerdict({ momPct: mom, cacheHitRate: rate }, d.locale);
+      }
+
+      // p2 추세 차트(비용) + 일자별 표
+      function fillP2(d) {
+        chartOf(document.getElementById('p2-chart'))
+          .setOption(window.TrendChart.buildTrendOption(d.daily, 'cost', theme));
+        document.getElementById('p2-table').innerHTML = d.daily
+          .map((r) => `<tr><td>${r.period}</td><td>${F.fmtUsd(r.totalCost)}</td><td>${F.fmtTokens(r.totalTokens)}</td></tr>`)
+          .join('');
+      }
+
+      // p3 모델 도넛+표 / 토큰 구성 표 / 캐시 효율
+      function fillP3(d) {
+        chartOf(document.getElementById('p3-donut'))
+          .setOption(window.ModelDonut.buildDonutOption(d.models, theme));
+        document.getElementById('p3-models').innerHTML = d.models
+          .map((m) => `<tr><td>${window.ModelDonut.shortModelName(m.modelName)}</td><td>${F.fmtUsd(m.cost)}</td></tr>`)
+          .join('');
+        const comp = window.ReportData.tokenComposition(d.daily);
+        const rows = [[L.input, comp.input], [L.output, comp.output], [L.cacheCreate, comp.cacheCreate], [L.cacheRead, comp.cacheRead]];
+        document.getElementById('p3-tokens').innerHTML = rows
+          .map(([k, v]) => `<tr><td>${k}</td><td>${F.fmtTokens(v)}</td></tr>`)
+          .join('');
+        const rate = window.Verdict.cacheHitRate({
+          inputTokens: comp.input, cacheCreationTokens: comp.cacheCreate, cacheReadTokens: comp.cacheRead,
+        });
+        document.getElementById('p3-cache').textContent = rate + '%';
+      }
+
+      // p4 프로젝트 Top N 바 / 세션 통계 Top 3
+      function fillP4(d) {
+        chartOf(document.getElementById('p4-projects')).setOption(
+          window.ProjectBars.buildProjectBarOption(window.ProjectBars.topNWithOther(d.projects, 5), theme)
+        );
+        const st = window.ReportData.sessionStats(d.sessions);
+        document.getElementById('p4-sessions-head').textContent = L.sessions.replace('{n}', st.totalSessions);
+        document.getElementById('p4-sessions').innerHTML = st.top3
+          .map((s) => `<tr><td>${s.project || '(unknown)'}</td><td>${F.fmtUsd(s.totalCost)}</td><td>${F.fmtTokens(s.totalTokens)}</td></tr>`)
+          .join('');
+      }
+
+      // PDF-050: main 프로세스가 실데이터를 주입하는 진입점(printToPDF 전 호출). 재초기화 안전.
+      window.renderReport = function (d) {
+        const data = d || sample;
+        applyLabels(data.locale); // 정적 라벨 먼저(EN/KO §10), 이후 동적 채움이 L 사용.
+        fillP1(data);
+        fillP2(data);
+        fillP3(data);
+        fillP4(data);
+      };
+      window.__SAMPLE__ = sample; // 캡처 검증 시 로케일 오버라이드용(REPORT_LOCALE).
+      // 주입 데이터(__REPORT_DATA__)가 있으면 그것, 없으면 샘플(캡처·개발용).
+      window.renderReport(window.__REPORT_DATA__);
+    </script>
+  </body>
+</html>

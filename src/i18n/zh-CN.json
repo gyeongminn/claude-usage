@@ -1,0 +1,16 @@
+{
+  "app_title": "Claude Usage",
+  "loading": "加载中…",
+  "tray_open": "打开仪表板",
+  "tray_report": "生成本月报告",
+  "tray_quit": "退出",
+  "dash_active_block": "活跃5小时块 · burn",
+  "dash_trend": "每日趋势",
+  "dash_cost": "费用",
+  "dash_tokens": "令牌",
+  "dash_today": "今天",
+  "dash_projects": "项目Top5",
+  "dash_used": "已用{pct}%",
+  "dash_eta": "预计结束{cost}",
+  "dash_remaining": "剩余{n}分钟"
+}

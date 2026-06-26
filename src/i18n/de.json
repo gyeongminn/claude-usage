@@ -1,0 +1,16 @@
+{
+  "app_title": "Claude Usage",
+  "loading": "Wird geladen…",
+  "tray_open": "Dashboard öffnen",
+  "tray_report": "Diesen Monat erstellen",
+  "tray_quit": "Beenden",
+  "dash_active_block": "Aktiver 5h-Block · burn",
+  "dash_trend": "Täglicher Trend",
+  "dash_cost": "Kosten",
+  "dash_tokens": "Tokens",
+  "dash_today": "Heute",
+  "dash_projects": "Top 5 Projekte",
+  "dash_used": "{pct}% genutzt",
+  "dash_eta": "Ende ca. {cost}",
+  "dash_remaining": "noch {n} Min"
+}

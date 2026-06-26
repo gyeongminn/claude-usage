@@ -7,7 +7,12 @@
   "license": "MIT",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder",
+    "test": "node --test",
+    "shot": "node scripts/shot.js",
+    "release:patch": "npm version patch && git push --follow-tags",
+    "release:minor": "npm version minor && git push --follow-tags",
+    "release:major": "npm version major && git push --follow-tags"
   },
   "dependencies": {
     "ccusage": "^20.0.14",
@@ -22,6 +27,43 @@
   "build": {
     "appId": "com.claudeusage.app",
     "productName": "Claude Usage",
+    "executableName": "ClaudeUsage",
+    "artifactName": "ClaudeUsage-${version}-${os}-${arch}.${ext}",
+    "files": [
+      "**/*",
+      "!test/**",
+      "!docs/**",
+      "!reports/**",
+      "!i18n/**",
+      "!.github/**"
+    ],
+    "asarUnpack": [
+      "**/node_modules/ccusage/**",
+      "**/node_modules/@ccusage/**"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "ClaudeUsage-${version}-${os}-${arch}-setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "ClaudeUsage-${version}-${os}-${arch}-portable.${ext}"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.developer-tools",
+      "hardenedRuntime": true
+    },
     "publish": {
       "provider": "github"
     }

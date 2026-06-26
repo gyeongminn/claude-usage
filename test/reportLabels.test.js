@@ -1,0 +1,39 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const { reportLabels } = require('../src/report/reportLabels');
+
+// PDF-060: PDF는 EN·KO만(§10). ko→한국어, 그 외 전부 영어 폴백.
+test('PDF060_reportLabels_ko_한국어', () => {
+  const L = reportLabels('ko');
+  assert.equal(L.totalCost, '총 비용');
+  assert.equal(L.dailyTrend, '일자별 추세');
+  assert.equal(L.cacheEfficiency, '캐시 효율');
+});
+
+test('PDF060_reportLabels_en_영어', () => {
+  const L = reportLabels('en');
+  assert.equal(L.totalCost, 'Total cost');
+  assert.equal(L.tokenComposition, 'Token composition');
+});
+
+test('PDF060_reportLabels_미지원로케일_en폴백', () => {
+  assert.equal(reportLabels('ja').totalCost, 'Total cost'); // ja는 PDF 미지원→en
+  assert.equal(reportLabels('pt-BR').totalCost, 'Total cost');
+  assert.equal(reportLabels(undefined).totalCost, 'Total cost');
+});
+
+test('PDF060_reportLabels_생성·세션_템플릿보간', () => {
+  const en = reportLabels('en');
+  assert.equal(en.generated.replace('{t}', '2026-06-01'), 'Generated 2026-06-01');
+  assert.equal(en.sessions.replace('{n}', '4'), 'Sessions — 4 total, top 3 by cost');
+  const ko = reportLabels('ko');
+  assert.equal(ko.generated.replace('{t}', '2026-06-01'), '2026-06-01 생성');
+  assert.equal(ko.sessions.replace('{n}', '4'), '세션 — 총 4개, 비용 상위 3');
+});
+
+test('PDF060_reportLabels_키집합_동일', () => {
+  // en/ko 키 누락 방지(자체 드리프트 가드).
+  const a = Object.keys(reportLabels('en')).sort();
+  const b = Object.keys(reportLabels('ko')).sort();
+  assert.deepEqual(a, b);
+});

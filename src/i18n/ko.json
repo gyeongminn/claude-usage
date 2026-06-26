@@ -1,0 +1,16 @@
+{
+  "app_title": "Claude Usage",
+  "loading": "불러오는 중…",
+  "tray_open": "대시보드 열기",
+  "tray_report": "이번 달 보고서",
+  "tray_quit": "종료",
+  "dash_active_block": "활성 5h 블록 · burn",
+  "dash_trend": "일자별 추세",
+  "dash_cost": "비용",
+  "dash_tokens": "토큰",
+  "dash_today": "오늘",
+  "dash_projects": "프로젝트 Top 5",
+  "dash_used": "소진 {pct}%",
+  "dash_eta": "예상종료 {cost}",
+  "dash_remaining": "남은 {n}분"
+}

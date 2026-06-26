@@ -1,0 +1,96 @@
+/* 대시보드 레이아웃 — 배치 B(§4.1). 토큰(tokens.css) 위에 구성. */
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text-1);
+  font-family: var(--font);
+  font-feature-settings: 'tnum' 1; /* tabular 숫자(§5.1) */
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-areas:
+    'hero hero'
+    'trend today'
+    'projects projects';
+  gap: var(--space-3);
+  padding: var(--space-3);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.hero { grid-area: hero; }
+.trend { grid-area: trend; }
+.today { grid-area: today; }
+.projects { grid-area: projects; }
+
+/* 카드 — 테두리 대신 부드러운 그림자, 큰 반경, 넉넉한 패딩(§5.1) */
+.card {
+  background: var(--card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--pad-card);
+}
+
+.card-label {
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+}
+
+/* 히어로 burn 게이지(DSH-020) — $/h·토큰/h 동급, 임계 색전환은 JS(burnGauge.js) */
+.hero-rates { display: flex; gap: var(--space-4); margin-bottom: var(--space-2); }
+.rate { display: flex; align-items: baseline; gap: 4px; }
+.rate-val { font-size: 40px; font-weight: 700; color: var(--text-1); }
+.rate-unit { font-size: 16px; color: var(--text-2); }
+.gauge-track {
+  height: 14px;
+  background: var(--track);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.gauge-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 160ms ease-out;
+}
+.gauge-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-1);
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+/* 카드 헤더(라벨 + 토글) */
+.card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); }
+.card-head .card-label { margin-bottom: 0; display: flex; align-items: center; gap: 6px; }
+
+/* 라이브 갱신 pulse 점(§5.1: 은은한 pulse만) */
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 1.6s ease-out infinite; }
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(49, 130, 246, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(49, 130, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(49, 130, 246, 0); }
+}
+
+/* 비용/토큰 토글(pill, §5.1) */
+.toggle { display: inline-flex; background: var(--track); border-radius: 999px; padding: 3px; }
+.toggle-btn {
+  border: 0; background: transparent; cursor: pointer;
+  font: inherit; font-size: 13px; color: var(--text-2);
+  padding: 5px 14px; border-radius: 999px;
+}
+.toggle-btn.active { background: var(--card); color: var(--accent); font-weight: 600; box-shadow: var(--shadow-card); }
+
+/* 차트 슬롯 */
+.chart-slot { min-height: 220px; }
+
+/* 오늘 KPI(비용·토큰 동급) + 도넛 */
+.kpi-row { display: flex; gap: var(--space-4); margin-bottom: var(--space-2); }
+.kpi-val { font-size: 28px; font-weight: 700; color: var(--text-1); }
+.kpi-cap { font-size: 13px; color: var(--text-2); }
+.donut-slot { min-height: 180px; }

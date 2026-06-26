@@ -1,0 +1,121 @@
+/* 월별 PDF 보고서 — A4 세로 인쇄(R2 4페이지, §4.2). Light 토큰 하드바인딩(§5.2). */
+/* Pretendard 번들(§5.1) — 보고서도 대시보드와 동일 폰트. 경로는 report/ 기준. */
+@font-face {
+  font-family: 'Pretendard';
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../renderer/fonts/PretendardVariable.woff2') format('woff2-variations');
+}
+
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+:root {
+  --page: #f2f4f6;
+  --card: #ffffff;
+  --text-1: #191f28;
+  --text-2: #8b95a1;
+  --text-3: #b0b8c1;
+  --accent: #3182f6;
+  --track: #eff1f4;
+  --ok: #15803d;
+  --warn: #ffc94d;
+  --over: #f04452;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Pretendard', system-ui, sans-serif;
+  font-feature-settings: 'tnum' 1; /* tabular 숫자(§5.1) */
+  color: var(--text-1);
+  background: var(--page);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* 한 페이지 = A4(210×297mm). 각 .page는 인쇄 시 페이지 분리. */
+.page {
+  position: relative;
+  width: 210mm;
+  height: 297mm;
+  padding: 18mm 16mm 22mm; /* 하단은 푸터 공간 */
+  background: var(--page);
+  page-break-after: always;
+  overflow: hidden;
+}
+.page:last-child { page-break-after: auto; }
+
+/* 페이지 하단 고정 푸터(§4.2): 생성일시 · 페이지 · 단가 출처 */
+.page-footer {
+  position: absolute;
+  left: 16mm;
+  right: 16mm;
+  bottom: 10mm;
+  display: flex;
+  justify-content: space-between;
+  font-size: 8pt;
+  color: var(--text-3);
+  border-top: 1px solid var(--track);
+  padding-top: 4mm;
+}
+
+/* 카드(보고서용) — 소프트 그림자 대신 인쇄 안정 위해 옅은 테두리 허용 */
+.card {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 8mm;
+  border: 1px solid var(--track);
+}
+
+.report-title { font-size: 22pt; font-weight: 700; }
+.report-sub { font-size: 11pt; color: var(--text-2); margin-top: 2mm; }
+.section-title { font-size: 13pt; font-weight: 700; margin: 0 0 4mm; }
+
+/* p1 KPI 4 (비용·토큰 동급, §5.1) */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6mm;
+  margin-top: 12mm;
+}
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--track);
+  border-radius: 10px;
+  padding: 7mm;
+}
+.kpi-cap { font-size: 10pt; color: var(--text-2); margin-bottom: 3mm; }
+.kpi-num { font-size: 20pt; font-weight: 700; color: var(--text-1); }
+
+/* 한 줄 총평 */
+.summary-line {
+  margin-top: 10mm;
+  font-size: 12pt;
+  color: var(--text-1);
+  background: var(--accent-light, #e8f3ff);
+  border-radius: 10px;
+  padding: 6mm 7mm;
+}
+
+/* p2~p4 차트 슬롯(printToPDF는 고정 크기 필요 — ECharts가 px clientWidth 읽음) */
+.report-chart { width: 100%; height: 78mm; margin-bottom: 6mm; }
+.report-donut { width: 100%; height: 62mm; }
+.cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; align-items: start; }
+
+/* 보고서 표 — 옅은 구분선, tabular 숫자 */
+.r-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+.r-table th, .r-table td { padding: 2mm 3mm; text-align: right; border-bottom: 1px solid var(--track); }
+.r-table th:first-child, .r-table td:first-child { text-align: left; color: var(--text-2); }
+.r-table th { color: var(--text-2); font-weight: 600; font-size: 8.5pt; }
+.r-table td { color: var(--text-1); }
+.sub-title { font-size: 10.5pt; font-weight: 700; margin: 4mm 0 2mm; color: var(--text-1); }
+
+/* p2 일자별 표는 한 달(최대 31행)이 A4 한 장에 들어가야 함 → 차트 축소 + 행 압축 */
+#p2 .report-chart { height: 58mm; }
+#p2 .r-table th, #p2 .r-table td { padding: 0.9mm 3mm; font-size: 8pt; line-height: 1.1; }
+.metric-big { font-size: 16pt; font-weight: 700; color: var(--accent); }
+.metric-cap { font-size: 9pt; color: var(--text-2); }

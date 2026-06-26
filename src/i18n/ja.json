@@ -1,0 +1,16 @@
+{
+  "app_title": "Claude Usage",
+  "loading": "読み込み中…",
+  "tray_open": "ダッシュボードを開く",
+  "tray_report": "今月のレポート",
+  "tray_quit": "終了",
+  "dash_active_block": "アクティブ5hブロック · burn",
+  "dash_trend": "日別推移",
+  "dash_cost": "コスト",
+  "dash_tokens": "トークン",
+  "dash_today": "今日",
+  "dash_projects": "プロジェクトTop5",
+  "dash_used": "使用 {pct}%",
+  "dash_eta": "終了予測 {cost}",
+  "dash_remaining": "残り{n}分"
+}

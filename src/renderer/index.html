@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>Claude Usage</title>
+    <link rel="stylesheet" href="tokens.css" />
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <!-- 배치 B(라이브 우선형, §4.1): 히어로 / 추세·오늘 / 프로젝트 -->
+    <main class="grid">
+      <section class="card hero" aria-label="burn">
+        <div class="card-label" data-i18n="dash_active_block">활성 5h 블록 · burn</div>
+        <div class="hero-rates">
+          <div class="rate"><span class="rate-val" id="burn-cost">$2.8</span><span class="rate-unit">/h</span></div>
+          <div class="rate"><span class="rate-val" id="burn-tok">46.7K</span><span class="rate-unit">tok/h</span></div>
+        </div>
+        <div class="gauge-track"><div class="gauge-fill" id="gauge-fill"></div></div>
+        <div class="gauge-meta">
+          <span id="gauge-pct">소진 90%</span>
+          <span id="gauge-eta">예상종료 $4.1</span>
+        </div>
+      </section>
+
+      <section class="card trend" aria-label="trend">
+        <div class="card-head">
+          <div class="card-label"><span class="live-dot"></span><span data-i18n="dash_trend">일자별 추세</span></div>
+          <div class="toggle">
+            <button id="t-cost" class="toggle-btn active" data-i18n="dash_cost">비용</button>
+            <button id="t-tok" class="toggle-btn" data-i18n="dash_tokens">토큰</button>
+          </div>
+        </div>
+        <div id="trend-chart" class="chart-slot"></div>
+      </section>
+
+      <section class="card today" aria-label="today">
+        <div class="card-label" data-i18n="dash_today">오늘</div>
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-val" id="today-cost">$91.4</div><div class="kpi-cap" data-i18n="dash_cost">비용</div></div>
+          <div class="kpi"><div class="kpi-val" id="today-tok">98K</div><div class="kpi-cap" data-i18n="dash_tokens">토큰</div></div>
+        </div>
+        <div id="model-donut" class="donut-slot"></div>
+      </section>
+
+      <section class="card projects" aria-label="projects">
+        <div class="card-label" data-i18n="dash_projects">프로젝트 Top 5</div>
+        <div id="project-bars" class="chart-slot"></div>
+      </section>
+    </main>
+
+    <script src="../../node_modules/echarts/dist/echarts.min.js"></script>
+    <script src="echartsTheme.js"></script>
+    <script src="trendChart.js"></script>
+    <script src="modelDonut.js"></script>
+    <script src="projectBars.js"></script>
+    <script src="burnGauge.js"></script>
+    <script src="format.js"></script>
+    <script>
+      // i18n(OPEN[07] 해소): preload가 노출한 t/locale. 정적 라벨(data-i18n) 일괄 적용 + 동적 문자열은 t() 보간.
+      const t = (window.usage && window.usage.t) || ((k) => k);
+      document.querySelectorAll('[data-i18n]').forEach((e) => {
+        const v = t(e.getAttribute('data-i18n'));
+        if (v) e.textContent = v;
+      });
+      if (window.usage && window.usage.locale) document.documentElement.lang = window.usage.locale;
+      // 첫 집계 전 정적 ETA 샘플도 로케일로(이후 onAggregate가 실값으로 교체).
+      document.getElementById('gauge-eta').textContent = t('dash_eta', { cost: '$4.1' });
+
+      // 토큰값(tokens.css와 동일) — 임계 색전환용. ponytail: 렌더러는 getComputedStyle로 읽어도 되나 샘플은 직접.
+      const TK = { accent: '#3182F6', warn: '#FFC94D', over: '#F04452' };
+      function renderGauge(pct) {
+        const p = window.BurnGauge.clampPct(pct);
+        const fill = document.getElementById('gauge-fill');
+        fill.style.width = p + '%';
+        fill.style.background = window.BurnGauge.burnColor(p, TK);
+        document.getElementById('gauge-pct').textContent = t('dash_used', { pct: Math.round(p) });
+      }
+      renderGauge(90); // 샘플(warn 구간 확인). 실제 burn 데이터는 DSH-060/DAT-030에서.
+
+      // 추세 차트 — 비용/토큰 토글. 샘플 데이터(실제 daily는 DSH-060).
+      const sampleDaily = [
+        { period: '06-20', totalCost: 12.3, totalTokens: 18000 },
+        { period: '06-21', totalCost: 31.5, totalTokens: 42000 },
+        { period: '06-22', totalCost: 24.1, totalTokens: 33000 },
+        { period: '06-23', totalCost: 48.7, totalTokens: 61000 },
+        { period: '06-24', totalCost: 39.2, totalTokens: 50000 },
+        { period: '06-25', totalCost: 55.0, totalTokens: 72000 },
+        { period: '06-26', totalCost: 91.4, totalTokens: 98000 },
+      ];
+      const theme = window.EChartsTheme.makeEchartsTheme();
+      const chart = echarts.init(document.getElementById('trend-chart'));
+      let metric = 'cost';
+      function drawTrend() {
+        chart.setOption(window.TrendChart.buildTrendOption(sampleDaily, metric, theme), true);
+      }
+      function setMetric(m) {
+        metric = m;
+        document.getElementById('t-cost').classList.toggle('active', m === 'cost');
+        document.getElementById('t-tok').classList.toggle('active', m === 'tokens');
+        drawTrend();
+      }
+      document.getElementById('t-cost').onclick = () => setMetric('cost');
+      document.getElementById('t-tok').onclick = () => setMetric('tokens');
+      drawTrend();
+
+      // 오늘 모델 도넛 — 샘플 breakdown(실제 데이터는 DSH-060).
+      const sampleModels = [
+        { modelName: 'claude-opus-4-8', cost: 88.2 },
+        { modelName: 'claude-haiku-4-5-20251001', cost: 3.2 },
+      ];
+      const donut = echarts.init(document.getElementById('model-donut'));
+      donut.setOption(window.ModelDonut.buildDonutOption(sampleModels, theme));
+
+      // 프로젝트 Top 5 + 기타 바 — 샘플(실제 --instances 데이터는 DSH-060).
+      const sampleProjects = [
+        { project: 'claude-usage', totalCost: 142.0 },
+        { project: 'pantology', totalCost: 88.5 },
+        { project: 'humanize-korean', totalCost: 53.2 },
+        { project: 'studyvault', totalCost: 31.0 },
+        { project: 'cate', totalCost: 22.4 },
+        { project: 'misc-a', totalCost: 12.0 },
+        { project: 'misc-b', totalCost: 7.5 },
+      ];
+      const bars = echarts.init(document.getElementById('project-bars'));
+      bars.setOption(
+        window.ProjectBars.buildProjectBarOption(window.ProjectBars.topNWithOther(sampleProjects, 5), theme)
+      );
+
+      // 통화·숫자 포맷(DAT-050). 토큰은 K/M/B 축약, 비용은 $ (₩ 병기).
+      const fmtCost = (n) => window.Fmt.fmtUsd(n);
+      const fmtTok = (n) => window.Fmt.fmtTokens(n);
+
+      // 실데이터 수신 → 게이지·추세·도넛·KPI 갱신(프로젝트는 데이터원 없어 샘플 유지, OPEN).
+      window.usage.onAggregate((agg) => {
+        if (!agg || !agg.burn) return;
+        // 플랜 토큰 한도 설정 시 토큰 소진율, 없으면 시간 소진율(§4.1, OPEN[09]).
+        renderGauge(agg.burn.tokenPct != null ? agg.burn.tokenPct : agg.burn.timePct);
+        document.getElementById('burn-cost').textContent = fmtCost(agg.burn.costPerHour);
+        document.getElementById('burn-tok').textContent = fmtTok(agg.burn.tokPerHour);
+        const rem = agg.burn.remainingMinutes ? ' · ' + t('dash_remaining', { n: agg.burn.remainingMinutes }) : '';
+        document.getElementById('gauge-eta').textContent = t('dash_eta', { cost: fmtCost(agg.burn.projectedCost) }) + rem;
+
+        if (agg.daily && agg.daily.length) {
+          for (const d of agg.daily) d.period = String(d.period).slice(5); // MM-DD
+          sampleDaily.length = 0;
+          sampleDaily.push(...agg.daily);
+          drawTrend();
+        }
+        if (agg.today) {
+          // 오늘 비용은 ₩ 병기(§5.1). 환율 없으면 USD만.
+          document.getElementById('today-cost').textContent =
+            window.Fmt.fmtUsdKrw(agg.today.totalCost, agg.krwPerUsd);
+          document.getElementById('today-tok').textContent = fmtTok(agg.today.totalTokens);
+          if (agg.today.models && agg.today.models.length) {
+            donut.setOption(window.ModelDonut.buildDonutOption(agg.today.models, theme));
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
