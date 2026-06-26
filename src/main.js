@@ -263,6 +263,9 @@ function setupTray(getWin) {
 }
 
 app.whenReady().then(() => {
+  // UX-040: 네이티브 앱 메뉴(Edit/View/Help) 제거 — 모든 동작은 UI에서 처리(사용자 지시).
+  // 트레이 컨텍스트 메뉴(setupTray)는 별개라 영향 없음. UX-010 리사이즈 수정으로 Reload View 우회 불필요.
+  Menu.setApplicationMenu(null);
   if (process.env.REPORT_PDF) {
     generatePdfAndQuit(process.env.REPORT_PDF);
     return;
