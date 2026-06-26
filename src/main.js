@@ -106,7 +106,8 @@ async function pushAggregate(win) {
 // CAPTURE_PATH 가 있으면 렌더 후 그 경로에 PNG 저장하고 종료(검증 루프 전용 모드).
 async function captureAndQuit(win, outPath) {
   // 검증 캡처는 전체 대시보드가 한 프레임에 들어오게 창을 키운다(뷰포트 밖 카드까지).
-  win.setContentSize(1100, Number(process.env.CAPTURE_H) || 1300);
+  // CAPTURE_W로 폭 지정 가능(반응형 단일 컬럼 검증용, 기본 1100).
+  win.setContentSize(Number(process.env.CAPTURE_W) || 1100, Number(process.env.CAPTURE_H) || 1300);
   // 첫 페인트 + 폰트 + ECharts 애니메이션 안정화 후 캡처(빈/미완성 프레임 방지).
   const delay = Number(process.env.CAPTURE_DELAY) || 1400;
   await new Promise((r) => setTimeout(r, delay));
@@ -133,6 +134,9 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1100,
     height: 720,
+    // 최소 크기(UX-020): 이 아래로는 단일 컬럼(dashboard.css @760)으로 reflow돼도 카드가 못 눌리게.
+    minWidth: 380,
+    minHeight: 520,
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),

@@ -31,6 +31,9 @@ body {
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   padding: var(--pad-card);
+  /* 그리드 아이템 기본 min-width:auto가 ECharts 내용폭(init 1100)만큼 트랙을 못 줄이게 막는다.
+     0으로 풀어야 좁은 창에서 컬럼이 줄고 chart.resize가 올바른 폭을 읽음(가로 오버플로 방지). */
+  min-width: 0;
 }
 
 .card-label {
@@ -94,3 +97,20 @@ body {
 .kpi-val { font-size: 28px; font-weight: 700; color: var(--text-1); }
 .kpi-cap { font-size: 13px; color: var(--text-2); }
 .donut-slot { min-height: 180px; }
+
+/* 반응형(UX-020): 좁은 창에서 trend·today 2열이 눌리므로 단일 컬럼으로 reflow.
+   hero(활성 5h)·trend(7일 추세)가 위에 그대로 쌓여 한눈에 들어옴(above-the-fold).
+   비율·크기 변동·축소에도 안깨지게. 차트 폭 추종은 UX-010 resize 핸들러가 처리. */
+@media (max-width: 760px) {
+  .grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'hero'
+      'trend'
+      'today'
+      'projects';
+    padding: var(--space-2);
+    gap: var(--space-2);
+  }
+  .rate-val { font-size: 32px; } /* 좁은 폭에서 숫자 줄바꿈 방지 */
+}
