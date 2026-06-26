@@ -9,7 +9,7 @@ const { renderReportToPdf, reportPath } = require('./main/reportPdf');
 const { buildReportInput } = require('./main/reportAssembler');
 const { buildTrayMenuTemplate, trayIconBitmap } = require('./main/tray');
 const { setAutoLaunch } = require('./main/autoLaunch');
-const { scheduleMonthly } = require('./main/scheduler');
+const { scheduleMonthly, currentYM } = require('./main/scheduler');
 const { missingMonths } = require('./main/catchup');
 const { loadSettings } = require('./main/settings');
 const { tFor, resolveLocale } = require('./i18n/i18n');
@@ -263,8 +263,8 @@ function setupTray(getWin) {
   const template = buildTrayMenuTemplate(
     {
       onOpen: showWin,
-      // ponytail: 실제 월 보고서 생성은 어셈블러(OPEN[10])·스케줄러(OPS-030) 연결 후. 지금은 자리.
-      onReport: () => console.log('이번 달 보고서 생성: 어셈블러 미연결(OPEN[10])'),
+      // UX-060: "이번 달 미리 뽑기" — 이번 달(UTC YM) 보고서를 지금 생성(reports/YYYY-MM.pdf).
+      onReport: () => generateMonthlyReport(currentYM(Date.now())),
       onQuit: () => {
         isQuitting = true;
         if (schedulerHandle) schedulerHandle.cancel();

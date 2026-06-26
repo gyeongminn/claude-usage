@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { nextMonthlyRun, prevMonthYM, scheduleMonthly } = require('../src/main/scheduler');
+const { nextMonthlyRun, prevMonthYM, scheduleMonthly, currentYM } = require('../src/main/scheduler');
 
 // 시각·시간 무관 결정성을 위해 Clock(now ms) 주입(UTC 기준 계산, §10/OPEN[05]).
 // nextMonthlyRun(now): now '이후'의 가장 가까운 '다음 달 1일 00:00 UTC' ms.
@@ -28,6 +28,19 @@ test('OPS030_prevMonthYM_지난달', () => {
 
 test('OPS030_prevMonthYM_연초→전년12월', () => {
   assert.deepEqual(prevMonthYM(Date.UTC(2026, 0, 5, 0, 0)), { year: 2025, month: 12 });
+});
+
+// UX-060: 트레이 "이번 달 미리 뽑기" 대상 = now 시점의 이번 달 {year, month}(UTC, 보고서 YM 규약 일관).
+test('UX060_currentYM_이번달', () => {
+  assert.deepEqual(currentYM(Date.UTC(2026, 5, 26, 8, 0)), { year: 2026, month: 6 }); // month idx5=6월
+});
+
+test('UX060_currentYM_12월_경계', () => {
+  assert.deepEqual(currentYM(Date.UTC(2026, 11, 15, 0, 0)), { year: 2026, month: 12 });
+});
+
+test('UX060_currentYM_월초자정', () => {
+  assert.deepEqual(currentYM(Date.UTC(2026, 0, 1, 0, 0, 0)), { year: 2026, month: 1 });
 });
 
 // scheduleMonthly: 발화 시 onFire(prevYM) 호출 + 재무장. setTimeout/clearTimeout 주입.

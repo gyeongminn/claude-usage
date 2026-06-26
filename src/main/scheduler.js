@@ -16,6 +16,14 @@ function prevMonthYM(now) {
   return { year: prev.getUTCFullYear(), month: prev.getUTCMonth() + 1 };
 }
 
+// now 시점의 이번 달 {year, month(1~12)}. 트레이 "이번 달 미리 뽑기"(UX-060) 대상.
+// UTC 기준 — prevMonthYM 등 보고서 YM 규약과 일관(§10/OPEN[05]). // ponytail: 월 경계 몇 시간은
+// UTC≠로컬일 수 있으나 보고서 생성 전체가 UTC YM 규약을 따르므로 일관 우선.
+function currentYM(now) {
+  const d = new Date(now);
+  return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1 };
+}
+
 // 매월 1일 발화. 발화 시 onFire(지난달 YM) 호출 후 다음 달로 재무장. handle.cancel()로 해제.
 // setTimer/clearTimer 주입(기본 전역). 33일 초과 지연은 setTimeout 한도(약 24.8일) 고려해 분할.
 function scheduleMonthly({ onFire, now, setTimer = setTimeout, clearTimer = clearTimeout }) {
@@ -48,4 +56,4 @@ function scheduleMonthly({ onFire, now, setTimer = setTimeout, clearTimer = clea
   };
 }
 
-module.exports = { nextMonthlyRun, prevMonthYM, scheduleMonthly };
+module.exports = { nextMonthlyRun, prevMonthYM, scheduleMonthly, currentYM };
