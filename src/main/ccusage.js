@@ -22,7 +22,9 @@ function defaultRunner(args) {
     execFile(
       process.execPath,
       [CLI, ...args],
-      { maxBuffer: 256 * 1024 * 1024, env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' } },
+      // windowsHide: ELECTRON_RUN_AS_NODE로 electron.exe를 띄우면 Windows에서 콘솔 창이 깜빡인다.
+      // 라이브 집계가 8초마다 spawn하므로 필수.
+      { maxBuffer: 256 * 1024 * 1024, env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, windowsHide: true },
       (err, stdout, stderr) => {
         if (err) return reject(new Error(`ccusage 실행 실패: ${stderr || err.message}`));
         resolve(stdout);
