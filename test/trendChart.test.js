@@ -42,3 +42,26 @@ test('DSH030_잘못된메트릭_cost폴백', () => {
   const opt = buildTrendOption(daily, 'bogus', theme);
   assert.deepEqual(opt.series[0].data, [10.5, 22.0, 8.25]); // 기본 cost
 });
+
+// UX-030: 비용 축은 $ 단위 명시, 토큰 축은 K/M/B 축약(긴 숫자 방지).
+test('UX030_cost_yAxis_달러단위_정수', () => {
+  const opt = buildTrendOption(daily, 'cost', theme);
+  assert.equal(opt.yAxis.axisLabel.formatter(1395), '$1,395'); // 축은 소수 없이 간결
+  assert.equal(opt.yAxis.axisLabel.formatter(40), '$40');
+});
+
+test('UX030_tokens_yAxis_KMB축약', () => {
+  const opt = buildTrendOption(daily, 'tokens', theme);
+  assert.equal(opt.yAxis.axisLabel.formatter(123000000), '123.0M');
+  assert.equal(opt.yAxis.axisLabel.formatter(46700), '46.7K');
+});
+
+test('UX030_cost_tooltip_달러_소수2', () => {
+  const opt = buildTrendOption(daily, 'cost', theme);
+  assert.equal(opt.tooltip.valueFormatter(91.4), '$91.40');
+});
+
+test('UX030_tokens_tooltip_축약', () => {
+  const opt = buildTrendOption(daily, 'tokens', theme);
+  assert.equal(opt.tooltip.valueFormatter(46700), '46.7K');
+});
