@@ -1,0 +1,10 @@
+node_modules/
+dist/
+out/
+reports/
+
+# Claude Code / agent-loop artifacts — never commit
+CLAUDE.md
+.claude/
+docs/
+.allow-push
