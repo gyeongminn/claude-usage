@@ -61,3 +61,14 @@ test('DSH050_라벨우선_name_fallback_project', () => {
   const rows = topNWithOther([{ name: '내프로젝트', totalCost: 5 }], 5);
   assert.equal(rows[0].project, '내프로젝트');
 });
+
+// UX-031: 비용 차트 단위 일관화 — 가로 바 x축·툴팁에 $ 표기(trend와 일관).
+test('UX031_projectBars_x축_달러단위', () => {
+  const opt = buildProjectBarOption([{ project: 'a', totalCost: 1395 }], theme);
+  assert.equal(opt.xAxis.axisLabel.formatter(1395), '$1,395');
+});
+
+test('UX031_projectBars_툴팁_달러', () => {
+  const opt = buildProjectBarOption([{ project: 'a', totalCost: 91.4 }], theme);
+  assert.equal(opt.tooltip.valueFormatter(91.4), '$91.40');
+});

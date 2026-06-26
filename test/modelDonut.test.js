@@ -47,3 +47,10 @@ test('DSH040_cost누락_0', () => {
   const opt = buildDonutOption([{ modelName: 'claude-opus-4-8' }], theme);
   assert.equal(opt.series[0].data[0].value, 0); // undefined cost → 0
 });
+
+// UX-031: 도넛 툴팁 비용 $ 표기(trend·바와 일관). 호버 시 모델별 비용 가독.
+test('UX031_donut_툴팁_달러', () => {
+  const opt = buildDonutOption(breakdowns, theme);
+  assert.equal(opt.tooltip.trigger, 'item');
+  assert.equal(opt.tooltip.valueFormatter(88.2), '$88.20');
+});

@@ -9,11 +9,19 @@
     return `${tier} ${m[2]}.${m[3]}`;
   }
 
+  // Fmt 재사용(UX-031): 툴팁 비용 $ 단위. node=require, 렌더러=window.Fmt(호출시 resolve).
+  function fmt() {
+    return typeof module !== 'undefined' && module.exports ? require('./format') : root.Fmt;
+  }
+
   // breakdowns: [{modelName, cost}]. 비용 기준 도넛.
   function buildDonutOption(breakdowns, theme) {
+    const F = fmt();
     return {
       color: theme.color,
       textStyle: theme.textStyle,
+      // 호버 시 '모델명: $비용 (퍼센트%)'. 도넛은 라벨 숨김이라 툴팁이 유일한 수치 노출.
+      tooltip: { trigger: 'item', valueFormatter: (v) => F.fmtUsd(v) },
       series: [
         {
           type: 'pie',
