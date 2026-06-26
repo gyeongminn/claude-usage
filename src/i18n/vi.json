@@ -14,5 +14,7 @@
   "dash_eta": "Kết thúc ~{cost}",
   "dash_remaining": "Còn {n} phút",
   "dash_refresh": "Làm mới",
-  "dash_theme": "Giao diện"
+  "dash_theme": "Giao diện",
+  "dash_zoom_in": "Phóng to",
+  "dash_zoom_out": "Thu nhỏ"
 }

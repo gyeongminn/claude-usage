@@ -11,7 +11,7 @@ const { buildTrayMenuTemplate, trayIconBitmap } = require('./main/tray');
 const { setAutoLaunch } = require('./main/autoLaunch');
 const { scheduleMonthly, currentYM } = require('./main/scheduler');
 const { missingMonths } = require('./main/catchup');
-const { loadSettings, saveSettings } = require('./main/settings');
+const { loadSettings, saveSettings, clampScale } = require('./main/settings');
 const { tFor, resolveLocale } = require('./i18n/i18n');
 
 // 시스템 타임존(§10/OPEN[05]: UTC 계산 + 시스템 TZ 표시)으로 daily 날짜 그룹화.
@@ -136,6 +136,8 @@ function createWindow() {
   const uiLocale = resolveLocale(process.env.UI_LOCALE || (settings && settings.locale) || app.getLocale());
   // UI-020 초기 테마: UI_THEME env(검증용) > 설정값. dark만 dark.
   const uiTheme = (process.env.UI_THEME || (settings && settings.theme)) === 'dark' ? 'dark' : 'light';
+  // UI-030 초기 배율: UI_SCALE env(검증용) > 설정값. setZoomFactor는 신뢰 경계라 clamp(범위밖/음수 차단).
+  const effScale = clampScale(Number(process.env.UI_SCALE) || (settings && settings.uiScale) || 1);
   const win = new BrowserWindow({
     width: 1100,
     height: 720,
@@ -151,7 +153,7 @@ function createWindow() {
       // preload가 i18n 카탈로그(node:fs)를 읽어 t/locale를 노출하려면 sandbox 해제 필요.
       // contextIsolation:true가 핵심 경계는 유지 — 렌더러엔 노출 API만 전달(OPEN[07]).
       sandbox: false,
-      additionalArguments: [`--ui-locale=${uiLocale}`, `--ui-theme=${uiTheme}`],
+      additionalArguments: [`--ui-locale=${uiLocale}`, `--ui-theme=${uiTheme}`, `--ui-scale=${effScale}`],
     },
   });
   // REPORT_CAPTURE면 보고서 템플릿 로드(PDF-010 시각 검증용). 평소엔 대시보드.
@@ -175,6 +177,8 @@ function createWindow() {
       if (process.env.CAPTURE_PATH) captureAndQuit(win, process.env.CAPTURE_PATH);
       return;
     }
+    // UI-030: 저장된 UI 배율 적용(차트+글씨 균일 스케일). 0.8~1.5.
+    win.webContents.setZoomFactor(effScale);
     // 환율 먼저 fetch 후 집계 push(병기). 환율 실패해도 집계는 진행.
     refreshFx().catch(() => {}).finally(() => pushAggregate(win));
     // 파일 변경 감시(DAT-020) → 변경 시 재집계. 활성 블록 burn 신선도 위해 주기 갱신도 병행(§4.1: 5~10s).
@@ -183,10 +187,17 @@ function createWindow() {
     // UI-010: 새로고침(재계산) 버튼 → 즉시 재집계. 결과는 usage:aggregate로 렌더러에 push.
     const onRefresh = () => pushAggregate(win);
     ipcMain.on('usage:refresh', onRefresh);
+    // UI-030: 배율 변경 → 검증·영속 후 setZoomFactor(차트+글씨 균일 스케일).
+    const onScale = (_e, scale) => {
+      settings = saveSettings(app.getPath('userData'), { ...settings, uiScale: scale });
+      if (!win.isDestroyed()) win.webContents.setZoomFactor(settings.uiScale);
+    };
+    ipcMain.on('scale:set', onScale);
     win.on('closed', () => {
       clearInterval(timer);
       watcher.close();
       ipcMain.removeListener('usage:refresh', onRefresh);
+      ipcMain.removeListener('scale:set', onScale);
     });
     if (process.env.CAPTURE_PATH) captureAndQuit(win, process.env.CAPTURE_PATH);
   });

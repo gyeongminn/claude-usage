@@ -14,5 +14,7 @@
   "dash_eta": "終了予測 {cost}",
   "dash_remaining": "残り{n}分",
   "dash_refresh": "更新",
-  "dash_theme": "テーマ"
+  "dash_theme": "テーマ",
+  "dash_zoom_in": "拡大",
+  "dash_zoom_out": "縮小"
 }

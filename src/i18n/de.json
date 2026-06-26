@@ -14,5 +14,7 @@
   "dash_eta": "Ende ca. {cost}",
   "dash_remaining": "noch {n} Min",
   "dash_refresh": "Aktualisieren",
-  "dash_theme": "Design"
+  "dash_theme": "Design",
+  "dash_zoom_in": "Vergrößern",
+  "dash_zoom_out": "Verkleinern"
 }

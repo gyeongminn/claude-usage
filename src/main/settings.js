@@ -12,11 +12,19 @@ const DEFAULTS = {
   locale: null, // null → app.getLocale() 자동(§10). 'ko' 등 지정 시 강제.
   planTokenLimit: null, // 플랜 토큰 한도(OPEN[09]). null=미설정(시간 소진율만).
   theme: 'light', // UI 테마(UI-020). 'light'|'dark'. 기본 라이트(§5.2).
+  uiScale: 1, // UI 배율(UI-030, webContents.setZoomFactor). [0.8,1.5], 0.1 step.
 };
 const KEYS = Object.keys(DEFAULTS);
 
 const isObj = (v) => v != null && typeof v === 'object' && !Array.isArray(v);
 const posNum = (v) => (typeof v === 'number' && isFinite(v) && v > 0 ? v : null);
+// UI 배율: 숫자 아니면 1, [0.8,1.5]로 clamp, 0.1 단위 반올림(부동소수 드리프트 방지).
+const SCALE_MIN = 0.8;
+const SCALE_MAX = 1.5;
+function clampScale(v) {
+  if (typeof v !== 'number' || !isFinite(v)) return 1; // null·문자열 등 비숫자 → 기본 1.
+  return Math.min(SCALE_MAX, Math.max(SCALE_MIN, Math.round(v * 10) / 10));
+}
 
 // 화이트리스트 키만 기본값 위에 머지(미지정·미지원 키 무시).
 function mergeSettings(partial) {
@@ -37,6 +45,7 @@ function validateSettings(partial) {
     locale: LOCALES.includes(s.locale) ? s.locale : null, // 미지원/ null → 시스템 자동.
     planTokenLimit: posNum(s.planTokenLimit), // 양수 아니면 null.
     theme: s.theme === 'dark' ? 'dark' : 'light', // dark만 dark, 그 외 light 폴백.
+    uiScale: clampScale(s.uiScale),
   };
 }
 
@@ -71,4 +80,4 @@ function defaultWrite(p, data) {
   fs.writeFileSync(p, data);
 }
 
-module.exports = { DEFAULTS, mergeSettings, validateSettings, settingsPath, loadSettings, saveSettings };
+module.exports = { DEFAULTS, mergeSettings, validateSettings, settingsPath, loadSettings, saveSettings, clampScale };

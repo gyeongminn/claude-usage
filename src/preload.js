@@ -10,6 +10,10 @@ const t = tFor(uiLocale);
 const themeArg = process.argv.find((a) => a.startsWith('--ui-theme='));
 const uiTheme = themeArg && themeArg.split('=')[1] === 'dark' ? 'dark' : 'light';
 
+// UI 배율(UI-030): main이 --ui-scale로 전달. 숫자 아니면 1(실제 clamp·영속은 main이 검증).
+const scaleArg = process.argv.find((a) => a.startsWith('--ui-scale='));
+const uiScale = scaleArg && isFinite(Number(scaleArg.split('=')[1])) ? Number(scaleArg.split('=')[1]) : 1;
+
 // 메인 → 렌더러 집계 push + i18n(t/locale) 노출(contextIsolation 유지, nodeIntegration 없음).
 // ponytail: t는 함수 프록시로 전달 — 렌더러는 카탈로그/노드 접근 없이 번역만 사용(OPEN[07] 해소).
 contextBridge.exposeInMainWorld('usage', {
@@ -25,4 +29,7 @@ contextBridge.exposeInMainWorld('usage', {
   // UI-020: 테마 — 초기값 노출 + 변경 영속(main이 settings.json에 저장).
   theme: uiTheme,
   setTheme: (theme) => ipcRenderer.send('theme:set', theme),
+  // UI-030: UI 배율 — 초기값 + 변경(main이 clamp·영속·setZoomFactor).
+  uiScale: uiScale,
+  setScale: (scale) => ipcRenderer.send('scale:set', scale),
 });

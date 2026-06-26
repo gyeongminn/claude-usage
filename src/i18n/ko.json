@@ -14,5 +14,7 @@
   "dash_eta": "예상종료 {cost}",
   "dash_remaining": "남은 {n}분",
   "dash_refresh": "새로고침",
-  "dash_theme": "테마"
+  "dash_theme": "테마",
+  "dash_zoom_in": "확대",
+  "dash_zoom_out": "축소"
 }

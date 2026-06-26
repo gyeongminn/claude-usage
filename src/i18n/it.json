@@ -14,5 +14,7 @@
   "dash_eta": "Fine prev. {cost}",
   "dash_remaining": "{n} min rimanenti",
   "dash_refresh": "Aggiorna",
-  "dash_theme": "Tema"
+  "dash_theme": "Tema",
+  "dash_zoom_in": "Ingrandisci",
+  "dash_zoom_out": "Riduci"
 }

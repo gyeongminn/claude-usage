@@ -52,6 +52,30 @@ test('OPS050_validate_planTokenLimit_양수or_null', () => {
   assert.equal(validateSettings({ planTokenLimit: 'x' }).planTokenLimit, null);
 });
 
+// UI-030: UI 배율(uiScale) — webContents.setZoomFactor용. 기본 1, [0.8,1.5] clamp, 0.1 반올림, 잘못된 값 1.
+test('UI030_uiScale_기본_1', () => {
+  assert.equal(validateSettings({}).uiScale, 1);
+  assert.ok('uiScale' in DEFAULTS);
+});
+
+test('UI030_uiScale_정상값', () => {
+  assert.equal(validateSettings({ uiScale: 1.2 }).uiScale, 1.2);
+});
+
+test('UI030_uiScale_범위밖_clamp', () => {
+  assert.equal(validateSettings({ uiScale: 0.5 }).uiScale, 0.8); // 하한
+  assert.equal(validateSettings({ uiScale: 3 }).uiScale, 1.5); // 상한
+});
+
+test('UI030_uiScale_반올림_0.1', () => {
+  assert.equal(validateSettings({ uiScale: 1.23 }).uiScale, 1.2);
+});
+
+test('UI030_uiScale_잘못된값_1', () => {
+  assert.equal(validateSettings({ uiScale: 'x' }).uiScale, 1);
+  assert.equal(validateSettings({ uiScale: null }).uiScale, 1);
+});
+
 // UI-020: 테마 영속(light|dark). 기본 light(§5.2 라이트 기본), 잘못된 값은 light 폴백.
 test('UI020_theme_기본_light', () => {
   assert.equal(validateSettings({}).theme, 'light');

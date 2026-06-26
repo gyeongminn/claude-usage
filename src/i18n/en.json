@@ -14,5 +14,7 @@
   "dash_eta": "Est. end {cost}",
   "dash_remaining": "{n} min left",
   "dash_refresh": "Refresh",
-  "dash_theme": "Theme"
+  "dash_theme": "Theme",
+  "dash_zoom_in": "Zoom in",
+  "dash_zoom_out": "Zoom out"
 }

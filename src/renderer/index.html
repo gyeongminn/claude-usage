@@ -9,6 +9,16 @@
   <body>
     <!-- 상단 툴바(UI-010): 우측 아이콘 버튼(Lucide 라인, 이모지 금지 §5.1). 테마·크기·설정은 후속 step에서 합류. -->
     <header class="toolbar">
+      <button id="btn-zoom-out" class="icon-btn" type="button" data-i18n-title="dash_zoom_out" aria-label="Zoom out">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3M8 11h6" />
+        </svg>
+      </button>
+      <button id="btn-zoom-in" class="icon-btn" type="button" data-i18n-title="dash_zoom_in" aria-label="Zoom in">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3M11 8v6M8 11h6" />
+        </svg>
+      </button>
       <button id="btn-theme" class="icon-btn" type="button" data-i18n-title="dash_theme" aria-label="Theme">
         <!-- 라이트일 때 moon(→다크로), 다크일 때 sun(→라이트로). CSS가 data-theme로 토글. -->
         <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -184,6 +194,20 @@
           redrawCharts();
         };
       }
+
+      // UI-030: UI 배율 +/− — main이 setZoomFactor로 차트+글씨 균일 스케일·영속. clamp는 main과 동일 범위.
+      // ponytail: 경계값 main settings.clampScale와 중복 — 한 곳 권위(main)지만 버튼 비활성 UX 위해 미러.
+      let uiScale = (window.usage && window.usage.uiScale) || 1;
+      const SCALE_MIN = 0.8;
+      const SCALE_MAX = 1.5;
+      function setScale(s) {
+        uiScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, Math.round(s * 10) / 10));
+        if (window.usage && window.usage.setScale) window.usage.setScale(uiScale);
+      }
+      const btnZoomIn = document.getElementById('btn-zoom-in');
+      const btnZoomOut = document.getElementById('btn-zoom-out');
+      if (btnZoomIn) btnZoomIn.onclick = () => setScale(uiScale + 0.1);
+      if (btnZoomOut) btnZoomOut.onclick = () => setScale(uiScale - 0.1);
 
       // UX-010: 창 크기 변경 시 차트 3개를 따라 리사이즈(디바운스). 미동작 시 레이아웃이 안 따라옴.
       window.addEventListener(
