@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "ccusage": "^20.0.14",
-    "@ccusage/ccusage-win32-x64": "^20.0.14",
     "chokidar": "^3.6.0",
     "echarts": "^5.5.0"
   },
