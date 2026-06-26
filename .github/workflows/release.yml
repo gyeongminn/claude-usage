@@ -7,7 +7,10 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: write
     steps:
@@ -17,6 +20,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      # 각 OS 러너가 자기 플랫폼 산출물(Win: nsis/portable, mac: dmg/zip)을 빌드해 같은 릴리즈에 업로드.
       - run: npm run build -- --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
