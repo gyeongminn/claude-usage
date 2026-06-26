@@ -17,6 +17,9 @@ const { tFor, resolveLocale } = require('./i18n/i18n');
 // 시스템 타임존(§10/OPEN[05]: UTC 계산 + 시스템 TZ 표시)으로 daily 날짜 그룹화.
 const SYSTEM_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+// 앱 아이콘(UX-050): build/icon.png. 패키징 시 build/는 asar에 포함되며 createFromPath가 asar 경로도 읽음.
+const ICON_PATH = path.join(__dirname, '..', 'build', 'icon.png');
+
 let tray = null; // GC 방지로 모듈 스코프 보관(§3 상주).
 let isQuitting = false; // 트레이 Quit/실종료 시에만 true — 그 전엔 창 닫기=트레이로 숨김.
 let schedulerHandle = null; // 월별 스케줄러(OPS-030).
@@ -137,6 +140,7 @@ function createWindow() {
     // 최소 크기(UX-020): 이 아래로는 단일 컬럼(dashboard.css @760)으로 reflow돼도 카드가 못 눌리게.
     minWidth: 380,
     minHeight: 520,
+    icon: ICON_PATH, // UX-050: 작업표시줄/창 아이콘(기본 Electron 아이콘 대체).
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -231,12 +235,23 @@ async function generatePdfAndQuit(outPath) {
   app.quit();
 }
 
+// 트레이 아이콘(UX-050): 실제 icon.png 우선, 못 읽으면(빈 이미지) 단색 비트맵 폴백.
+function trayImage() {
+  const img = nativeImage.createFromPath(ICON_PATH);
+  if (!img.isEmpty()) {
+    console.log('트레이 아이콘: icon.png');
+    return img.resize({ width: 16, height: 16 });
+  }
+  console.log('트레이 아이콘: fallback bitmap');
+  const ico = trayIconBitmap(16);
+  return nativeImage.createFromBitmap(ico.buffer, { width: ico.width, height: ico.height });
+}
+
 // 트레이 상주(OPS-010): 아이콘 + 메뉴(대시보드 열기·이번 달 미리 뽑기·종료). UI 로케일로 라벨.
 function setupTray(getWin) {
   // 설정 locale 우선(§10), null이면 시스템 언어 자동.
   const t = tFor((settings && settings.locale) || app.getLocale());
-  const ico = trayIconBitmap(16);
-  tray = new Tray(nativeImage.createFromBitmap(ico.buffer, { width: ico.width, height: ico.height }));
+  tray = new Tray(trayImage());
   tray.setToolTip(t('app_title'));
   const showWin = () => {
     const w = getWin();
