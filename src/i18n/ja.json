@@ -12,5 +12,6 @@
   "dash_projects": "プロジェクトTop5",
   "dash_used": "使用 {pct}%",
   "dash_eta": "終了予測 {cost}",
-  "dash_remaining": "残り{n}分"
+  "dash_remaining": "残り{n}分",
+  "dash_refresh": "更新"
 }

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { runCcusage } = require('./main/ccusage');
@@ -178,9 +178,13 @@ function createWindow() {
     // 파일 변경 감시(DAT-020) → 변경 시 재집계. 활성 블록 burn 신선도 위해 주기 갱신도 병행(§4.1: 5~10s).
     const watcher = startWatcher(() => pushAggregate(win));
     const timer = setInterval(() => pushAggregate(win), 8000);
+    // UI-010: 새로고침(재계산) 버튼 → 즉시 재집계. 결과는 usage:aggregate로 렌더러에 push.
+    const onRefresh = () => pushAggregate(win);
+    ipcMain.on('usage:refresh', onRefresh);
     win.on('closed', () => {
       clearInterval(timer);
       watcher.close();
+      ipcMain.removeListener('usage:refresh', onRefresh);
     });
     if (process.env.CAPTURE_PATH) captureAndQuit(win, process.env.CAPTURE_PATH);
   });

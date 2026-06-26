@@ -12,5 +12,6 @@
   "dash_projects": "Top 5 projects",
   "dash_used": "{pct}% used",
   "dash_eta": "Est. end {cost}",
-  "dash_remaining": "{n} min left"
+  "dash_remaining": "{n} min left",
+  "dash_refresh": "Refresh"
 }

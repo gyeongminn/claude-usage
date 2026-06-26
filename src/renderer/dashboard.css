@@ -7,6 +7,32 @@ body {
   font-feature-settings: 'tnum' 1; /* tabular 숫자(§5.1) */
 }
 
+/* 상단 툴바(UI-010) — 우측 정렬 아이콘 버튼. 토스풍: 테두리 없는 면, 은은한 hover. */
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-3) 0;
+}
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background 160ms ease-out, color 160ms ease-out;
+}
+.icon-btn:hover { background: var(--track); color: var(--text-1); }
+.icon-btn:active { background: var(--accent-light); color: var(--accent); }
+
 .grid {
   display: grid;
   grid-template-columns: 2fr 1fr;

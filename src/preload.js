@@ -16,4 +16,6 @@ contextBridge.exposeInMainWorld('usage', {
   },
   locale: uiLocale,
   t: (key, vars) => t(key, vars),
+  // UI-010: 새로고침(재계산) — 메인에 즉시 재집계 요청(결과는 onAggregate로 되돌아옴).
+  refresh: () => ipcRenderer.send('usage:refresh'),
 });
