@@ -51,3 +51,18 @@ test('OPS050_validate_planTokenLimit_양수or_null', () => {
   assert.equal(validateSettings({ planTokenLimit: -1 }).planTokenLimit, null);
   assert.equal(validateSettings({ planTokenLimit: 'x' }).planTokenLimit, null);
 });
+
+// UI-020: 테마 영속(light|dark). 기본 light(§5.2 라이트 기본), 잘못된 값은 light 폴백.
+test('UI020_theme_기본_light', () => {
+  assert.equal(validateSettings({}).theme, 'light');
+  assert.ok('theme' in DEFAULTS);
+});
+
+test('UI020_theme_dark_허용', () => {
+  assert.equal(validateSettings({ theme: 'dark' }).theme, 'dark');
+});
+
+test('UI020_theme_잘못된값_light폴백', () => {
+  assert.equal(validateSettings({ theme: 'neon' }).theme, 'light');
+  assert.equal(validateSettings({ theme: null }).theme, 'light');
+});

@@ -18,6 +18,28 @@ const TOKENS = {
   over: '#F04452',
 };
 
+// 다크 토큰 미러(UI-020) — 같은 토스 원칙(accent 블루 동일), 네온 금지. page/card/text만 어둡게.
+// tokens.css [data-theme="dark"] 블록과 동기화(드리프트 self-check가 잠금).
+const TOKENS_DARK = {
+  page: '#15181E',
+  card: '#1E222A',
+  'text-1': '#E8EBED',
+  'text-2': '#9AA4B0',
+  'text-3': '#6B7682',
+  accent: '#3182F6',
+  'accent-hover': '#4A93F7',
+  'accent-light': '#18253A',
+  track: '#2B313B',
+  ok: '#22C55E',
+  warn: '#FFC94D',
+  over: '#F04452',
+};
+
+// 테마명 → 토큰 셋. 기본 라이트.
+function tokensFor(theme) {
+  return theme === 'dark' ? TOKENS_DARK : TOKENS;
+}
+
 function hexToRgba(hex, alpha) {
   if (typeof hex !== 'string' || !/^#?[0-9A-Fa-f]{3,8}$/.test(hex)) return 'rgba(0, 0, 0, 0)';
   const h = hex.replace('#', '');
@@ -57,7 +79,7 @@ function makeEchartsTheme(tokens = TOKENS) {
   };
 }
 
-  const api = { makeEchartsTheme, hexToRgba, TOKENS };
+  const api = { makeEchartsTheme, hexToRgba, TOKENS, TOKENS_DARK, tokensFor };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.EChartsTheme = api;
 })(typeof window !== 'undefined' ? window : globalThis);

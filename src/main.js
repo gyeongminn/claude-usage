@@ -11,7 +11,7 @@ const { buildTrayMenuTemplate, trayIconBitmap } = require('./main/tray');
 const { setAutoLaunch } = require('./main/autoLaunch');
 const { scheduleMonthly, currentYM } = require('./main/scheduler');
 const { missingMonths } = require('./main/catchup');
-const { loadSettings } = require('./main/settings');
+const { loadSettings, saveSettings } = require('./main/settings');
 const { tFor, resolveLocale } = require('./i18n/i18n');
 
 // 시스템 타임존(§10/OPEN[05]: UTC 계산 + 시스템 TZ 표시)으로 daily 날짜 그룹화.
@@ -134,6 +134,8 @@ async function captureAndQuit(win, outPath) {
 function createWindow() {
   // UI 로케일(§10): UI_LOCALE env(검증용) > 설정 > 시스템 → resolveLocale(10종, 미지원 en). preload에 전달.
   const uiLocale = resolveLocale(process.env.UI_LOCALE || (settings && settings.locale) || app.getLocale());
+  // UI-020 초기 테마: UI_THEME env(검증용) > 설정값. dark만 dark.
+  const uiTheme = (process.env.UI_THEME || (settings && settings.theme)) === 'dark' ? 'dark' : 'light';
   const win = new BrowserWindow({
     width: 1100,
     height: 720,
@@ -149,7 +151,7 @@ function createWindow() {
       // preload가 i18n 카탈로그(node:fs)를 읽어 t/locale를 노출하려면 sandbox 해제 필요.
       // contextIsolation:true가 핵심 경계는 유지 — 렌더러엔 노출 API만 전달(OPEN[07]).
       sandbox: false,
-      additionalArguments: [`--ui-locale=${uiLocale}`],
+      additionalArguments: [`--ui-locale=${uiLocale}`, `--ui-theme=${uiTheme}`],
     },
   });
   // REPORT_CAPTURE면 보고서 템플릿 로드(PDF-010 시각 검증용). 평소엔 대시보드.
@@ -290,6 +292,10 @@ app.whenReady().then(() => {
     return;
   }
   settings = loadSettings(app.getPath('userData')); // 영속 설정 로드(OPS-050).
+  // UI-020: 테마 토글 영속 — 렌더러가 setTheme 하면 settings.json에 저장(다음 기동에도 유지).
+  ipcMain.on('theme:set', (_e, theme) => {
+    settings = saveSettings(app.getPath('userData'), { ...settings, theme });
+  });
   const win = createWindow();
   // 캡처/검증 모드가 아니면 트레이 상주 + 로그인 자동실행 등록.
   if (!process.env.CAPTURE_PATH) {

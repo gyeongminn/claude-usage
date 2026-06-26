@@ -41,3 +41,21 @@
   --space-3: 24px;
   --space-4: 32px;
 }
+
+/* 다크 테마(UI-020) — 같은 토스 원칙으로 재설계(네온 금지). 색값은 echartsTheme.js TOKENS_DARK와 동기화. */
+[data-theme='dark'] {
+  --page: #15181e;
+  --card: #1e222a;
+  --text-1: #e8ebed;
+  --text-2: #9aa4b0;
+  --text-3: #6b7682;
+  --accent: #3182f6;
+  --accent-hover: #4a93f7;
+  --accent-light: #18253a;
+  --track: #2b313b;
+  --ok: #22c55e;
+  --warn: #ffc94d;
+  --over: #f04452;
+  /* 다크에선 그림자가 거의 안 보이므로 더 깊게(은은한 입체). */
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.4);
+}

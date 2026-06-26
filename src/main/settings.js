@@ -11,6 +11,7 @@ const DEFAULTS = {
   autoLaunch: true,
   locale: null, // null → app.getLocale() 자동(§10). 'ko' 등 지정 시 강제.
   planTokenLimit: null, // 플랜 토큰 한도(OPEN[09]). null=미설정(시간 소진율만).
+  theme: 'light', // UI 테마(UI-020). 'light'|'dark'. 기본 라이트(§5.2).
 };
 const KEYS = Object.keys(DEFAULTS);
 
@@ -35,6 +36,7 @@ function validateSettings(partial) {
     autoLaunch: !!s.autoLaunch,
     locale: LOCALES.includes(s.locale) ? s.locale : null, // 미지원/ null → 시스템 자동.
     planTokenLimit: posNum(s.planTokenLimit), // 양수 아니면 null.
+    theme: s.theme === 'dark' ? 'dark' : 'light', // dark만 dark, 그 외 light 폴백.
   };
 }
 

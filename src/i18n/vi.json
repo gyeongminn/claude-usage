@@ -13,5 +13,6 @@
   "dash_used": "Đã dùng {pct}%",
   "dash_eta": "Kết thúc ~{cost}",
   "dash_remaining": "Còn {n} phút",
-  "dash_refresh": "Làm mới"
+  "dash_refresh": "Làm mới",
+  "dash_theme": "Giao diện"
 }

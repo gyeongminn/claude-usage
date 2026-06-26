@@ -13,5 +13,6 @@
   "dash_used": "소진 {pct}%",
   "dash_eta": "예상종료 {cost}",
   "dash_remaining": "남은 {n}분",
-  "dash_refresh": "새로고침"
+  "dash_refresh": "새로고침",
+  "dash_theme": "테마"
 }

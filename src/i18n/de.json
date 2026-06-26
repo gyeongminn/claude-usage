@@ -13,5 +13,6 @@
   "dash_used": "{pct}% genutzt",
   "dash_eta": "Ende ca. {cost}",
   "dash_remaining": "noch {n} Min",
-  "dash_refresh": "Aktualisieren"
+  "dash_refresh": "Aktualisieren",
+  "dash_theme": "Design"
 }

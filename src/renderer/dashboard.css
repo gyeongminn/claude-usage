@@ -32,6 +32,10 @@ body {
 }
 .icon-btn:hover { background: var(--track); color: var(--text-1); }
 .icon-btn:active { background: var(--accent-light); color: var(--accent); }
+/* 테마 토글 아이콘: 라이트에선 moon(→다크 전환), 다크에선 sun(→라이트 전환)만 보임. */
+.icon-sun { display: none; }
+[data-theme='dark'] .icon-moon { display: none; }
+[data-theme='dark'] .icon-sun { display: inline; }
 
 .grid {
   display: grid;

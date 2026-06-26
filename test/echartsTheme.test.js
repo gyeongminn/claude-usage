@@ -51,3 +51,35 @@ test('DSN030_TOKENS_tokens_css와_드리프트없음', () => {
     assert.equal(m[1].toUpperCase(), val.toUpperCase(), `--${key} 값 불일치`);
   }
 });
+
+// UI-020: 다크 토큰 미러 — 같은 토스 원칙(accent 동일), page/text만 어둡게.
+test('UI020_TOKENS_DARK_다크값_accent유지', () => {
+  const { TOKENS_DARK, tokensFor } = require('../src/renderer/echartsTheme');
+  assert.notEqual(TOKENS_DARK.page, TOKENS.page); // 다크 page는 라이트와 다름
+  assert.notEqual(TOKENS_DARK['text-1'], TOKENS['text-1']);
+  assert.equal(TOKENS_DARK.accent, TOKENS.accent); // accent(블루)는 동일 — 토스 원칙
+  assert.equal(tokensFor('dark'), TOKENS_DARK);
+  assert.equal(tokensFor('light'), TOKENS);
+  assert.equal(tokensFor(undefined), TOKENS); // 기본 라이트
+});
+
+test('UI020_makeEchartsTheme_다크_텍스트색', () => {
+  const { TOKENS_DARK } = require('../src/renderer/echartsTheme');
+  const theme = makeEchartsTheme(TOKENS_DARK);
+  assert.equal(theme.textStyle.color, TOKENS_DARK['text-1']);
+  assert.equal(theme.color[0], TOKENS_DARK.accent); // accent 팔레트 유지
+});
+
+test('UI020_TOKENS_DARK_tokens_css_드리프트없음', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const { TOKENS_DARK } = require('../src/renderer/echartsTheme');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'tokens.css'), 'utf8');
+  const block = css.match(/\[data-theme=['"]dark['"]\]\s*\{([^}]*)\}/);
+  assert.ok(block, 'tokens.css에 [data-theme="dark"] 블록 있어야 함');
+  for (const [key, val] of Object.entries(TOKENS_DARK)) {
+    const m = block[1].match(new RegExp(`--${key}:\\s*(#[0-9A-Fa-f]{3,8})`));
+    assert.ok(m, `다크 블록에 --${key} 있어야 함`);
+    assert.equal(m[1].toUpperCase(), val.toUpperCase(), `다크 --${key} 불일치`);
+  }
+});
