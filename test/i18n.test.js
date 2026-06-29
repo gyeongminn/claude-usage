@@ -4,8 +4,6 @@ const {
   LOCALES,
   resolveLocale,
   makeT,
-  formatCurrency,
-  formatNumber,
 } = require('../src/i18n/i18n');
 
 test('FND070_LOCALES_확정10종', () => {
@@ -69,14 +67,4 @@ test('FND070_loadCatalog_화이트리스트_traversal차단', () => {
   assert.deepEqual(loadCatalog('../../package'), {}); // 경로 탈출 시도 → 빈 객체
   assert.deepEqual(loadCatalog('xx'), {}); // 미지원 로케일 → 빈 객체
   assert.ok(loadCatalog('en').app_title); // 정상 로케일은 로드
-});
-
-test('FND070_formatCurrency_로케일별', () => {
-  // USD 표시, 로케일에 따라 자리 구분만 다름(값·통화기호 동일).
-  assert.equal(formatCurrency(1234.5, 'en'), '$1,234.50');
-  assert.ok(formatCurrency(1234.5, 'ko').includes('1,234.50'));
-});
-
-test('FND070_formatNumber_천단위', () => {
-  assert.equal(formatNumber(1234567, 'en'), '1,234,567');
 });

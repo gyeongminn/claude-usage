@@ -40,13 +40,8 @@ function tFor(systemLocale) {
   return makeT(locale, loadCatalog('en'), loadCatalog(locale));
 }
 
-// 숫자/통화는 Intl 로케일 포맷(§10). 통화 기본 USD(KRW 병기는 호출부에서 §5.1).
-function formatCurrency(value, locale = 'en', currency = 'USD') {
-  return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value);
-}
-function formatNumber(value, locale = 'en') {
-  return new Intl.NumberFormat(locale).format(value);
-}
+// §10 숫자·통화·날짜 로케일 포맷은 렌더러 format.js(fmtUsd/fmtKrw/fmtInt·setLocale)가 담당(AUDIT-030).
+// 과거 여기 있던 formatCurrency/formatNumber는 생산 미참조 死코드라 제거(BL-06 선례).
 
 module.exports = {
   LOCALES,
@@ -54,6 +49,4 @@ module.exports = {
   makeT,
   tFor,
   loadCatalog,
-  formatCurrency,
-  formatNumber,
 };
