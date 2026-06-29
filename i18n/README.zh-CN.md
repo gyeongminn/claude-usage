@@ -7,7 +7,25 @@
 
 基于 Electron + ECharts 构建。跨机器、自包含——目标机器无需预装 Node、ccusage 或字体。
 
-_截图即将上线。_
+<p align="center">
+  <img src="../assets/dashboard.png" alt="Claude Usage — live dashboard" width="380">
+</p>
+
+<details>
+<summary>更多截图 — 深色主题、详情、响应式布局</summary>
+
+<table>
+  <tr>
+    <td width="50%"><img src="../assets/dashboard-dark.png" alt="Dark theme"></td>
+    <td width="50%"><img src="../assets/detail.png" alt="Details — model usage share and token composition"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="../assets/detail-dark.png" alt="Details (dark theme)"></td>
+    <td width="50%"><img src="../assets/responsive.png" alt="Responsive layout at a narrow width"></td>
+  </tr>
+</table>
+
+</details>
 
 ## 功能
 

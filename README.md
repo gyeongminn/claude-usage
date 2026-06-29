@@ -7,8 +7,25 @@ A native, tray-resident desktop app that **visualizes your [ccusage](https://git
 
 Built with Electron + ECharts. Cross-machine and self-contained — no Node, ccusage, or fonts to pre-install on the target machine.
 
-<!-- Screenshots: dashboard and PDF report previews to be added (docs/assets/). -->
-_Screenshots coming soon._
+<p align="center">
+  <img src="assets/dashboard.png" alt="Claude Usage — live dashboard" width="380">
+</p>
+
+<details>
+<summary>More screenshots — dark theme, details, responsive layout</summary>
+
+<table>
+  <tr>
+    <td width="50%"><img src="assets/dashboard-dark.png" alt="Dark theme"></td>
+    <td width="50%"><img src="assets/detail.png" alt="Details — model usage share and token composition"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="assets/detail-dark.png" alt="Details (dark theme)"></td>
+    <td width="50%"><img src="assets/responsive.png" alt="Responsive layout at a narrow width"></td>
+  </tr>
+</table>
+
+</details>
 
 ## Features
 

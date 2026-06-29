@@ -7,7 +7,25 @@
 
 Electron + ECharts로 제작. 크로스 머신 · 자립형 — 대상 머신에 Node, ccusage, 폰트를 미리 설치할 필요가 없습니다.
 
-_스크린샷 준비 중._
+<p align="center">
+  <img src="../assets/dashboard.png" alt="Claude Usage — live dashboard" width="380">
+</p>
+
+<details>
+<summary>스크린샷 더 보기 — 다크 테마, 상세, 반응형 레이아웃</summary>
+
+<table>
+  <tr>
+    <td width="50%"><img src="../assets/dashboard-dark.png" alt="Dark theme"></td>
+    <td width="50%"><img src="../assets/detail.png" alt="Details — model usage share and token composition"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="../assets/detail-dark.png" alt="Details (dark theme)"></td>
+    <td width="50%"><img src="../assets/responsive.png" alt="Responsive layout at a narrow width"></td>
+  </tr>
+</table>
+
+</details>
 
 ## 기능
 

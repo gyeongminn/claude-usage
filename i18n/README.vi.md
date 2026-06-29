@@ -7,7 +7,25 @@
 
 Xây dựng bằng Electron + ECharts. Đa máy và tự chứa — không cần cài sẵn Node, ccusage hay phông chữ trên máy đích.
 
-_Ảnh chụp màn hình sắp ra mắt._
+<p align="center">
+  <img src="../assets/dashboard.png" alt="Claude Usage — live dashboard" width="380">
+</p>
+
+<details>
+<summary>Thêm ảnh chụp màn hình — giao diện tối, chi tiết, bố cục responsive</summary>
+
+<table>
+  <tr>
+    <td width="50%"><img src="../assets/dashboard-dark.png" alt="Dark theme"></td>
+    <td width="50%"><img src="../assets/detail.png" alt="Details — model usage share and token composition"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="../assets/detail-dark.png" alt="Details (dark theme)"></td>
+    <td width="50%"><img src="../assets/responsive.png" alt="Responsive layout at a narrow width"></td>
+  </tr>
+</table>
+
+</details>
 
 ## Tính năng
 
