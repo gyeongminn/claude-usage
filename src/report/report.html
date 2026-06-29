@@ -160,6 +160,10 @@
         });
       }
 
+      // comp(tokenComposition) → 캐시 적중률%. p1 총평·p3 캐시효율 공용(키 매핑 중복 제거·거동 불변).
+      const cacheRateOf = (comp) =>
+        window.Verdict.cacheHitRate({ inputTokens: comp.input, cacheCreationTokens: comp.cacheCreate, cacheReadTokens: comp.cacheRead });
+
       function fillP1(d) {
         const s = window.ReportData.monthSummary(d.daily);
         const comp = window.ReportData.tokenComposition(d.daily);
@@ -171,9 +175,7 @@
         const mom = window.ReportData.momChangePct(s.totalCost, d.prevMonthCost);
         document.getElementById('k4').textContent = mom == null ? '—' : (mom > 0 ? '+' : '') + mom + '%';
         document.querySelectorAll('.r-generated').forEach((e) => (e.textContent = L.generated.replace('{t}', d.generated)));
-        const rate = window.Verdict.cacheHitRate({
-          inputTokens: comp.input, cacheCreationTokens: comp.cacheCreate, cacheReadTokens: comp.cacheRead,
-        });
+        const rate = cacheRateOf(comp);
         document.getElementById('p1-summary').textContent =
           window.Verdict.buildVerdict({ momPct: mom, cacheHitRate: rate }, d.locale);
       }
@@ -195,9 +197,7 @@
         const comp = window.ReportData.tokenComposition(d.daily);
         const rows = [[L.input, comp.input], [L.output, comp.output], [L.cacheCreate, comp.cacheCreate], [L.cacheRead, comp.cacheRead]];
         setRows('p3-tokens', rows, ([k, v]) => [k, F.fmtTokens(v)]);
-        const rate = window.Verdict.cacheHitRate({
-          inputTokens: comp.input, cacheCreationTokens: comp.cacheCreate, cacheReadTokens: comp.cacheRead,
-        });
+        const rate = cacheRateOf(comp);
         document.getElementById('p3-cache').textContent = rate + '%';
       }
 
