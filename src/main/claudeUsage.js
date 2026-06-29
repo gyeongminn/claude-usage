@@ -68,6 +68,13 @@ async function fetchUsage(opts = {}) {
   }
 }
 
+// util%에서 100%까지 남은 분 — ratePerMin(분당 증가율)로 외삽. 유한·비음수만, 아니면 null.
+// AUTO-010: etaMinutes(2샘플 증가율)·etaFromWindow(단일샘플 평균burn) 공통 외삽 꼬리 단일화.
+const minsToFull = (util, ratePerMin) => {
+  const mins = (100 - util) / ratePerMin;
+  return Number.isFinite(mins) && mins >= 0 ? Math.round(mins) : null;
+};
+
 // 예상 소진(분): 두 시점 utilization 변화율로 100% 도달까지 남은 분. 증가 중일 때만, 그 외 null.
 // 5분 폴링 사이의 실제 증가 추세를 외삽 — 정체·감소·입력부족이면 예측 안 함(과장 방지).
 function etaMinutes(prevUtil, prevMs, curUtil, nowMs) {
@@ -76,9 +83,7 @@ function etaMinutes(prevUtil, prevMs, curUtil, nowMs) {
   const dt = nowMs - prevMs;
   const du = curUtil - prevUtil;
   if (dt <= 0 || du <= 0) return null; // 증가할 때만 예측
-  const ratePerMin = du / (dt / 60000);
-  const mins = (100 - curUtil) / ratePerMin;
-  return Number.isFinite(mins) && mins >= 0 ? Math.round(mins) : null;
+  return minsToFull(curUtil, du / (dt / 60000));
 }
 
 // 예상 소진(분) — 단일 샘플판(BL-01 첫 폴링용). 직전 샘플이 없어 증가율을 못 구하는 첫 조회에서,
@@ -91,9 +96,7 @@ function etaFromWindow(util, resetsAt, windowMinutes, nowMs) {
   if (!Number.isFinite(resetMs)) return null;
   const elapsedMin = (nowMs - (resetMs - windowMinutes * 60000)) / 60000;
   if (elapsedMin <= 0 || util <= 0) return null; // 시작 전·아직 미사용 → 추세 없음
-  const ratePerMin = util / elapsedMin;
-  const mins = (100 - util) / ratePerMin;
-  return Number.isFinite(mins) && mins >= 0 ? Math.round(mins) : null;
+  return minsToFull(util, util / elapsedMin);
 }
 
 // OAuth 자격 상태 분류(BL-03). refresh 토큰 흐름이 없어 만료/없음이면 fetchUsage가 영구 null →
