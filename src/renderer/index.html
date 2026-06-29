@@ -654,20 +654,24 @@
         const projects = detail && detail.querySelector('[aria-label="projects"]');
         const spanOf = {};
         for (const tdef of window.Tiles.TILES) spanOf[tdef.id] = tdef.span;
+        // AUTO-010: 타일 노드 조회 + span 클래스 리셋(양 루프 공유·재배치 전 정리). 없으면 null.
+        const findTile = (id) => {
+          const n = document.querySelector('[data-tile="' + id + '"]');
+          if (n) n.classList.remove('tile-full', 'tile-wide', 'tile-narrow');
+          return n;
+        };
         // 선택 타일 → 메인(순서대로) + span 클래스. 전체를 순서대로 append하므로 최종 순서 = order.
         for (const id of order) {
-          const node = document.querySelector('[data-tile="' + id + '"]');
+          const node = findTile(id);
           if (!node) continue;
-          node.classList.remove('tile-full', 'tile-wide', 'tile-narrow');
           node.classList.add('tile-' + (spanOf[id] || 'narrow'));
           main.appendChild(node);
         }
         // 미선택 카탈로그 타일 → 상세 라이브러리(카탈로그 순서, projects 카드 앞) + span 클래스 제거.
         for (const tdef of window.Tiles.TILES) {
           if (order.includes(tdef.id)) continue;
-          const node = document.querySelector('[data-tile="' + tdef.id + '"]');
+          const node = findTile(tdef.id);
           if (!node) continue;
-          node.classList.remove('tile-full', 'tile-wide', 'tile-narrow');
           if (projects) detail.insertBefore(node, projects);
           else if (detail) detail.appendChild(node);
         }
