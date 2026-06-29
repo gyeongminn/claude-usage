@@ -47,3 +47,11 @@ test('PDF060_reportLabels_키집합_동일', () => {
   const b = Object.keys(reportLabels('ko')).sort();
   assert.deepEqual(a, b);
 });
+
+test('RPT010_projectsEmpty_빈상태_라벨_en_ko', () => {
+  // 보고서 p4(프로젝트·세션)가 빈 데이터(OPEN[08])일 때 노출할 빈상태 메시지(§2/AUDIT-010 선례). EN/KO 둘 다 존재·비공백.
+  const en = reportLabels('en').projectsEmpty;
+  const ko = reportLabels('ko').projectsEmpty;
+  assert.ok(typeof en === 'string' && en.trim().length > 0, 'en projectsEmpty 존재');
+  assert.ok(typeof ko === 'string' && ko.trim().length > 0, 'ko projectsEmpty 존재');
+});

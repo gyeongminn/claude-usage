@@ -71,10 +71,14 @@
     <!-- p4 프로젝트 -->
     <section class="page" id="p4">
       <h2 class="section-title" data-i18n="projectsSessions">Projects &amp; Sessions</h2>
-      <div class="sub-title" data-i18n="topProjects">Top projects</div>
-      <div id="p4-projects" class="report-chart"></div>
-      <div class="sub-title" id="p4-sessions-head"></div>
-      <table class="r-table"><thead><tr><th data-i18n="project">Project</th><th data-i18n="cost">Cost</th><th data-i18n="tokens">Tokens</th></tr></thead><tbody id="p4-sessions"></tbody></table>
+      <!-- RPT-010: projects+sessions 모두 빈 데이터(OPEN[08])면 #p4-content 숨기고 #p4-empty 노출(§2/AUDIT-010 선례, 빈 차트 방지). -->
+      <div id="p4-content">
+        <div class="sub-title" data-i18n="topProjects">Top projects</div>
+        <div id="p4-projects" class="report-chart"></div>
+        <div class="sub-title" id="p4-sessions-head"></div>
+        <table class="r-table"><thead><tr><th data-i18n="project">Project</th><th data-i18n="cost">Cost</th><th data-i18n="tokens">Tokens</th></tr></thead><tbody id="p4-sessions"></tbody></table>
+      </div>
+      <div id="p4-empty" class="report-empty" data-i18n="projectsEmpty" hidden>Per-project and session data isn't available yet.</div>
       <footer class="page-footer">
         <span class="r-generated"></span>
         <span data-i18n="pricingSource">Pricing source: ccusage</span>
@@ -197,6 +201,11 @@
 
       // p4 프로젝트 Top N 바 / 세션 통계 Top 3
       function fillP4(d) {
+        // RPT-010: projects·sessions 둘 다 비면(프로덕션 OPEN[08]) 빈 차트/표 대신 빈상태 메시지(§2/AUDIT-010 선례).
+        const empty = !(d.projects && d.projects.length) && !(d.sessions && d.sessions.length);
+        document.getElementById('p4-content').hidden = empty;
+        document.getElementById('p4-empty').hidden = !empty;
+        if (empty) return; // 차트/표 렌더 생략 — 빈 차트(축만)·"0 total" 방지.
         chartOf(document.getElementById('p4-projects')).setOption(
           window.ProjectBars.buildProjectBarOption(window.ProjectBars.topNWithOther(d.projects, 5, L.other), theme)
         );

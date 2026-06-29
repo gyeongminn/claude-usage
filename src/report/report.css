@@ -74,6 +74,8 @@ body {
 .report-title { font-size: 22pt; font-weight: 700; }
 .report-sub { font-size: 11pt; color: var(--text-2); margin-top: 2mm; }
 .section-title { font-size: 13pt; font-weight: 700; margin: 0 0 4mm; }
+/* RPT-010: p4 빈상태(projects·sessions 데이터원 부재, OPEN[08]) — 빈 차트 대신 절제된 안내(§2/AUDIT-010 톤). */
+.report-empty { color: var(--text-3); font-size: 10pt; text-align: center; padding: 20mm 0; }
 
 /* p1 KPI 4 (비용·토큰 동급, §5.1) */
 .kpi-grid {

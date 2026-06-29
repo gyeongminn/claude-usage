@@ -227,6 +227,13 @@ async function captureAndQuit(win, outPath) {
     );
     await new Promise((r) => setTimeout(r, 300));
   }
+  // RPT-010 빈상태 검증: REPORT_EMPTY면 projects·sessions를 프로덕션처럼 빈 배열로 재렌더(OPEN[08] 데이터원 부재 재현).
+  if (process.env.REPORT_EMPTY) {
+    await win.webContents.executeJavaScript(
+      `window.renderReport(Object.assign({}, window.__SAMPLE__, { projects: [], sessions: [] })); true;`
+    );
+    await new Promise((r) => setTimeout(r, 300));
+  }
   // 보고서처럼 긴 문서는 CAPTURE_SCROLL(px)로 해당 위치까지 스크롤 후 캡처(페이지별 검증).
   if (process.env.CAPTURE_SCROLL) {
     await win.webContents.executeJavaScript(`window.scrollTo(0, ${Number(process.env.CAPTURE_SCROLL)})`);

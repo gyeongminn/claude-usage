@@ -28,6 +28,7 @@
     other: 'Other',
     generated: 'Generated {t}',
     sessions: 'Sessions — {n} total, top 3 by cost',
+    projectsEmpty: "Per-project and session data isn't available yet.",
   };
   const ko = {
     totalCost: '총 비용',
@@ -56,6 +57,7 @@
     other: '기타',
     generated: '{t} 생성',
     sessions: '세션 — 총 {n}개, 비용 상위 3',
+    projectsEmpty: '프로젝트·세션별 데이터는 아직 지원되지 않습니다.',
   };
 
   function reportLabels(locale) {
