@@ -20,6 +20,8 @@
   "dash_zoom_out": "Riduci",
   "dash_per_hour": "/h",
   "dash_tok_per_hour": "tok/h",
+  "update_available": "Nuova versione {version}",
+  "update_get": "Scarica",
   "set_title": "Impostazioni",
   "set_language": "Lingua",
   "set_system": "Predefinito di sistema",

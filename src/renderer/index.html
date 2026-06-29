@@ -7,6 +7,12 @@
     <link rel="stylesheet" href="dashboard.css" />
   </head>
   <body>
+    <!-- 업데이트 알림 배너(FEAT-010): main이 새 버전 감지 시 표시. "받기"→릴리즈 페이지(외부 브라우저). 평소 숨김. -->
+    <div id="update-banner" class="update-banner" hidden>
+      <span id="update-text"></span>
+      <button id="update-get" class="btn-update" type="button" data-i18n="update_get">받기</button>
+    </div>
+
     <!-- 상단 툴바(UI-010): 우측 아이콘 버튼(Lucide 라인, 이모지 금지 §5.1). 테마·크기·설정은 후속 step에서 합류. -->
     <header class="toolbar">
       <button id="btn-zoom-out" class="icon-btn" type="button" data-i18n-title="dash_zoom_out" aria-label="Zoom out">
@@ -321,6 +327,7 @@
             fillLocaleOptions();
             if (window.Fmt) window.Fmt.setLocale(uiLocale);
             document.documentElement.lang = uiLocale;
+            renderUpdateBanner(); // 업데이트 배너 텍스트도 새 로케일로 재번역(표시 중일 때만).
             if (lastAgg) renderAgg(lastAgg); // 마지막 집계로 동적 문자열(소진%·ETA) 즉시 새 t 재렌더.
             if (window.usage.refresh) window.usage.refresh(); // 최신 데이터로도 갱신.
           }
@@ -348,6 +355,13 @@
       // 실데이터 수신 → 게이지·추세·도넛·KPI 갱신(프로젝트는 데이터원 없어 빈상태, OPEN[08]).
       // lastAgg 캐시(UI-040): 로케일 전환 시 동적 문자열(소진%·ETA 등)을 즉시 새 t로 재렌더. 멱등해야 함.
       let lastAgg = null;
+      // FEAT-010: 배너 텍스트(동적 버전)는 t() 보간이라 로케일 전환 시 재렌더 필요(게이지/ETA와 동일 패턴).
+      let updateVersion = null;
+      function renderUpdateBanner() {
+        if (!updateVersion) return;
+        document.getElementById('update-text').textContent = t('update_available', { version: updateVersion });
+        document.getElementById('update-banner').hidden = false;
+      }
       function renderAgg(agg) {
         if (!agg || !agg.burn) return;
         lastAgg = agg;
@@ -376,6 +390,17 @@
         }
       }
       window.usage.onAggregate(renderAgg);
+
+      // FEAT-010: 업데이트 알림 — main이 새 버전 감지 시 'update:available' push → 배너 표시.
+      // "받기"는 main이 보관한 릴리즈 URL을 외부 브라우저로 연다(렌더러는 URL을 모름 = sink 주입 차단).
+      if (window.usage && window.usage.onUpdateAvailable) {
+        window.usage.onUpdateAvailable((info) => {
+          updateVersion = info && info.version ? (/^v/i.test(info.version) ? info.version : 'v' + info.version) : '';
+          renderUpdateBanner(); // 로케일 전환 시에도 동일 함수로 재렌더(applyLive에서 호출).
+        });
+        const getBtn = document.getElementById('update-get');
+        if (getBtn) getBtn.onclick = () => window.usage.openRelease();
+      }
     </script>
   </body>
 </html>

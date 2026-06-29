@@ -37,6 +37,33 @@ body {
 [data-theme='dark'] .icon-moon { display: none; }
 [data-theme='dark'] .icon-sun { display: inline; }
 
+/* 업데이트 알림 배너(FEAT-010) — 은은한 블루 면(accent-light), "받기"는 accent pill. 평소 숨김. */
+.update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  max-width: 1100px;
+  margin: var(--space-2) auto 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--accent-light);
+  color: var(--accent);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.btn-update {
+  border: 0;
+  border-radius: 999px; /* pill(§5.1 칩 허용) */
+  background: var(--accent);
+  color: #fff;
+  padding: 6px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 160ms ease-out;
+}
+.btn-update:hover { background: var(--accent-hover); }
+
 .grid {
   display: grid;
   grid-template-columns: 2fr 1fr;

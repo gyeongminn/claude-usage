@@ -9,6 +9,8 @@ const DASH_KEYS = [
   'dash_projects_empty',
   // AUDIT-040: 히어로 burn 단위(하드코딩 제거, §10 t() 경유).
   'dash_per_hour', 'dash_tok_per_hour',
+  // FEAT-010: 업데이트 알림 배너(새 버전 {version} · 받기).
+  'update_available', 'update_get',
 ];
 
 test('INT020_대시보드키_10로케일_모두존재', () => {
@@ -38,6 +40,13 @@ test('AUDIT010_프로젝트_빈상태_키_en_ko_비어있지않음', () => {
     assert.equal(typeof v, 'string');
     assert.ok(v.length > 0 && v !== 'dash_projects_empty', `${lc} 빈상태 문구 누락`);
   }
+});
+
+test('FEAT010_update_배너_보간_en_ko', () => {
+  assert.equal(tFor('en')('update_available', { version: 'v0.2.0' }), 'New version v0.2.0');
+  assert.equal(tFor('ko')('update_available', { version: 'v0.2.0' }), '새 버전 v0.2.0');
+  assert.equal(tFor('en')('update_get'), 'Get');
+  assert.equal(tFor('ko')('update_get'), '받기');
 });
 
 test('INT020_ko_보간_소진율', () => {

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { runCcusage } = require('./main/ccusage');
@@ -12,7 +12,13 @@ const { setAutoLaunch } = require('./main/autoLaunch');
 const { scheduleMonthly, currentYM } = require('./main/scheduler');
 const { missingMonths } = require('./main/catchup');
 const { loadSettings, saveSettings, clampScale } = require('./main/settings');
+const { checkForUpdate, isSafeReleaseUrl } = require('./main/updateCheck');
 const { tFor, resolveLocale } = require('./i18n/i18n');
+
+// 업데이트 알림(FEAT-010): GitHub Releases와 app 버전 비교. 기동 시 + 6h 주기.
+const UPDATE_REPO = 'gyeongminn/claude-usage'; // ponytail: 단일 고정값 — config로 뺄 이유 없음.
+const UPDATE_INTERVAL_MS = 6 * 60 * 60 * 1000;
+let pendingUpdate = null; // 최신 릴리즈 {version,url}. openExternal은 이 값만 사용(렌더러 URL 미수용 = sink 주입 차단).
 
 // 시스템 타임존(§10/OPEN[05]: UTC 계산 + 시스템 TZ 표시)으로 daily 날짜 그룹화.
 const SYSTEM_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -111,6 +117,17 @@ async function pushAggregate(win) {
   }
 }
 
+// 업데이트 확인(FEAT-010): 토글 켜짐일 때만 GitHub Releases 비교 → 새 버전이면 렌더러에 배너 push.
+// 실패·오프라인은 checkForUpdate가 null 반환(조용히 무시). URL은 main이 보관(pendingUpdate)해 openExternal 시 사용.
+async function runUpdateCheck(win) {
+  if (!settings || !settings.checkUpdates) return; // 토글 끄면 체크 0(§ FEAT-010).
+  const latest = await checkForUpdate({ currentVersion: app.getVersion(), repo: UPDATE_REPO });
+  if (latest && isSafeReleaseUrl(latest.url) && win && !win.isDestroyed()) {
+    pendingUpdate = latest;
+    win.webContents.send('update:available', { version: latest.version });
+  }
+}
+
 // ponytail: 검증용 스크린샷은 네이티브 capturePage 로 충분 — 외부 도구/의존성 불필요.
 // CAPTURE_PATH 가 있으면 렌더 후 그 경로에 PNG 저장하고 종료(검증 루프 전용 모드).
 async function captureAndQuit(win, outPath) {
@@ -142,6 +159,13 @@ async function captureAndQuit(win, outPath) {
       );
       await new Promise((r) => setTimeout(r, 800));
     }
+  }
+  // FEAT-010 배너 검증: UPDATE_BANNER면 가짜 새 버전으로 배너를 띄워 시각 확인(실 네트워크 불필요).
+  if (process.env.UPDATE_BANNER) {
+    await win.webContents.executeJavaScript(
+      `(function(){var b=document.getElementById('update-banner');if(!b)return false;var t=(window.usage&&window.usage.t)||function(k,v){return 'New version '+(v&&v.version);};document.getElementById('update-text').textContent=t('update_available',{version:'v9.9.9'});b.hidden=false;return true;})();`
+    );
+    await new Promise((r) => setTimeout(r, 250));
   }
   const img = await win.webContents.capturePage();
   fs.writeFileSync(outPath, img.toPNG());
@@ -202,6 +226,9 @@ function createWindow() {
     // 파일 변경 감시(DAT-020) → 변경 시 재집계. 활성 블록 burn 신선도 위해 주기 갱신도 병행(§4.1: 5~10s).
     const watcher = startWatcher(() => pushAggregate(win));
     const timer = setInterval(() => pushAggregate(win), 8000);
+    // 업데이트 확인(FEAT-010): 기동 시 1회 + 6h 주기. 토글 꺼지면 runUpdateCheck가 즉시 반환(체크 0).
+    runUpdateCheck(win).catch(() => {});
+    const updTimer = setInterval(() => runUpdateCheck(win).catch(() => {}), UPDATE_INTERVAL_MS);
     // UI-010: 새로고침(재계산) 버튼 → 즉시 재집계. 결과는 usage:aggregate로 렌더러에 push.
     const onRefresh = () => pushAggregate(win);
     ipcMain.on('usage:refresh', onRefresh);
@@ -213,6 +240,7 @@ function createWindow() {
     ipcMain.on('scale:set', onScale);
     win.on('closed', () => {
       clearInterval(timer);
+      clearInterval(updTimer);
       watcher.close();
       ipcMain.removeListener('usage:refresh', onRefresh);
       ipcMain.removeListener('scale:set', onScale);
@@ -324,6 +352,10 @@ app.whenReady().then(() => {
   // UI-020: 테마 토글 영속 — 렌더러가 setTheme 하면 settings.json에 저장(다음 기동에도 유지).
   ipcMain.on('theme:set', (_e, theme) => {
     settings = saveSettings(app.getPath('userData'), { ...settings, theme });
+  });
+  // FEAT-010: "받기" 클릭 → main이 보관한 릴리즈 URL을 외부 브라우저로(렌더러가 URL을 넘기지 않음 = 임의 sink 차단).
+  ipcMain.on('update:open', () => {
+    if (pendingUpdate && isSafeReleaseUrl(pendingUpdate.url)) shell.openExternal(pendingUpdate.url);
   });
   // UI-040: 설정 화면 — 전체 설정 로드/저장(즉시 반영). saveSettings가 화이트리스트·검증·영속.
   ipcMain.handle('settings:load', () => settings);

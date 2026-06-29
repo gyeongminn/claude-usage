@@ -20,6 +20,8 @@
   "dash_zoom_out": "축소",
   "dash_per_hour": "/h",
   "dash_tok_per_hour": "tok/h",
+  "update_available": "새 버전 {version}",
+  "update_get": "받기",
   "set_title": "설정",
   "set_language": "언어",
   "set_system": "시스템 기본",

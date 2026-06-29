@@ -43,4 +43,12 @@ contextBridge.exposeInMainWorld('usage', {
     const tt = tFor(resolveLocale(loc));
     return (key, vars) => tt(key, vars);
   },
+  // FEAT-010: 업데이트 알림 — main이 새 버전 push(version만), "받기"는 main 보관 URL을 openExternal.
+  // ponytail: 렌더러는 URL을 넘기지 않는다 — openExternal sink에 임의 URL 주입 불가(보안 경계는 main).
+  onUpdateAvailable: (cb) => {
+    const handler = (_e, info) => cb(info);
+    ipcRenderer.on('update:available', handler);
+    return () => ipcRenderer.removeListener('update:available', handler);
+  },
+  openRelease: () => ipcRenderer.send('update:open'),
 });
