@@ -40,19 +40,20 @@ function makeDebouncer(fn, ms) {
   return debounced;
 }
 
-// JSONL 변경 감시 → 디바운스된 onChange 호출. close()로 정리.
+// 공통 FS 워처(AUTO-010): 디바운스 + add/change/unlink 구독 + error 핸들러 + close(cancel+close).
+// startWatcher·startCredentialsWatcher 공용 — 차이는 (감시대상·디바운스ms·오류라벨)뿐이라 단일화.
+// error 핸들러 필수(§11 크래시 금지): chokidar는 FS 오류(EACCES·EBUSY·EMFILE 등)를 'error'로 방출,
+// 리스너 없으면 EventEmitter가 throw → 트레이 상주 메인 프로세스(§3) 크래시. 로그만 남기고 계속 감시.
+// 토큰 갱신은 원자적 rename(unlink+add)일 수 있어 세 이벤트 모두 구독. ignoreInitial로 기동 중복 방지.
 // ponytail: chokidar에 감시 위임 — fs.watch 직접 구현 안 함(크로스플랫폼 안정성).
-function startWatcher(onChange, opts = {}) {
-  const dir = resolveWatchDir(opts.env);
-  const debounced = makeDebouncer(onChange, opts.debounceMs || 800);
-  const w = chokidar.watch(watchGlob(dir), {
-    ignoreInitial: true, // 기동 시 기존 파일은 catch-up이 처리, 워처는 변경만.
+function makeFsWatcher(target, onChange, debounceMs, errorLabel) {
+  const debounced = makeDebouncer(onChange, debounceMs);
+  const w = chokidar.watch(target, {
+    ignoreInitial: true, // 기동 시 기존 파일은 catch-up/pushLimits가 처리, 워처는 이후 변경만.
     awaitWriteFinish: { stabilityThreshold: 300, pollInterval: 100 },
   });
-  // error 핸들러 필수(§11 크래시 금지): chokidar는 FS 오류(EACCES·EBUSY·EMFILE 등)를 'error'로 방출,
-  // 리스너 없으면 EventEmitter가 throw → 트레이 상주 메인 프로세스(§3) 크래시. 로그만 남기고 계속 감시.
   w.on('add', debounced).on('change', debounced).on('unlink', debounced)
-    .on('error', (e) => console.error('워처 오류:', (e && e.message) || e));
+    .on('error', (e) => console.error(errorLabel, (e && e.message) || e));
   return {
     close: () => {
       debounced.cancel();
@@ -61,24 +62,14 @@ function startWatcher(onChange, opts = {}) {
   };
 }
 
-// 자격파일(.credentials.json) 단일 감시 → 변경 시 디바운스된 onChange(계정 전환/토큰 갱신 즉시 한도 재조회, BL-04).
-// 토큰 갱신은 원자적 rename(unlink+add)일 수 있어 세 이벤트 모두 구독. ignoreInitial로 기동 중복 방지.
+// JSONL 변경 감시 → 디바운스된 onChange 호출. close()로 정리(§3, DAT-020).
+function startWatcher(onChange, opts = {}) {
+  return makeFsWatcher(watchGlob(resolveWatchDir(opts.env)), onChange, opts.debounceMs || 800, '워처 오류:');
+}
+
+// 자격파일(.credentials.json) 단일 감시 → 변경 시 onChange(계정 전환/토큰 갱신 즉시 한도 재조회, BL-04).
 function startCredentialsWatcher(onChange, opts = {}) {
-  const file = resolveCredentialsFile(opts.env);
-  const debounced = makeDebouncer(onChange, opts.debounceMs || 1000);
-  const w = chokidar.watch(file, {
-    ignoreInitial: true, // 기동 시 pushLimits가 이미 1회 조회 — 워처는 이후 변경만.
-    awaitWriteFinish: { stabilityThreshold: 300, pollInterval: 100 },
-  });
-  // error 핸들러 필수(§11): startWatcher와 동일 — 자격파일 워처 'error' 미처리 시 메인 프로세스 크래시 방지.
-  w.on('add', debounced).on('change', debounced).on('unlink', debounced)
-    .on('error', (e) => console.error('자격파일 워처 오류:', (e && e.message) || e));
-  return {
-    close: () => {
-      debounced.cancel();
-      return w.close();
-    },
-  };
+  return makeFsWatcher(resolveCredentialsFile(opts.env), onChange, opts.debounceMs || 1000, '자격파일 워처 오류:');
 }
 
 module.exports = { resolveWatchDir, resolveCredentialsFile, watchGlob, makeDebouncer, startWatcher, startCredentialsWatcher };
