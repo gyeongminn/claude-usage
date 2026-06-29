@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { runCcusage } = require('./main/ccusage');
 const { buildAggregate, buildBurn } = require('./main/aggregate');
-const { startWatcher } = require('./main/watcher');
+const { startWatcher, startCredentialsWatcher } = require('./main/watcher');
 const { fetchKrwPerUsd } = require('./main/fxRate');
 const { renderReportToPdf, reportPath } = require('./main/reportPdf');
 const { buildReportInput } = require('./main/reportAssembler');
@@ -288,6 +288,12 @@ function createWindow() {
     // 실제 사용 한도(5h·주간): 기동 시 1회 + 5분 주기(엔드포인트 공격적 429라 저빈도). 실패는 캐시 유지.
     pushLimits(win).catch(() => {});
     const limitsTimer = setInterval(() => pushLimits(win).catch(() => {}), 5 * 60 * 1000);
+    // BL-04: 계정 전환/토큰 갱신(.credentials.json 변경) 즉시 한도 재조회 — 5분 폴링을 기다리지 않음(현재 계정 기준).
+    // 계정이 바뀌면 이전 계정의 eta 샘플(usagePrev)은 무의미 → 비워 첫폴링 추정(etaFromWindow)으로 재시작.
+    const credWatcher = startCredentialsWatcher(() => {
+      for (const k of Object.keys(usagePrev)) delete usagePrev[k];
+      pushLimits(win).catch(() => {});
+    });
     // UI-010: 새로고침(재계산) 버튼 → 즉시 재집계. 결과는 usage:aggregate로 렌더러에 push.
     const onRefresh = () => pushAggregate(win);
     ipcMain.on('usage:refresh', onRefresh);
@@ -302,6 +308,7 @@ function createWindow() {
       clearInterval(updTimer);
       clearInterval(limitsTimer);
       watcher.close();
+      credWatcher.close();
       ipcMain.removeListener('usage:refresh', onRefresh);
       ipcMain.removeListener('scale:set', onScale);
     });

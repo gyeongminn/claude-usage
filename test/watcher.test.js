@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { resolveWatchDir, watchGlob, makeDebouncer } = require('../src/main/watcher');
+const { resolveWatchDir, watchGlob, makeDebouncer, resolveCredentialsFile } = require('../src/main/watcher');
 const path = require('node:path');
 const os = require('node:os');
 
@@ -12,6 +12,17 @@ test('DAT020_resolveWatchDir_기본_홈projects', () => {
 test('DAT020_resolveWatchDir_CLAUDE_CONFIG_DIR_존중', () => {
   const dir = resolveWatchDir({ CLAUDE_CONFIG_DIR: '/custom/cfg' });
   assert.equal(dir, path.join('/custom/cfg', 'projects'));
+});
+
+test('BL04_resolveCredentialsFile_기본_홈', () => {
+  // 계정 변경 즉시 반영(BL-04): ~/.claude/.credentials.json 감시 경로.
+  const f = resolveCredentialsFile({});
+  assert.equal(f, path.join(os.homedir(), '.claude', '.credentials.json'));
+});
+
+test('BL04_resolveCredentialsFile_CLAUDE_CONFIG_DIR_존중', () => {
+  const f = resolveCredentialsFile({ CLAUDE_CONFIG_DIR: '/custom/cfg' });
+  assert.equal(f, path.join('/custom/cfg', '.credentials.json'));
 });
 
 test('DAT020_watchGlob_jsonl만', () => {
