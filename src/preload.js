@@ -28,6 +28,12 @@ contextBridge.exposeInMainWorld('usage', {
     ipcRenderer.on('usage:burn', handler);
     return () => ipcRenderer.removeListener('usage:burn', handler);
   },
+  // 실제 사용 한도(5h·주간) push — Claude 설정창과 동일 소스. {fiveHour,sevenDay:{utilization,resetsAt,etaMinutes}}.
+  onLimits: (cb) => {
+    const handler = (_e, limits) => cb(limits);
+    ipcRenderer.on('usage:limits', handler);
+    return () => ipcRenderer.removeListener('usage:limits', handler);
+  },
   locale: uiLocale,
   t: (key, vars) => t(key, vars),
   // UI-010: 새로고침(재계산) — 메인에 즉시 재집계 요청(결과는 onAggregate로 되돌아옴).

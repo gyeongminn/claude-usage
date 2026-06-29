@@ -13,8 +13,13 @@
       <button id="update-get" class="btn-update" type="button" data-i18n="update_get">받기</button>
     </div>
 
-    <!-- 상단 툴바(UI-010): 우측 아이콘 버튼(Lucide 라인, 이모지 금지 §5.1). 테마·크기·설정은 후속 step에서 합류. -->
+    <!-- 상단 툴바: 좌측=메인/상세 탭, 우측=아이콘 버튼(같은 row, 사용자 요청). -->
     <header class="toolbar">
+      <nav class="tabs">
+        <button id="tab-main" class="tab active" type="button" data-i18n="tab_main">메인</button>
+        <button id="tab-detail" class="tab" type="button" data-i18n="tab_detail">상세</button>
+      </nav>
+      <div class="toolbar-actions">
       <button id="btn-zoom-out" class="icon-btn" type="button" data-i18n-title="dash_zoom_out" aria-label="Zoom out">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3M8 11h6" />
@@ -46,20 +51,26 @@
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
         </svg>
       </button>
+      </div>
     </header>
 
-    <!-- 배치 B(라이브 우선형, §4.1): 히어로 / 추세·오늘 / 프로젝트 -->
-    <main class="grid">
-      <section class="card hero" aria-label="burn">
-        <div class="card-label" data-i18n="dash_active_block">활성 5h 블록 · burn</div>
-        <div class="hero-rates">
-          <div class="rate"><span class="rate-val" id="burn-cost">$2.8</span><span class="rate-unit" data-i18n="dash_per_hour">/h</span></div>
-          <div class="rate"><span class="rate-val" id="burn-tok">46.7K</span><span class="rate-unit" data-i18n="dash_tok_per_hour">tok/h</span></div>
-        </div>
-        <div class="gauge-track"><div class="gauge-fill" id="gauge-fill"></div></div>
-        <div class="gauge-meta">
-          <span id="gauge-pct">소진 90%</span>
-          <span id="gauge-eta">예상종료 $4.1</span>
+    <!-- 메인 탭 — 히어로(5h·7d 실제 소진률 좌우분할) / 추세 / 오늘 -->
+    <main id="view-main" class="grid">
+      <section class="card hero" aria-label="usage">
+        <div class="hero-split">
+          <div class="usage-col">
+            <div class="card-label" data-i18n="usage_5h">5시간 한도</div>
+            <div class="usage-pct" id="u5h-pct">—</div>
+            <div class="gauge-track"><div class="gauge-fill" id="u5h-fill"></div></div>
+            <div class="gauge-meta"><span id="u5h-reset"></span><span id="u5h-eta"></span></div>
+            <div class="usage-burn"><span id="burn-cost">—</span><span class="rate-unit" data-i18n="dash_per_hour">/h</span> · <span id="burn-tok">—</span><span class="rate-unit" data-i18n="dash_tok_per_hour">tok/h</span></div>
+          </div>
+          <div class="usage-col">
+            <div class="card-label" data-i18n="usage_weekly">주간 한도</div>
+            <div class="usage-pct" id="u7d-pct">—</div>
+            <div class="gauge-track"><div class="gauge-fill" id="u7d-fill"></div></div>
+            <div class="gauge-meta"><span id="u7d-reset"></span><span id="u7d-eta"></span></div>
+          </div>
         </div>
       </section>
 
@@ -77,15 +88,24 @@
       <section class="card today" aria-label="today">
         <div class="card-label" data-i18n="dash_today">오늘</div>
         <div class="kpi-row">
-          <div class="kpi"><div class="kpi-val" id="today-cost">$91.4</div><div class="kpi-cap" data-i18n="dash_cost">비용</div></div>
-          <div class="kpi"><div class="kpi-val" id="today-tok">98K</div><div class="kpi-cap" data-i18n="dash_tokens">토큰</div></div>
+          <div class="kpi">
+            <div class="kpi-val cost-stack"><span class="cost-usd" id="today-cost-usd">$0.00</span><span class="cost-krw" id="today-cost-krw"></span></div>
+            <div class="kpi-cap" data-i18n="dash_cost">비용</div>
+          </div>
+          <div class="kpi"><div class="kpi-val" id="today-tok">0</div><div class="kpi-cap" data-i18n="dash_tokens">토큰</div></div>
         </div>
+      </section>
+    </main>
+
+    <!-- 상세 탭 — 모델별 비중 / 프로젝트 Top 5 -->
+    <main id="view-detail" class="grid-detail" hidden>
+      <section class="card" aria-label="models">
+        <div class="card-label" data-i18n="dash_today">오늘</div>
         <div id="model-donut" class="donut-slot"></div>
       </section>
-
-      <section class="card projects" aria-label="projects">
+      <section class="card" aria-label="projects">
         <div class="card-label" data-i18n="dash_projects">프로젝트 Top 5</div>
-        <!-- AUDIT-010: 가짜 샘플 프로젝트 데이터 제거(§2 날조금지). ccusage v20은 프로젝트 축 미노출(--instances 부재, OPEN[08]) → 빈상태. PDF p4 빈 값 유지와 정합. -->
+        <!-- AUDIT-010: 가짜 샘플 제거(§2). ccusage v20 프로젝트 축 미노출(OPEN[08]) → 빈상태. -->
         <div id="project-empty" class="empty-state" data-i18n="dash_projects_empty">프로젝트별 데이터는 아직 지원되지 않습니다</div>
       </section>
     </main>
@@ -165,19 +185,48 @@
       if (window.usage && window.usage.locale) document.documentElement.lang = window.usage.locale;
       // UI-020: 초기 테마 적용(설정 영속값). CSS 변수는 data-theme로 자동 스왑, 차트는 JS 재테마 필요.
       document.documentElement.dataset.theme = (window.usage && window.usage.theme) || 'light';
-      // 첫 집계 전 정적 ETA 샘플도 로케일로(이후 onAggregate가 실값으로 교체).
-      document.getElementById('gauge-eta').textContent = t('dash_eta', { cost: '$4.1' });
-
-      // 토큰값(tokens.css와 동일) — 임계 색전환용. ponytail: 렌더러는 getComputedStyle로 읽어도 되나 샘플은 직접.
+      // 임계 색전환 토큰(tokens.css와 동일). 게이지 fill 색을 BurnGauge.burnColor로 결정(≥85 warn·≥95 over).
       const TK = { accent: '#3182F6', warn: '#FFC94D', over: '#F04452' };
-      function renderGauge(pct) {
-        const p = window.BurnGauge.clampPct(pct);
-        const fill = document.getElementById('gauge-fill');
+
+      // 재시작/예상소진 시각을 로케일 표시(24h 내면 시각만, 그 이상은 요일+시각). Intl 위임.
+      function fmtClock(ms) {
+        const d = new Date(ms);
+        if (isNaN(d.getTime())) return '';
+        const within = ms - Date.now() < 24 * 3600 * 1000;
+        const opts = within ? { hour: '2-digit', minute: '2-digit' } : { weekday: 'short', hour: '2-digit', minute: '2-digit' };
+        try {
+          return new Intl.DateTimeFormat((window.usage && window.usage.locale) || undefined, opts).format(d);
+        } catch (e) {
+          return d.toLocaleTimeString();
+        }
+      }
+      // 한 윈도우(5h/주간) 게이지 렌더 — 실제 utilization%·재시작·예상소진(없으면 '—').
+      function renderUsageCol(prefix, w) {
+        const pctEl = document.getElementById(prefix + '-pct');
+        const fill = document.getElementById(prefix + '-fill');
+        const resetEl = document.getElementById(prefix + '-reset');
+        const etaEl = document.getElementById(prefix + '-eta');
+        if (!w || typeof w.utilization !== 'number') {
+          pctEl.textContent = '—';
+          fill.style.width = '0%';
+          resetEl.textContent = '';
+          if (etaEl) etaEl.textContent = '';
+          return;
+        }
+        const p = window.BurnGauge.clampPct(w.utilization);
+        pctEl.textContent = Math.round(p) + '%';
         fill.style.width = p + '%';
         fill.style.background = window.BurnGauge.burnColor(p, TK);
-        document.getElementById('gauge-pct').textContent = t('dash_used', { pct: Math.round(p) });
+        resetEl.textContent = w.resetsAt ? t('usage_reset', { t: fmtClock(Date.parse(w.resetsAt)) }) : '';
+        if (etaEl) etaEl.textContent = w.etaMinutes != null ? t('usage_eta', { t: fmtClock(Date.now() + w.etaMinutes * 60000) }) : '';
       }
-      renderGauge(90); // 샘플(warn 구간 확인). 실제 burn 데이터는 DSH-060/DAT-030에서.
+      let lastLimits = null;
+      function renderLimits(limits) {
+        if (!limits) return;
+        lastLimits = limits;
+        renderUsageCol('u5h', limits.fiveHour);
+        renderUsageCol('u7d', limits.sevenDay);
+      }
 
       // 추세 차트 — 비용/토큰 토글. 샘플 데이터(실제 daily는 DSH-060).
       const sampleDaily = [
@@ -328,6 +377,7 @@
             if (window.Fmt) window.Fmt.setLocale(uiLocale);
             document.documentElement.lang = uiLocale;
             renderUpdateBanner(); // 업데이트 배너 텍스트도 새 로케일로 재번역(표시 중일 때만).
+            if (lastLimits) renderLimits(lastLimits); // 5h/주간 재시작·예상소진 라벨도 새 로케일·시각 포맷으로.
             if (lastAgg) renderAgg(lastAgg); // 마지막 집계로 동적 문자열(소진%·ETA) 즉시 새 t 재렌더.
             if (window.usage.refresh) window.usage.refresh(); // 최신 데이터로도 갱신.
           }
@@ -364,14 +414,12 @@
       }
       // 히어로 게이지+burn rates만 렌더(PERF-010: 8s burn-only 갱신과 전체 집계가 공유). lastAgg.burn 동기화로
       // 로케일 전환 시 최신 burn으로 재렌더. 플랜 토큰 한도 설정 시 토큰 소진율, 없으면 시간 소진율(§4.1, OPEN[09]).
+      // 활성 5h 블록 burn rate($/h·tok/h) 캡션만 갱신(소진률 게이지는 실제 한도=renderLimits가 담당).
       function renderBurn(burn) {
         if (!burn) return;
         if (lastAgg) lastAgg.burn = burn; else lastAgg = { burn };
-        renderGauge(burn.tokenPct != null ? burn.tokenPct : burn.timePct);
         document.getElementById('burn-cost').textContent = fmtCost(burn.costPerHour);
         document.getElementById('burn-tok').textContent = fmtTok(burn.tokPerHour);
-        const rem = burn.remainingMinutes ? ' · ' + t('dash_remaining', { n: burn.remainingMinutes }) : '';
-        document.getElementById('gauge-eta').textContent = t('dash_eta', { cost: fmtCost(burn.projectedCost) }) + rem;
       }
       function renderAgg(agg) {
         if (!agg || !agg.burn) return;
@@ -385,9 +433,10 @@
           drawTrend();
         }
         if (agg.today) {
-          // 오늘 비용은 ₩ 병기(§5.1). 환율 없으면 USD만.
-          document.getElementById('today-cost').textContent =
-            window.Fmt.fmtUsdKrw(agg.today.totalCost, agg.krwPerUsd);
+          // 비용: $ 흰색 위 / ₩ 작게 아래(사용자 요청). 환율 없으면 ₩ 생략(오프라인 안전).
+          document.getElementById('today-cost-usd').textContent = window.Fmt.fmtUsd(agg.today.totalCost);
+          document.getElementById('today-cost-krw').textContent =
+            agg.krwPerUsd > 0 ? window.Fmt.fmtKrw(agg.today.totalCost * agg.krwPerUsd) : '';
           document.getElementById('today-tok').textContent = fmtTok(agg.today.totalTokens);
           if (agg.today.models && agg.today.models.length) {
             currentModels = agg.today.models; // 테마 토글 재테마 시 실데이터 유지.
@@ -398,6 +447,25 @@
       window.usage.onAggregate(renderAgg);
       // PERF-010: 8s 인터벌의 활성 블록 burn-only 갱신(전체 daily 재파싱 없이 게이지·burn rates만).
       if (window.usage.onBurn) window.usage.onBurn(renderBurn);
+      // 실제 사용 한도(5h·주간) — Claude 설정창과 동일 소스. main이 5분 주기로 push.
+      if (window.usage.onLimits) window.usage.onLimits(renderLimits);
+
+      // 메인/상세 탭 전환. 상세 탭의 도넛은 표시될 때 resize(숨김 중 init은 크기 0이라).
+      (function setupTabs() {
+        const vMain = document.getElementById('view-main');
+        const vDetail = document.getElementById('view-detail');
+        const tMain = document.getElementById('tab-main');
+        const tDetail = document.getElementById('tab-detail');
+        function show(main) {
+          vMain.hidden = !main;
+          vDetail.hidden = main;
+          tMain.classList.toggle('active', main);
+          tDetail.classList.toggle('active', !main);
+          setTimeout(() => (main ? chart.resize() : donut.resize()), 0); // 표시 후 차트 크기 재계산.
+        }
+        tMain.onclick = () => show(true);
+        tDetail.onclick = () => show(false);
+      })();
 
       // FEAT-010: 업데이트 알림 — main이 새 버전 감지 시 'update:available' push → 배너 표시.
       // "받기"는 main이 보관한 릴리즈 URL을 외부 브라우저로 연다(렌더러는 URL을 모름 = sink 주입 차단).

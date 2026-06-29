@@ -68,4 +68,17 @@ async function fetchUsage(opts = {}) {
   }
 }
 
-module.exports = { readOAuth, parseUsage, fetchUsage, credentialsPath, USAGE_URL, UA_VERSION };
+// 예상 소진(분): 두 시점 utilization 변화율로 100% 도달까지 남은 분. 증가 중일 때만, 그 외 null.
+// 5분 폴링 사이의 실제 증가 추세를 외삽 — 정체·감소·입력부족이면 예측 안 함(과장 방지).
+function etaMinutes(prevUtil, prevMs, curUtil, nowMs) {
+  if (![prevUtil, prevMs, curUtil, nowMs].every(Number.isFinite)) return null;
+  if (curUtil >= 100) return 0;
+  const dt = nowMs - prevMs;
+  const du = curUtil - prevUtil;
+  if (dt <= 0 || du <= 0) return null; // 증가할 때만 예측
+  const ratePerMin = du / (dt / 60000);
+  const mins = (100 - curUtil) / ratePerMin;
+  return Number.isFinite(mins) && mins >= 0 ? Math.round(mins) : null;
+}
+
+module.exports = { readOAuth, parseUsage, fetchUsage, etaMinutes, credentialsPath, USAGE_URL, UA_VERSION };

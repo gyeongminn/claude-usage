@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { readOAuth, parseUsage, fetchUsage } = require('../src/main/claudeUsage');
+const { readOAuth, parseUsage, fetchUsage, etaMinutes } = require('../src/main/claudeUsage');
 
 // 실제 /api/oauth/usage 응답 형태(검증된 실데이터 구조).
 const SAMPLE = {
@@ -74,4 +74,19 @@ test('USAGE_fetchUsage_429_네트워크실패_null', async () => {
 test('USAGE_fetchUsage_토큰없음_null', async () => {
   const u = await fetchUsage({ cred: null, fetchImpl: async () => ({ ok: true, json: async () => SAMPLE }), now: 1 });
   assert.equal(u, null);
+});
+
+test('USAGE_etaMinutes_증가추세_예측', () => {
+  // 10분 사이 50%→60% (10%/10분=1%/분) → 100까지 40%p → 40분.
+  const t0 = 1_000_000;
+  assert.equal(etaMinutes(50, t0, 60, t0 + 10 * 60000), 40);
+  assert.equal(etaMinutes(99, t0, 100, t0 + 60000), 0); // 이미 100
+});
+
+test('USAGE_etaMinutes_비증가_입력부족_null', () => {
+  const t0 = 1_000_000;
+  assert.equal(etaMinutes(60, t0, 60, t0 + 60000), null); // 정체
+  assert.equal(etaMinutes(60, t0, 55, t0 + 60000), null); // 감소
+  assert.equal(etaMinutes(50, t0, 60, t0), null); // dt<=0
+  assert.equal(etaMinutes(NaN, t0, 60, t0 + 60000), null); // 입력부족
 });

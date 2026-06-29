@@ -11,6 +11,8 @@ const DASH_KEYS = [
   'dash_per_hour', 'dash_tok_per_hour',
   // FEAT-010: 업데이트 알림 배너(새 버전 {version} · 받기).
   'update_available', 'update_get',
+  // 메인/상세 탭 + 실제 사용 한도(5h·주간) 히어로.
+  'tab_main', 'tab_detail', 'usage_5h', 'usage_weekly', 'usage_reset', 'usage_eta',
 ];
 
 test('INT020_대시보드키_10로케일_모두존재', () => {

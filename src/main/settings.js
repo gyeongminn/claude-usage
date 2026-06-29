@@ -15,6 +15,7 @@ const DEFAULTS = {
   uiScale: 1, // UI 배율(UI-030, webContents.setZoomFactor). [0.8,1.5], 0.1 step.
   timezone: null, // 표시 타임존(UI-040, §10). null=시스템 TZ 자동, 유효 IANA면 수동 오버라이드.
   checkUpdates: true, // 업데이트 확인 토글(UI-040/FEAT-010). 기본 켜짐.
+  accurateUsage: true, // 실제 사용 한도(oauth /usage) 조회. 기본 켜짐(사용자 선택). 끄면 호출 0.
 };
 const KEYS = Object.keys(DEFAULTS);
 
@@ -61,6 +62,7 @@ function validateSettings(partial) {
     uiScale: clampScale(s.uiScale),
     timezone: isValidTimeZone(s.timezone) ? s.timezone : null, // 유효 IANA만, 그 외 시스템 자동.
     checkUpdates: typeof s.checkUpdates === 'boolean' ? s.checkUpdates : DEFAULTS.checkUpdates,
+    accurateUsage: typeof s.accurateUsage === 'boolean' ? s.accurateUsage : DEFAULTS.accurateUsage,
   };
 }
 

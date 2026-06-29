@@ -13,6 +13,7 @@ const { scheduleMonthly, currentYM } = require('./main/scheduler');
 const { missingMonths } = require('./main/catchup');
 const { loadSettings, saveSettings, clampScale } = require('./main/settings');
 const { checkForUpdate, isSafeReleaseUrl } = require('./main/updateCheck');
+const { fetchUsage, etaMinutes } = require('./main/claudeUsage');
 const { tFor, resolveLocale } = require('./i18n/i18n');
 
 // 업데이트 알림(FEAT-010): GitHub Releases와 app 버전 비교. 기동 시 + 6h 주기.
@@ -118,6 +119,27 @@ async function pushAggregate(win) {
   }
 }
 
+// 실제 Claude 사용 한도(5h·주간) — Claude 설정창과 동일 소스(oauth /usage). 현재 계정 기준.
+// 저빈도 폴링(엔드포인트가 공격적 429) + 마지막 성공값 캐시(실패 시 유지) + 윈도우별 예상 소진(분) 계산.
+let lastLimits = null; // 마지막 성공 조회 결과(429/오프라인이면 유지).
+const usagePrev = {}; // 윈도우별 {util, t} — 증가율로 eta 산출.
+async function pushLimits(win) {
+  if (!settings || !settings.accurateUsage) return; // 토글 끄면 호출 0.
+  const u = await fetchUsage(); // 실패·만료·429 → null(캐시 유지).
+  if (u) {
+    const nowMs = Date.now();
+    for (const key of ['fiveHour', 'sevenDay']) {
+      const w = u[key];
+      if (!w) continue;
+      const p = usagePrev[key];
+      w.etaMinutes = p ? etaMinutes(p.util, p.t, w.utilization, nowMs) : null;
+      usagePrev[key] = { util: w.utilization, t: nowMs };
+    }
+    lastLimits = u;
+  }
+  if (lastLimits && !win.isDestroyed()) win.webContents.send('usage:limits', lastLimits);
+}
+
 // 활성 블록 burn만 경량 갱신(PERF-010/§3: "활성 블록 burn만 짧은 간격 갱신"). 인터벌이 daily 전체 파싱을
 // 반복하지 않게 blocks --active만. daily/today는 워처 이벤트(파일 변경 시)로만 갱신 → 매-8s 전체 재파싱 제거.
 async function pushBurn(win) {
@@ -173,6 +195,11 @@ async function captureAndQuit(win, outPath) {
       );
       await new Promise((r) => setTimeout(r, 800));
     }
+  }
+  // 탭 검증: CLICK_TAB=main|detail이면 해당 탭을 눌러 전환 후 캡처.
+  if (process.env.CLICK_TAB) {
+    await win.webContents.executeJavaScript(`var b=document.getElementById('tab-${process.env.CLICK_TAB}'); if(b) b.click(); true;`);
+    await new Promise((r) => setTimeout(r, 500));
   }
   // FEAT-010 배너 검증: UPDATE_BANNER면 가짜 새 버전으로 배너를 띄워 시각 확인(실 네트워크 불필요).
   if (process.env.UPDATE_BANNER) {
@@ -244,6 +271,9 @@ function createWindow() {
     // 업데이트 확인(FEAT-010): 기동 시 1회 + 6h 주기. 토글 꺼지면 runUpdateCheck가 즉시 반환(체크 0).
     runUpdateCheck(win).catch(() => {});
     const updTimer = setInterval(() => runUpdateCheck(win).catch(() => {}), UPDATE_INTERVAL_MS);
+    // 실제 사용 한도(5h·주간): 기동 시 1회 + 5분 주기(엔드포인트 공격적 429라 저빈도). 실패는 캐시 유지.
+    pushLimits(win).catch(() => {});
+    const limitsTimer = setInterval(() => pushLimits(win).catch(() => {}), 5 * 60 * 1000);
     // UI-010: 새로고침(재계산) 버튼 → 즉시 재집계. 결과는 usage:aggregate로 렌더러에 push.
     const onRefresh = () => pushAggregate(win);
     ipcMain.on('usage:refresh', onRefresh);
@@ -256,6 +286,7 @@ function createWindow() {
     win.on('closed', () => {
       clearInterval(timer);
       clearInterval(updTimer);
+      clearInterval(limitsTimer);
       watcher.close();
       ipcMain.removeListener('usage:refresh', onRefresh);
       ipcMain.removeListener('scale:set', onScale);
@@ -399,6 +430,7 @@ app.whenReady().then(() => {
     if (w && !w.isDestroyed()) {
       w.webContents.setZoomFactor(settings.uiScale);
       pushAggregate(w);
+      pushLimits(w).catch(() => {}); // accurateUsage 토글·계정 변경 즉시 반영.
     }
     // 렌더러 즉시 재번역용으로 해석된 UI 로케일 반환(설정 우선, 없으면 시스템 언어).
     return { settings, uiLocale: resolveLocale(settings.locale || app.getLocale()) };

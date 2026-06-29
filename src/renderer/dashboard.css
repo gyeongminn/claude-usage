@@ -23,16 +23,17 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: var(--text-3); background-clip: padding-box; }
 ::-webkit-scrollbar-corner { background: transparent; }
 
-/* 상단 툴바(UI-010) — 우측 정렬 아이콘 버튼. 토스풍: 테두리 없는 면, 은은한 hover. */
+/* 상단 툴바 — 좌측 탭 / 우측 아이콘(같은 row). 토스풍: 테두리 없는 면, 은은한 hover. */
 .toolbar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   max-width: 1100px;
   margin: 0 auto;
   padding: var(--space-2) var(--space-3) 0;
 }
+.toolbar-actions { display: flex; align-items: center; gap: var(--space-1); }
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -82,23 +83,65 @@ body {
 }
 .btn-update:hover { background: var(--accent-hover); }
 
+/* 메인/상세 탭 — 툴바 좌측에 배치(아이콘과 같은 row). 토스풍 세그먼트. */
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+.tab {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-2);
+  padding: 8px 16px;
+  border-radius: 10px;
+  transition: background 160ms ease-out, color 160ms ease-out;
+}
+.tab:hover { background: var(--track); }
+.tab.active { background: var(--accent-light); color: var(--accent); }
+
 .grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
   grid-template-areas:
     'hero hero'
-    'trend today'
-    'projects projects';
+    'trend today';
   gap: var(--space-3);
   padding: var(--space-3);
   max-width: 1100px;
   margin: 0 auto;
 }
+/* hidden 속성 존중(display:grid가 UA [hidden]{display:none}을 덮으므로 명시). 탭 전환 시 한 뷰만 표시. */
+.grid[hidden] { display: none; }
+/* 상세 탭 — 모델·프로젝트 2열(좁으면 1열로 자동). */
+.grid-detail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-3);
+  padding: var(--space-3);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.grid-detail[hidden] { display: none; }
 
 .hero { grid-area: hero; }
 .trend { grid-area: trend; }
 .today { grid-area: today; }
-.projects { grid-area: projects; }
+
+/* 히어로 5h·7d 좌우분할(사용자 요청) — 좁으면 자동 1열(최소창 절반에서도 정상). */
+.hero-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); }
+.usage-col { min-width: 0; }
+.usage-pct { font-size: 44px; font-weight: 700; color: var(--text-1); margin-bottom: var(--space-2); line-height: 1.1; }
+.usage-burn { margin-top: var(--space-1); color: var(--text-2); font-size: 13px; }
+.usage-burn .rate-unit { font-size: 12px; }
+
+/* 오늘 비용: $ 흰색(text-1) 위 / ₩ 작게 white-gray(text-2) 아래(사용자 요청). */
+.cost-stack { display: flex; flex-direction: column; line-height: 1.15; }
+.cost-usd { font-size: 28px; font-weight: 700; color: var(--text-1); }
+.cost-krw { font-size: 16px; font-weight: 600; color: var(--text-2); }
 
 /* 카드 — 테두리 대신 부드러운 그림자, 큰 반경, 넉넉한 패딩(§5.1) */
 .card {
