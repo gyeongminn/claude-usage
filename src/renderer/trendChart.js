@@ -1,4 +1,4 @@
-// 일자별 추세 차트 옵션 빌더(§4.1) — 비용/토큰 토글 라인·영역.
+// 일자별 추세 차트 옵션 빌더(§4.1) — 비용/토큰 토글 막대그래프(사용자 요청: 스무딩 라인 금지).
 // UMD: node 테스트(module.exports)·렌더러(window.TrendChart).
 (function (root) {
   // Fmt 재사용(UX-030): node는 require, 렌더러는 window.Fmt(호출 시점엔 로드 완료).
@@ -33,13 +33,11 @@
       },
       series: [
         {
-          type: 'line',
-          smooth: true,
-          symbol: 'none',
+          type: 'bar',
           data: daily.map(pick),
-          lineStyle: theme.line.lineStyle,
-          areaStyle: theme.line.areaStyle,
-          itemStyle: theme.line.itemStyle,
+          // 스무딩 없는 막대(사용자 요청). accent 단색 + 상단만 둥글게(토스 톤).
+          itemStyle: Object.assign({}, theme.line.itemStyle, { borderRadius: [4, 4, 0, 0] }),
+          barMaxWidth: 28,
         },
       ],
     };

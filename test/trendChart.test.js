@@ -25,11 +25,12 @@ test('DSH030_tokens_메트릭_토큰시리즈', () => {
   assert.deepEqual(opt.series[0].data, [1000, 3000, 500]);
 });
 
-test('DSH030_라인_영역_accent', () => {
+test('DSH030_막대_accent', () => {
+  // 사용자 요청: 일별 추세는 스무딩 라인이 아니라 막대그래프.
   const opt = buildTrendOption(daily, 'cost', theme);
-  assert.equal(opt.series[0].type, 'line');
-  assert.equal(opt.series[0].lineStyle.color, TOKENS.accent);
-  assert.match(opt.series[0].areaStyle.color, /rgba\(/); // 저알파 영역
+  assert.equal(opt.series[0].type, 'bar');
+  assert.equal(opt.series[0].itemStyle.color, TOKENS.accent);
+  assert.deepEqual(opt.series[0].itemStyle.borderRadius, [4, 4, 0, 0]); // 상단만 둥글게(토스 톤)
 });
 
 test('DSH030_빈데이터_안전', () => {
