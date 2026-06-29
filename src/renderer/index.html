@@ -73,7 +73,8 @@
 
       <section class="card projects" aria-label="projects">
         <div class="card-label" data-i18n="dash_projects">프로젝트 Top 5</div>
-        <div id="project-bars" class="chart-slot"></div>
+        <!-- AUDIT-010: 가짜 샘플 프로젝트 데이터 제거(§2 날조금지). ccusage v20은 프로젝트 축 미노출(--instances 부재, OPEN[08]) → 빈상태. PDF p4 빈 값 유지와 정합. -->
+        <div id="project-empty" class="empty-state" data-i18n="dash_projects_empty">프로젝트별 데이터는 아직 지원되지 않습니다</div>
       </section>
     </main>
 
@@ -81,7 +82,6 @@
     <script src="echartsTheme.js"></script>
     <script src="trendChart.js"></script>
     <script src="modelDonut.js"></script>
-    <script src="projectBars.js"></script>
     <script src="burnGauge.js"></script>
     <script src="format.js"></script>
     <script src="chartResize.js"></script>
@@ -160,21 +160,8 @@
       const donut = echarts.init(document.getElementById('model-donut'));
       donut.setOption(window.ModelDonut.buildDonutOption(currentModels, theme));
 
-      // 프로젝트 Top 5 + 기타 바 — 샘플(실제 --instances 데이터는 DSH-060).
-      const sampleProjects = [
-        { project: 'claude-usage', totalCost: 142.0 },
-        { project: 'pantology', totalCost: 88.5 },
-        { project: 'humanize-korean', totalCost: 53.2 },
-        { project: 'studyvault', totalCost: 31.0 },
-        { project: 'cate', totalCost: 22.4 },
-        { project: 'misc-a', totalCost: 12.0 },
-        { project: 'misc-b', totalCost: 7.5 },
-      ];
-      const currentProjects = sampleProjects; // 데이터원 부재로 고정(OPEN[08]) — 토글 재테마 시 재사용.
-      const bars = echarts.init(document.getElementById('project-bars'));
-      bars.setOption(
-        window.ProjectBars.buildProjectBarOption(window.ProjectBars.topNWithOther(currentProjects, 5), theme)
-      );
+      // 프로젝트 카드: ccusage v20은 프로젝트 축 미노출(--instances 부재, OPEN[08]) → 빈상태 표시(AUDIT-010).
+      // 가짜 샘플 데이터를 사용자에게 보여주지 않는다(§2). 데이터원 생기면 차트 복원.
 
       // UI-020: 테마 토글 — data-theme 스왑(CSS 변수 자동) + 차트 JS 재테마 + 설정 영속.
       function redrawCharts() {
@@ -183,7 +170,6 @@
         );
         drawTrend();
         donut.setOption(window.ModelDonut.buildDonutOption(currentModels, theme));
-        bars.setOption(window.ProjectBars.buildProjectBarOption(window.ProjectBars.topNWithOther(currentProjects, 5), theme));
       }
       const btnTheme = document.getElementById('btn-theme');
       if (btnTheme) {
@@ -209,17 +195,17 @@
       if (btnZoomIn) btnZoomIn.onclick = () => setScale(uiScale + 0.1);
       if (btnZoomOut) btnZoomOut.onclick = () => setScale(uiScale - 0.1);
 
-      // UX-010: 창 크기 변경 시 차트 3개를 따라 리사이즈(디바운스). 미동작 시 레이아웃이 안 따라옴.
+      // UX-010: 창 크기 변경 시 차트(추세·도넛)를 따라 리사이즈(디바운스). 미동작 시 레이아웃이 안 따라옴.
       window.addEventListener(
         'resize',
-        window.ChartResize.makeDebounced(() => window.ChartResize.resizeAll([chart, donut, bars]), 150)
+        window.ChartResize.makeDebounced(() => window.ChartResize.resizeAll([chart, donut]), 150)
       );
 
       // 통화·숫자 포맷(DAT-050). 토큰은 K/M/B 축약, 비용은 $ (₩ 병기).
       const fmtCost = (n) => window.Fmt.fmtUsd(n);
       const fmtTok = (n) => window.Fmt.fmtTokens(n);
 
-      // 실데이터 수신 → 게이지·추세·도넛·KPI 갱신(프로젝트는 데이터원 없어 샘플 유지, OPEN).
+      // 실데이터 수신 → 게이지·추세·도넛·KPI 갱신(프로젝트는 데이터원 없어 빈상태, OPEN[08]).
       window.usage.onAggregate((agg) => {
         if (!agg || !agg.burn) return;
         // 플랜 토큰 한도 설정 시 토큰 소진율, 없으면 시간 소진율(§4.1, OPEN[09]).

@@ -5,12 +5,23 @@ const { tFor, LOCALES, loadCatalog } = require('../src/i18n/i18n');
 const DASH_KEYS = [
   'dash_active_block', 'dash_trend', 'dash_cost', 'dash_tokens',
   'dash_today', 'dash_projects', 'dash_used', 'dash_eta', 'dash_remaining',
+  // AUDIT-010: 프로젝트 카드 빈상태(가짜 데이터 제거, ccusage 데이터원 부재 OPEN[08]).
+  'dash_projects_empty',
 ];
 
 test('INT020_대시보드키_10로케일_모두존재', () => {
   for (const lc of LOCALES) {
     const cat = loadCatalog(lc);
     for (const k of DASH_KEYS) assert.ok(k in cat, `${lc} 누락: ${k}`);
+  }
+});
+
+test('AUDIT010_프로젝트_빈상태_키_en_ko_비어있지않음', () => {
+  // 가짜 프로젝트 데이터 대신 t() 경유 빈상태 문구. 10로케일 존재는 위 테스트가, 핵심 2종 값 검증.
+  for (const lc of ['en', 'ko']) {
+    const v = tFor(lc)('dash_projects_empty');
+    assert.equal(typeof v, 'string');
+    assert.ok(v.length > 0 && v !== 'dash_projects_empty', `${lc} 빈상태 문구 누락`);
   }
 });
 

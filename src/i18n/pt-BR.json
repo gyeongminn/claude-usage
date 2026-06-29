@@ -10,6 +10,7 @@
   "dash_tokens": "Tokens",
   "dash_today": "Hoje",
   "dash_projects": "Top 5 projetos",
+  "dash_projects_empty": "Dados por projeto ainda não estão disponíveis",
   "dash_used": "{pct}% usado",
   "dash_eta": "Fim est. {cost}",
   "dash_remaining": "{n} min restantes",

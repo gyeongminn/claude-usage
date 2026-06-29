@@ -122,6 +122,17 @@ body {
 /* 차트 슬롯 */
 .chart-slot { min-height: 220px; }
 
+/* 빈상태(AUDIT-010): 데이터원 없는 카드는 가짜 데이터 대신 절제된 안내. 차트 슬롯과 같은 높이로 카드 크기 유지. */
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  color: var(--text-3);
+  font-size: 14px;
+  text-align: center;
+}
+
 /* 오늘 KPI(비용·토큰 동급) + 도넛 */
 .kpi-row { display: flex; gap: var(--space-4); margin-bottom: var(--space-2); }
 .kpi-val { font-size: 28px; font-weight: 700; color: var(--text-1); }

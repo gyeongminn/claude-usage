@@ -10,6 +10,7 @@
   "dash_tokens": "令牌",
   "dash_today": "今天",
   "dash_projects": "项目Top5",
+  "dash_projects_empty": "暂不支持按项目细分的数据",
   "dash_used": "已用{pct}%",
   "dash_eta": "预计结束{cost}",
   "dash_remaining": "剩余{n}分钟",
