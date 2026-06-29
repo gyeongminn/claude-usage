@@ -11,6 +11,7 @@
   "dash_today": "Aujourd’hui",
   "dash_projects": "Top 5 projets",
   "dash_projects_empty": "Les données par projet ne sont pas encore disponibles",
+  "dash_no_data": "Aucune donnée d'utilisation pour le moment",
   "dash_used": "{pct}% utilisé",
   "dash_eta": "Fin est. {cost}",
   "dash_remaining": "{n} min restantes",

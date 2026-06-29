@@ -11,6 +11,7 @@
   "dash_today": "Hôm nay",
   "dash_projects": "Top 5 dự án",
   "dash_projects_empty": "Dữ liệu theo dự án chưa khả dụng",
+  "dash_no_data": "Chưa có dữ liệu sử dụng",
   "dash_used": "Đã dùng {pct}%",
   "dash_eta": "Kết thúc ~{cost}",
   "dash_remaining": "Còn {n} phút",

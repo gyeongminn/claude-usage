@@ -84,6 +84,7 @@
           </div>
         </div>
         <div id="trend-chart" class="chart-slot"></div>
+        <div id="trend-empty" class="empty-state" data-i18n="dash_no_data" hidden>No usage data yet</div>
       </section>
 
       <section class="card today" aria-label="today" data-tile="today">
@@ -118,6 +119,7 @@
         <div class="card-label" data-i18n="model_share">모델 사용 비중</div>
         <div id="model-donut" class="donut-slot"></div>
         <div id="model-legend" class="model-legend"></div>
+        <div id="model-empty" class="empty-state" data-i18n="dash_no_data" hidden>No usage data yet</div>
       </section>
       <section class="card" aria-label="token composition" data-tile="tokens">
         <div class="card-label" data-i18n="detail_token_comp">토큰 구성</div>
@@ -287,16 +289,9 @@
         renderUsageCol('u7d', limits.sevenDay);
       }
 
-      // 추세 차트 — 비용/토큰 토글. 샘플 데이터(실제 daily는 DSH-060).
-      const sampleDaily = [
-        { period: '06-20', totalCost: 12.3, totalTokens: 18000 },
-        { period: '06-21', totalCost: 31.5, totalTokens: 42000 },
-        { period: '06-22', totalCost: 24.1, totalTokens: 33000 },
-        { period: '06-23', totalCost: 48.7, totalTokens: 61000 },
-        { period: '06-24', totalCost: 39.2, totalTokens: 50000 },
-        { period: '06-25', totalCost: 55.0, totalTokens: 72000 },
-        { period: '06-26', totalCost: 91.4, totalTokens: 98000 },
-      ];
+      // 추세 차트 — 비용/토큰 토글. AUDIT-060: 가짜 샘플 제거(§2 "없는 데이터 지어내지 않는다") —
+      // 빈 배열로 시작, onAggregate가 실 daily로 채운다. 무데이터면 빈상태(아래 drawTrend).
+      const sampleDaily = [];
       // 차트 테마는 현재 data-theme에서 토큰을 골라 생성(토글 시 redrawCharts가 재생성). 초기·재테마 공용(중복 제거·call-time data-theme 읽기).
       const makeTheme = () =>
         window.EChartsTheme.makeEchartsTheme(window.EChartsTheme.tokensFor(document.documentElement.dataset.theme));
@@ -304,7 +299,14 @@
       const chart = echarts.init(document.getElementById('trend-chart'));
       let metric = 'cost';
       function drawTrend() {
-        chart.setOption(window.TrendChart.buildTrendOption(sampleDaily, metric, theme), true);
+        // AUDIT-060: 데이터 없으면 빈상태(가짜 데이터 금지·§2), 있으면 차트. resize=숨김→표시 후 0폭 보정.
+        const has = sampleDaily.length > 0;
+        document.getElementById('trend-chart').hidden = !has;
+        document.getElementById('trend-empty').hidden = has;
+        if (has) {
+          chart.setOption(window.TrendChart.buildTrendOption(sampleDaily, metric, theme), true);
+          chart.resize();
+        }
       }
       function setMetric(m) {
         metric = m;
@@ -321,12 +323,8 @@
       document.getElementById('t-tok').onclick = () => setMetric('tokens');
       drawTrend();
 
-      // 오늘 모델 도넛 — 샘플 breakdown(실제 데이터는 DSH-060).
-      const sampleModels = [
-        { modelName: 'claude-opus-4-8', cost: 88.2 },
-        { modelName: 'claude-haiku-4-5-20251001', cost: 3.2 },
-      ];
-      let currentModels = sampleModels; // 토글 재테마 시 재사용(onAggregate가 실데이터로 갱신).
+      // 오늘 모델 도넛 — AUDIT-060: 가짜 샘플 제거(§2). onAggregate가 실 today.models로 채운다.
+      let currentModels = []; // 토글 재테마 시 재사용(onAggregate가 실데이터로 갱신). 무데이터면 빈상태.
       const donut = echarts.init(document.getElementById('model-donut'));
       // MODELSHARE: 도넛 우측 하단 범례(색·모델명·비중%). 모델명은 textContent로(임의 문자열 안전).
       function renderLegend(models) {
@@ -350,8 +348,16 @@
         }
       }
       function drawDonut() {
-        donut.setOption(window.ModelDonut.buildDonutOption(currentModels, theme));
-        renderLegend(currentModels);
+        // AUDIT-060: 모델 데이터 없으면 빈상태(§2), 있으면 도넛+범례.
+        const has = currentModels.length > 0;
+        document.getElementById('model-donut').hidden = !has;
+        document.getElementById('model-legend').hidden = !has;
+        document.getElementById('model-empty').hidden = has;
+        if (has) {
+          donut.setOption(window.ModelDonut.buildDonutOption(currentModels, theme));
+          renderLegend(currentModels);
+          donut.resize();
+        }
       }
       drawDonut();
 

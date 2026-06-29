@@ -7,6 +7,8 @@ const DASH_KEYS = [
   'dash_today', 'dash_projects', 'dash_used', 'dash_eta', 'dash_remaining',
   // AUDIT-010: 프로젝트 카드 빈상태(가짜 데이터 제거, ccusage 데이터원 부재 OPEN[08]).
   'dash_projects_empty',
+  // AUDIT-060: 추세/도넛 무데이터 빈상태(가짜 sampleDaily/sampleModels 제거, §2).
+  'dash_no_data',
   // AUDIT-040: 히어로 burn 단위(하드코딩 제거, §10 t() 경유).
   'dash_per_hour', 'dash_tok_per_hour',
   // FEAT-010: 업데이트 알림 배너(새 버전 {version} · 받기).
@@ -55,6 +57,12 @@ test('A11Y010_설정닫기_접근이름_en_ko', () => {
   // 설정 모달 닫기(X) 버튼의 접근 이름(data-i18n-title=set_close → applyI18n이 title+aria-label 현지화).
   assert.equal(tFor('en')('set_close'), 'Close');
   assert.equal(tFor('ko')('set_close'), '닫기');
+});
+
+test('AUDIT060_무데이터_빈상태_키_en_ko', () => {
+  // 추세/도넛 무데이터 시 표시되는 범용 빈상태 문구(가짜 샘플 제거 후, §2).
+  assert.equal(tFor('en')('dash_no_data'), 'No usage data yet');
+  assert.equal(tFor('ko')('dash_no_data'), '아직 사용 데이터가 없어요');
 });
 
 test('AUDIT010_프로젝트_빈상태_키_en_ko_비어있지않음', () => {

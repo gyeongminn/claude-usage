@@ -240,6 +240,8 @@ body {
   font-size: 14px;
   text-align: center;
 }
+/* AUDIT-060: hidden 속성이 .empty-state의 display:flex에 가려지지 않게(추세/도넛 데이터 유무 토글). */
+.empty-state[hidden] { display: none; }
 
 /* BL-05: 상세 탭 토큰 구성 — 라벨·비례 바·값 한 줄, tabular 값. 캐시 효율은 accent 강조. */
 .tok-comp { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-2); }
