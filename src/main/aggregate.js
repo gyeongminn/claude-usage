@@ -67,15 +67,20 @@ function recentDays(daily, n) {
   return arr.filter((x) => String(x.period) >= cutoff);
 }
 
-// 최근 n일 합계 — recentDays 행을 비용·토큰 합산(메인 탭 KPI).
-function sumRecentDays(daily, n) {
-  return recentDays(daily, n).reduce(
+// daily 행 묶음의 비용·토큰 합 — sumRecentDays·weeklyBuckets 공용(중복 제거, 동일 null 가드).
+function sumCostTokens(rows) {
+  return (Array.isArray(rows) ? rows : []).reduce(
     (a, x) => ({
       totalCost: a.totalCost + (Number(x.totalCost) || 0),
       totalTokens: a.totalTokens + (Number(x.totalTokens) || 0),
     }),
     { totalCost: 0, totalTokens: 0 }
   );
+}
+
+// 최근 n일 합계 — recentDays 행을 비용·토큰 합산(메인 탭 KPI).
+function sumRecentDays(daily, n) {
+  return sumCostTokens(recentDays(daily, n));
 }
 
 // 주 시작(월요일 00:00 UTC) ms. ISO 주 표준(월요일 시작). ponytail: 일요일/Anthropic 리셋 정렬 필요 시 교체.
@@ -96,11 +101,7 @@ function weeklyBuckets(daily, n, nowMs) {
     const wsStr = new Date(ws).toISOString().slice(0, 10);
     const weStr = new Date(ws + 7 * 86400000).toISOString().slice(0, 10);
     const rows = arr.filter((x) => { const p = String(x.period); return p >= wsStr && p < weStr; });
-    weeks.push({
-      weekStart: wsStr,
-      totalCost: rows.reduce((s, x) => s + (Number(x.totalCost) || 0), 0),
-      totalTokens: rows.reduce((s, x) => s + (Number(x.totalTokens) || 0), 0),
-    });
+    weeks.push({ weekStart: wsStr, ...sumCostTokens(rows) });
   }
   return weeks;
 }
