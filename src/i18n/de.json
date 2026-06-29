@@ -57,5 +57,8 @@
   "sys_cpu": "CPU",
   "sys_ram": "RAM",
   "sys_gpu": "GPU",
-  "sys_gpu_na": "N/A"
+  "sys_gpu_na": "N/A",
+  "tile_customize": "Haupt-Kacheln",
+  "tile_add": "Zur Hauptseite hinzufügen",
+  "tile_remove": "Von Hauptseite entfernen"
 }

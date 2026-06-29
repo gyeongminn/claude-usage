@@ -23,6 +23,8 @@ const DASH_KEYS = [
   'dash_weekly5',
   // SYS-030: 상세 탭 시스템 리소스(CPU·RAM·GPU) 카드.
   'sys_title', 'sys_cpu', 'sys_ram', 'sys_gpu', 'sys_gpu_na',
+  // TILE-030: 메인 탭 타일 구성(상세 '메인 타일' 카드 + 추가/제거 토글).
+  'tile_customize', 'tile_add', 'tile_remove',
 ];
 
 test('INT020_대시보드키_10로케일_모두존재', () => {

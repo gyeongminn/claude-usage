@@ -259,6 +259,14 @@ body {
 .sys-pct { font-size: 28px; font-weight: 700; color: var(--text-1); font-variant-numeric: tabular-nums; line-height: 1; }
 .sys-meta { margin-top: var(--space-2); font-size: 13px; color: var(--text-2); font-variant-numeric: tabular-nums; }
 
+/* TILE-030: 상세 '메인 타일' 구성 카드 — 타일별 추가/제거 토글(애플 위젯식). */
+.tile-cz-list { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-2); }
+.tile-cz-row { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
+.tile-cz-name { font-size: 14px; color: var(--text-1); }
+.tile-cz-toggle { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--track); background: var(--card); color: var(--text-3); cursor: pointer; transition: background 160ms ease-out, color 160ms ease-out, border-color 160ms ease-out; }
+.tile-cz-toggle:hover { background: var(--track); }
+.tile-cz-toggle.active { background: var(--accent-light); color: var(--accent); border-color: transparent; } /* 메인에 있음(핀됨) */
+
 /* 오늘 KPI(비용·토큰 동급) + 도넛 */
 /* Today KPI(비용·토큰) — §5.1 "KPI 38–56px". 세로 스택(각 KPI 전폭)이라 긴 로케일 값(de "341,1 Mio.")도 1fr 열에서 오버플로 없음(UX-080). */
 .kpi-row { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-2); }
