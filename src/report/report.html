@@ -142,10 +142,12 @@
       const chartOf = (el) => echarts.getInstanceByDom(el) || echarts.init(el);
 
       // 표 행 렌더 헬퍼(AUTO-010): id 요소 innerHTML을 arr 각 항목 → `<tr><td>…</td></tr>`로 채움(p2/p3×2/p4 4중복 제거).
-      // cells(item)=셀 문자열 배열. 값은 기존과 동일하게 그대로 보간(거동 불변 — 이스케이프 추가/제거 없음).
+      // cells(item)=셀 문자열 배열. SEC-010: 셀 값은 esc()로 HTML 인코딩(유일 innerHTML sink·OWASP 출력 인코딩).
+      //   거동 보존 — 숫자·날짜·정상 모델명·로케일 라벨엔 no-op, `<>&"'` 포함 병리값(정규식 미매칭 모델명 등)만 인코딩.
+      const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       const setRows = (id, arr, cells) => {
         document.getElementById(id).innerHTML = arr
-          .map((item) => '<tr>' + cells(item).map((c) => `<td>${c}</td>`).join('') + '</tr>')
+          .map((item) => '<tr>' + cells(item).map((c) => `<td>${esc(c)}</td>`).join('') + '</tr>')
           .join('');
       };
 
