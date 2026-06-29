@@ -373,7 +373,7 @@ async function generatePdfAndQuit(outPath) {
   const data = {
     title: 'Claude Usage Report',
     period: 'April 2026 (2026-04-01 ~ 2026-04-30)',
-    generated: '2026-05-01 09:00 (KST)',
+    generated: '2026-05-01 09:00 UTC',
     locale: 'en',
     krwPerUsd: 1380,
     daily,
