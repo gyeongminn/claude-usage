@@ -212,6 +212,9 @@
       let t = (window.usage && window.usage.t) || ((k) => k);
       // AUDIT-030: 숫자·통화 포맷을 UI 로케일 Intl로(§10, de/fr/it/vi 자리구분 다름). 첫 포맷 전 1회.
       if (window.usage && window.usage.locale && window.Fmt) window.Fmt.setLocale(window.usage.locale);
+      // I18N-010: 라이브 언어 변경(applyLive) 시 fmtClock도 새 로케일로 갱신되게 렌더러 가변 보관.
+      // window.usage.locale은 contextBridge 노출 읽기전용이라 재할당 불가 → 가변 변수로 추적(초기값=boot 로케일, 거동 보존).
+      let curLocale = (window.usage && window.usage.locale) || undefined;
       function applyI18n() {
         document.querySelectorAll('[data-i18n]').forEach((e) => {
           const v = t(e.getAttribute('data-i18n'));
@@ -256,7 +259,7 @@
         const tz = lastAgg && lastAgg.timezone;
         if (tz) opts.timeZone = tz;
         try {
-          return new Intl.DateTimeFormat((window.usage && window.usage.locale) || undefined, opts).format(d);
+          return new Intl.DateTimeFormat(curLocale, opts).format(d); // I18N-010: 라이브 갱신되는 curLocale 사용.
         } catch (e) {
           return d.toLocaleTimeString();
         }
@@ -475,6 +478,7 @@
             applyI18n();
             fillLocaleOptions();
             if (window.Fmt) window.Fmt.setLocale(uiLocale);
+            curLocale = uiLocale; // I18N-010: fmtClock(reset/eta 시계)이 새 로케일로 포맷되게 갱신(renderLimits 전).
             document.documentElement.lang = uiLocale;
             renderUpdateBanner(); // 업데이트 배너 텍스트도 새 로케일로 재번역(표시 중일 때만).
             if (lastLimits) renderLimits(lastLimits); // 5h/주간 재시작·예상소진 라벨도 새 로케일·시각 포맷으로.
