@@ -107,6 +107,11 @@ async function refreshFx() {
   krwPerUsd = r.krwPerUsd;
 }
 
+// 렌더러로 안전 push(AUTO-010): 창이 파괴됐으면(트레이 종료 레이스) 무시. 모든 push가 이 가드를 공유 — 누락 방지.
+function sendToWin(win, channel, payload) {
+  if (!win.isDestroyed()) win.webContents.send(channel, payload);
+}
+
 // 실데이터 집계 → 렌더러 push. 실패해도 앱은 유지(빈 화면 방지 위해 에러 무시).
 // 전체 집계(daily+blocks)는 기동·워처 이벤트·새로고침에서만(PERF-010/§3: 전체 재파싱은 이벤트 기반으로 한정).
 async function pushAggregate(win) {
@@ -118,7 +123,7 @@ async function pushAggregate(win) {
     });
     agg.krwPerUsd = krwPerUsd; // 통화 병기용(§5.1).
     agg.timezone = tz; // UX-070: 렌더러 fmtClock이 표시 TZ 오버라이드를 reset/eta 시계에 적용(데이터·시계 TZ 정합).
-    if (!win.isDestroyed()) win.webContents.send('usage:aggregate', agg);
+    sendToWin(win, 'usage:aggregate', agg);
   } catch (e) {
     console.error('집계 실패:', e.message);
   }
@@ -135,9 +140,7 @@ async function pushLimits(win) {
   // BL-03: 만료/없는 토큰은 fetchUsage가 영구 null → 게이지가 '—'로 멈춰 원인 불명. refresh 흐름이
   // 없으므로(Claude Code 재로그인 필요) 네트워크 호출 없이 재로그인 안내만 보낸다(마지막 캐시는 유지).
   if (authStatus(cred, nowMs) !== 'ok') {
-    if (!win.isDestroyed()) {
-      win.webContents.send('usage:limits', { ...(lastLimits || {}), authExpired: true });
-    }
+    sendToWin(win, 'usage:limits', { ...(lastLimits || {}), authExpired: true });
     return;
   }
   const u = await fetchUsage({ cred }); // 유효 토큰. 429·오프라인 → null(캐시 유지).
@@ -159,7 +162,7 @@ async function pushLimits(win) {
     }
     lastLimits = u;
   }
-  if (lastLimits && !win.isDestroyed()) win.webContents.send('usage:limits', lastLimits);
+  if (lastLimits) sendToWin(win, 'usage:limits', lastLimits);
 }
 
 // 활성 블록 burn만 경량 갱신(PERF-010/§3: "활성 블록 burn만 짧은 간격 갱신"). 인터벌이 daily 전체 파싱을
@@ -169,7 +172,7 @@ async function pushBurn(win) {
     const { burn } = await buildBurn(runCcusage, {
       planTokenLimit: settings && settings.planTokenLimit,
     });
-    if (!win.isDestroyed()) win.webContents.send('usage:burn', burn);
+    sendToWin(win, 'usage:burn', burn);
   } catch (e) {
     console.error('burn 갱신 실패:', e.message);
   }
@@ -183,7 +186,7 @@ function pushSysStats(win) {
   const cpu = cpuPercent(prevCpus, cur);
   prevCpus = cur;
   const mem = memUsage(os.totalmem(), os.freemem());
-  if (!win.isDestroyed()) win.webContents.send('sys:stats', { cpu, mem, gpu: lastGpu });
+  sendToWin(win, 'sys:stats', { cpu, mem, gpu: lastGpu });
 }
 // GPU best-effort: nvidia-smi spawn(windowsHide=콘솔 깜빡임 방지·2s 타임아웃·ENOENT/실패/비정상 → null). NVIDIA 없으면 영구 null.
 function refreshGpu() {
