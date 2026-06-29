@@ -142,6 +142,9 @@ async function pushLimits(win) {
   }
   const u = await fetchUsage({ cred }); // 유효 토큰. 429·오프라인 → null(캐시 유지).
   if (u) {
+    // AUTO-020: 샘플(util)은 fetch 완료 시점 서버 상태 → eta 델타·usagePrev 타임스탬프는 fetch '후' 시각으로.
+    // nowMs는 fetch 전 캡처라 네트워크 지연만큼 과거(authStatus 게이트엔 적합) — 첫 폴링 etaFromWindow 경과시간 과소·증가율 분모 오염 방지.
+    const sampleMs = Date.now();
     for (const key of ['fiveHour', 'sevenDay']) {
       const w = u[key];
       if (!w) continue;
@@ -150,9 +153,9 @@ async function pushLimits(win) {
       // 첫 폴링(직전 샘플 없음)은 윈도우 시작 이후 평균 burn으로 즉시 추정(BL-01) — 5분 뒤 2번째
       // 폴링부터는 두 샘플 증가율(최근 추세)로 갱신, 정체·감소면 의도적 null(과장 방지).
       w.etaMinutes = p
-        ? etaMinutes(p.util, p.t, w.utilization, nowMs)
-        : etaFromWindow(w.utilization, w.resetsAt, windowMin, nowMs);
-      usagePrev[key] = { util: w.utilization, t: nowMs };
+        ? etaMinutes(p.util, p.t, w.utilization, sampleMs)
+        : etaFromWindow(w.utilization, w.resetsAt, windowMin, sampleMs);
+      usagePrev[key] = { util: w.utilization, t: sampleMs };
     }
     lastLimits = u;
   }
