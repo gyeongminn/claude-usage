@@ -212,6 +212,13 @@
       let t = (window.usage && window.usage.t) || ((k) => k);
       // AUDIT-030: 숫자·통화 포맷을 UI 로케일 Intl로(§10, de/fr/it/vi 자리구분 다름). 첫 포맷 전 1회.
       if (window.usage && window.usage.locale && window.Fmt) window.Fmt.setLocale(window.usage.locale);
+      // 무데이터 초기 통화 표시도 로케일 포맷(§10): 정적 '$0.00'(en 마침표)이 무agg/무활성블록 상태에서
+      // it/de/fr/es/vi/pt-BR(쉼표 소수) UI에 그대로 노출되지 않게 부트 1회 정정(데이터 도착 시 renderAgg가 덮음).
+      if (window.Fmt)
+        ['today-cost-usd', 'last7-cost'].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = window.Fmt.fmtUsd(0);
+        });
       // I18N-010: 라이브 언어 변경(applyLive) 시 fmtClock도 새 로케일로 갱신되게 렌더러 가변 보관.
       // window.usage.locale은 contextBridge 노출 읽기전용이라 재할당 불가 → 가변 변수로 추적(초기값=boot 로케일, 거동 보존).
       let curLocale = (window.usage && window.usage.locale) || undefined;
