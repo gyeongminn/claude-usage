@@ -2,16 +2,20 @@ const path = require('node:path');
 const os = require('node:os');
 const chokidar = require('chokidar');
 
+// Claude 설정 베이스 디렉토리 — CLAUDE_CONFIG_DIR 존중(§2 크로스 머신), 없으면 ~/.claude.
+// AUTO-010: resolveWatchDir·resolveCredentialsFile의 동일 base 산출(§2 규칙) 단일화.
+function resolveClaudeBase(env = process.env) {
+  return env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
+}
+
 // 감시 루트 — CLAUDE_CONFIG_DIR 존중(§2), 없으면 ~/.claude/projects.
 function resolveWatchDir(env = process.env) {
-  const base = env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
-  return path.join(base, 'projects');
+  return path.join(resolveClaudeBase(env), 'projects');
 }
 
 // 계정 변경 즉시 반영(BL-04) — 현재 계정 OAuth 자격파일(~/.claude/.credentials.json, CLAUDE_CONFIG_DIR 존중).
 function resolveCredentialsFile(env = process.env) {
-  const base = env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
-  return path.join(base, '.credentials.json');
+  return path.join(resolveClaudeBase(env), '.credentials.json');
 }
 
 function watchGlob(dir) {
