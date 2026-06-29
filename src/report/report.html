@@ -140,6 +140,8 @@
       const F = window.Fmt;
       // 재초기화 안전: 이미 init된 DOM이면 기존 인스턴스 재사용(printToPDF 주입 시 중복 init 방지).
       const chartOf = (el) => echarts.getInstanceByDom(el) || echarts.init(el);
+      // AUTO-010: 차트 id로 init-or-reuse 후 setOption (p2×2/p3/p4 4중복 제거·같은 파일 setRows 추출 선례 대칭).
+      const drawChart = (id, opt) => chartOf(document.getElementById(id)).setOption(opt);
 
       // 표 행 렌더 헬퍼(AUTO-010): id 요소 innerHTML을 arr 각 항목 → `<tr><td>…</td></tr>`로 채움(p2/p3×2/p4 4중복 제거).
       // cells(item)=셀 문자열 배열. SEC-010: 셀 값은 esc()로 HTML 인코딩(유일 innerHTML sink·OWASP 출력 인코딩).
@@ -184,17 +186,14 @@
 
       // p2 추세 — 비용/토큰 2단 차트(§4.2) + 일자별 표
       function fillP2(d) {
-        chartOf(document.getElementById('p2-chart'))
-          .setOption(window.TrendChart.buildTrendOption(d.daily, 'cost', theme));
-        chartOf(document.getElementById('p2-chart-tokens'))
-          .setOption(window.TrendChart.buildTrendOption(d.daily, 'tokens', theme));
+        drawChart('p2-chart', window.TrendChart.buildTrendOption(d.daily, 'cost', theme));
+        drawChart('p2-chart-tokens', window.TrendChart.buildTrendOption(d.daily, 'tokens', theme));
         setRows('p2-table', d.daily, (r) => [r.period, F.fmtUsd(r.totalCost), F.fmtTokens(r.totalTokens)]);
       }
 
       // p3 모델 도넛+표 / 토큰 구성 표 / 캐시 효율
       function fillP3(d) {
-        chartOf(document.getElementById('p3-donut'))
-          .setOption(window.ModelDonut.buildDonutOption(d.models, theme));
+        drawChart('p3-donut', window.ModelDonut.buildDonutOption(d.models, theme));
         setRows('p3-models', d.models, (m) => [window.ModelDonut.shortModelName(m.modelName), F.fmtUsd(m.cost)]);
         const comp = window.ReportData.tokenComposition(d.daily);
         const rows = [[L.input, comp.input], [L.output, comp.output], [L.cacheCreate, comp.cacheCreate], [L.cacheRead, comp.cacheRead]];
@@ -210,7 +209,7 @@
         document.getElementById('p4-content').hidden = empty;
         document.getElementById('p4-empty').hidden = !empty;
         if (empty) return; // 차트/표 렌더 생략 — 빈 차트(축만)·"0 total" 방지.
-        chartOf(document.getElementById('p4-projects')).setOption(
+        drawChart('p4-projects',
           window.ProjectBars.buildProjectBarOption(window.ProjectBars.topNWithOther(d.projects, 5, L.other), theme)
         );
         const st = window.ReportData.sessionStats(d.sessions);
