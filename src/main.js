@@ -54,6 +54,11 @@ function persistSettings(patch) {
 }
 
 // 월 보고서 생성(INT-010): ccusage 월/일/세션 → 어셈블러 → printToPDF → reports/YYYY-MM.pdf.
+// AUTO-010: 보고서 템플릿(report.html)을 데이터로 PDF 렌더 — 월보고서·검증(REPORT_PDF) 공용(BrowserWindow·htmlPath 고정).
+function emitReportPdf(data, outPath) {
+  return renderReportToPdf({ BrowserWindow, htmlPath: path.join(__dirname, 'report', 'report.html'), data, outPath });
+}
+
 // PDF 로케일은 EN/KO만(§10). 실패해도 앱은 유지(에러 로깅).
 async function generateMonthlyReport(ym) {
   try {
@@ -78,12 +83,7 @@ async function generateMonthlyReport(ym) {
       }
     );
     const out = reportPath(reportsDir(), ym.year, ym.month);
-    await renderReportToPdf({
-      BrowserWindow,
-      htmlPath: path.join(__dirname, 'report', 'report.html'),
-      data,
-      outPath: out,
-    });
+    await emitReportPdf(data, out);
     console.log('월 보고서 생성:', out);
   } catch (e) {
     console.error('월 보고서 생성 실패:', e.message);
@@ -410,12 +410,7 @@ async function generatePdfAndQuit(outPath) {
     ],
   };
   try {
-    await renderReportToPdf({
-      BrowserWindow,
-      htmlPath: path.join(__dirname, 'report', 'report.html'),
-      data,
-      outPath,
-    });
+    await emitReportPdf(data, outPath);
   } catch (e) {
     console.error('PDF 렌더 실패:', e.message);
     process.exitCode = 1;
