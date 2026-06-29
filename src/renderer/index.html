@@ -105,6 +105,7 @@
       <section class="card weekly" aria-label="weekly" data-tile="weekly">
         <div class="card-label" data-i18n="dash_weekly5">최근 5주</div>
         <div id="week-list" class="week-list"></div>
+        <div id="week-empty" class="empty-state" data-i18n="dash_no_data" hidden>No usage data yet</div>
       </section>
     </main>
 
@@ -374,6 +375,7 @@
         }
       }
       drawDonut();
+      renderWeekly([]); // boot 빈상태: agg 도착 전(또는 ccusage 미가용)에도 추세/도넛처럼 weekly 빈상태 표시(hoisted 함수 선언).
 
       // 차트 리사이즈를 다음 틱으로 미룸(AUTO-010): 타일 이동/탭 전환으로 바뀐 컨테이너 폭을 반영.
       // 숨김 뷰(0폭) resize의 echarts 내부 throw는 try/catch로 삼킴(turn-1 fix). renderMain·setupTabs.show 공용(중복 제거).
@@ -574,6 +576,11 @@
         if (!el) return;
         el.textContent = '';
         const arr = Array.isArray(weeks) ? weeks.slice().reverse() : [];
+        // AUDIT-060 류 빈상태: 실사용(비용·토큰>0) 주가 하나도 없으면 5×$0 행 나열 대신 빈상태 메시지(추세/도넛과 일관·§2/§5).
+        // weeklyBuckets는 무데이터에도 항상 5주(0값) 반환 → boot/무데이터/agg미도착 시 weekly만 빈 카드로 보이던 갭 정정.
+        const has = arr.some((w) => (Number(w.totalCost) || 0) > 0 || (Number(w.totalTokens) || 0) > 0);
+        toggleEmpty('week-list', 'week-empty', has);
+        if (!has) return;
         const max = Math.max(1, ...arr.map((w) => Number(w.totalCost) || 0)); // 0 나눗셈 방지.
         for (const w of arr) {
           const cost = Number(w.totalCost) || 0;

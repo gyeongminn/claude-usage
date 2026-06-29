@@ -131,6 +131,8 @@ body {
 
 /* WEEK5: 최근 5주 주차별(이번 주 포함) — 주 라벨·비례 바·비용·토큰 한 줄(최신 위). */
 .week-list { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-2); }
+/* AUDIT-060류: hidden 속성이 display:flex에 가려지지 않게(무데이터 시 week-empty 빈상태와 토글). .empty-state[hidden]과 동일 패턴. */
+.week-list[hidden] { display: none; }
 .week-row { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: var(--space-3); }
 .week-label { font-size: 13px; color: var(--text-2); font-variant-numeric: tabular-nums; }
 .week-bar { height: 8px; background: var(--track); border-radius: 999px; overflow: hidden; }
