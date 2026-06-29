@@ -223,53 +223,54 @@ async function runUpdateCheck(win) {
 // ponytail: 검증용 스크린샷은 네이티브 capturePage 로 충분 — 외부 도구/의존성 불필요.
 // CAPTURE_PATH 가 있으면 렌더 후 그 경로에 PNG 저장하고 종료(검증 루프 전용 모드).
 async function captureAndQuit(win, outPath) {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); // AUTO-010: 캡처 단계별 안정화 대기 8중복 단일화.
   // 검증 캡처는 전체 대시보드가 한 프레임에 들어오게 창을 키운다(뷰포트 밖 카드까지).
   // CAPTURE_W로 폭 지정 가능(반응형 단일 컬럼 검증용, 기본 1100).
   win.setContentSize(Number(process.env.CAPTURE_W) || 1100, Number(process.env.CAPTURE_H) || 1300);
   // 첫 페인트 + 폰트 + ECharts 애니메이션 안정화 후 캡처(빈/미완성 프레임 방지).
   const delay = Number(process.env.CAPTURE_DELAY) || 1400;
-  await new Promise((r) => setTimeout(r, delay));
+  await sleep(delay);
   // 보고서 로케일 검증: REPORT_LOCALE면 샘플을 해당 로케일로 재렌더(EN/KO §10).
   if (process.env.REPORT_LOCALE) {
     await win.webContents.executeJavaScript(
       `window.renderReport(Object.assign({}, window.__SAMPLE__, { locale: ${JSON.stringify(process.env.REPORT_LOCALE)} })); true;`
     );
-    await new Promise((r) => setTimeout(r, 300));
+    await sleep(300);
   }
   // RPT-010 빈상태 검증: REPORT_EMPTY면 projects·sessions를 프로덕션처럼 빈 배열로 재렌더(OPEN[08] 데이터원 부재 재현).
   if (process.env.REPORT_EMPTY) {
     await win.webContents.executeJavaScript(
       `window.renderReport(Object.assign({}, window.__SAMPLE__, { projects: [], sessions: [] })); true;`
     );
-    await new Promise((r) => setTimeout(r, 300));
+    await sleep(300);
   }
   // 보고서처럼 긴 문서는 CAPTURE_SCROLL(px)로 해당 위치까지 스크롤 후 캡처(페이지별 검증).
   if (process.env.CAPTURE_SCROLL) {
     await win.webContents.executeJavaScript(`window.scrollTo(0, ${Number(process.env.CAPTURE_SCROLL)})`);
-    await new Promise((r) => setTimeout(r, 300));
+    await sleep(300);
   }
   // UI-040 설정 모달 검증: SETTINGS_OPEN이면 모달 열고, SETTINGS_LOCALE이면 그 로케일로 저장(즉시 반영 검증).
   if (process.env.SETTINGS_OPEN) {
     await win.webContents.executeJavaScript(`document.getElementById('btn-settings').click(); true;`);
-    await new Promise((r) => setTimeout(r, 400));
+    await sleep(400);
     if (process.env.SETTINGS_LOCALE) {
       await win.webContents.executeJavaScript(
         `(function(){var s=document.getElementById('set-locale');s.value=${JSON.stringify(process.env.SETTINGS_LOCALE)};document.getElementById('set-save').click();return true;})();`
       );
-      await new Promise((r) => setTimeout(r, 800));
+      await sleep(800);
     }
   }
   // 탭 검증: CLICK_TAB=main|detail이면 해당 탭을 눌러 전환 후 캡처.
   if (process.env.CLICK_TAB) {
     await win.webContents.executeJavaScript(`var b=document.getElementById('tab-${process.env.CLICK_TAB}'); if(b) b.click(); true;`);
-    await new Promise((r) => setTimeout(r, 500));
+    await sleep(500);
   }
   // FEAT-010 배너 검증: UPDATE_BANNER면 가짜 새 버전으로 배너를 띄워 시각 확인(실 네트워크 불필요).
   if (process.env.UPDATE_BANNER) {
     await win.webContents.executeJavaScript(
       `(function(){var b=document.getElementById('update-banner');if(!b)return false;var t=(window.usage&&window.usage.t)||function(k,v){return 'New version '+(v&&v.version);};document.getElementById('update-text').textContent=t('update_available',{version:'v9.9.9'});b.hidden=false;return true;})();`
     );
-    await new Promise((r) => setTimeout(r, 250));
+    await sleep(250);
   }
   const img = await win.webContents.capturePage();
   fs.writeFileSync(outPath, img.toPNG());
