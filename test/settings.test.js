@@ -127,3 +127,24 @@ test('UI020_theme_잘못된값_light폴백', () => {
   assert.equal(validateSettings({ theme: 'neon' }).theme, 'light');
   assert.equal(validateSettings({ theme: null }).theme, 'light');
 });
+
+// TILE-010: 메인 탭 타일 구성(settings.mainTiles, §12). tiles.js 카탈로그 화이트리스트·중복제거·미지 드롭·빈/무효→기본.
+test('TILE010_DEFAULTS_mainTiles_현행4', () => {
+  assert.ok('mainTiles' in DEFAULTS);
+  assert.deepEqual(DEFAULTS.mainTiles, ['hero', 'trend', 'today', 'weekly']);
+});
+
+test('TILE010_validate_mainTiles_정상부분집합_순서보존', () => {
+  assert.deepEqual(validateSettings({ mainTiles: ['system', 'hero', 'trend'] }).mainTiles, ['system', 'hero', 'trend']);
+});
+
+test('TILE010_validate_mainTiles_미지드롭_중복제거', () => {
+  assert.deepEqual(validateSettings({ mainTiles: ['hero', 'bogus', 'hero', 'tokens'] }).mainTiles, ['hero', 'tokens']);
+});
+
+test('TILE010_validate_mainTiles_빈_비배열_무효_미지정_기본폴백', () => {
+  assert.deepEqual(validateSettings({ mainTiles: [] }).mainTiles, DEFAULTS.mainTiles);
+  assert.deepEqual(validateSettings({ mainTiles: 'hero' }).mainTiles, DEFAULTS.mainTiles);
+  assert.deepEqual(validateSettings({ mainTiles: ['nope'] }).mainTiles, DEFAULTS.mainTiles);
+  assert.deepEqual(validateSettings({}).mainTiles, DEFAULTS.mainTiles); // 미지정 → 기본
+});

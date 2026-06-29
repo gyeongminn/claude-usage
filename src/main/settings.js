@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { LOCALES } = require('../i18n/i18n');
+const { DEFAULT_MAIN_TILES, normalizeMainTiles } = require('../renderer/tiles');
 
 // 기본값. reportsDir=''는 "앱 데이터 폴더 reports/"를 의미(호출부에서 해석). locale=null=시스템 언어 자동(§10).
 const DEFAULTS = {
@@ -16,6 +17,7 @@ const DEFAULTS = {
   timezone: null, // 표시 타임존(UI-040, §10). null=시스템 TZ 자동, 유효 IANA면 수동 오버라이드.
   checkUpdates: true, // 업데이트 확인 토글(UI-040/FEAT-010). 기본 켜짐.
   accurateUsage: true, // 실제 사용 한도(oauth /usage) 조회. 기본 켜짐(사용자 선택). 끄면 호출 0.
+  mainTiles: DEFAULT_MAIN_TILES.slice(), // 메인 탭 타일 구성(TILE-010, §12). 순서 있는 id 배열, 기본=현행4.
 };
 const KEYS = Object.keys(DEFAULTS);
 
@@ -63,6 +65,7 @@ function validateSettings(partial) {
     timezone: isValidTimeZone(s.timezone) ? s.timezone : null, // 유효 IANA만, 그 외 시스템 자동.
     checkUpdates: typeof s.checkUpdates === 'boolean' ? s.checkUpdates : DEFAULTS.checkUpdates,
     accurateUsage: typeof s.accurateUsage === 'boolean' ? s.accurateUsage : DEFAULTS.accurateUsage,
+    mainTiles: normalizeMainTiles(s.mainTiles), // 카탈로그 화이트리스트·중복제거·미지 드롭·빈/무효→기본(§12).
   };
 }
 
