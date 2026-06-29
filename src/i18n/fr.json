@@ -41,6 +41,7 @@
   "set_scale": "Échelle de l’interface",
   "set_autolaunch": "Lancer à la connexion",
   "set_check_updates": "Rechercher des mises à jour",
+  "set_accurate": "Limites d'usage réelles",
   "set_save": "Enregistrer",
   "set_cancel": "Annuler"
 }

@@ -145,6 +145,8 @@
             <input id="set-autolaunch" type="checkbox" /></label>
           <label class="set-row"><span data-i18n="set_check_updates">업데이트 확인</span>
             <input id="set-check-updates" type="checkbox" /></label>
+          <label class="set-row"><span data-i18n="set_accurate">실제 사용 한도</span>
+            <input id="set-accurate" type="checkbox" /></label>
         </div>
         <div class="modal-foot">
           <button id="set-cancel" class="btn-secondary" type="button" data-i18n="set_cancel">취소</button>
@@ -346,6 +348,7 @@
           $('set-scale').value = s.uiScale;
           $('set-autolaunch').checked = !!s.autoLaunch;
           $('set-check-updates').checked = !!s.checkUpdates;
+          $('set-accurate').checked = !!s.accurateUsage;
           overlay.hidden = false;
         }
         const close = () => (overlay.hidden = true);
@@ -363,6 +366,7 @@
             uiScale: Number($('set-scale').value),
             autoLaunch: $('set-autolaunch').checked,
             checkUpdates: $('set-check-updates').checked,
+            accurateUsage: $('set-accurate').checked,
           });
           applyLive(res && res.settings, res && res.uiLocale);
           close();

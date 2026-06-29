@@ -41,6 +41,7 @@
   "set_scale": "UI scale",
   "set_autolaunch": "Launch at login",
   "set_check_updates": "Check for updates",
+  "set_accurate": "Accurate usage limits",
   "set_save": "Save",
   "set_cancel": "Cancel"
 }

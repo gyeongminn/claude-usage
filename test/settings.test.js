@@ -35,6 +35,16 @@ test('UI040_validate_checkUpdates_불린_기본true', () => {
   assert.equal(validateSettings({ checkUpdates: 0 }).checkUpdates, true); // 비불린 → 기본
 });
 
+// BL-02: accurateUsage 토글(실제 사용 한도 oauth /usage 조회). 불린 강제, 기본 켜짐, 끄면 호출 0.
+test('BL02_validate_accurateUsage_불린_기본true', () => {
+  assert.ok('accurateUsage' in DEFAULTS);
+  assert.equal(validateSettings({}).accurateUsage, true); // 기본 켜짐(사용자 선택)
+  assert.equal(validateSettings({ accurateUsage: false }).accurateUsage, false); // 끄면 false 영속
+  assert.equal(validateSettings({ accurateUsage: true }).accurateUsage, true);
+  assert.equal(validateSettings({ accurateUsage: 'x' }).accurateUsage, true); // 비불린 → 기본
+  assert.equal(validateSettings({ accurateUsage: 0 }).accurateUsage, true); // 비불린 → 기본
+});
+
 test('OPS050_mergeSettings_부분오버라이드', () => {
   const m = mergeSettings({ krwPerUsd: 1400, autoLaunch: false });
   assert.equal(m.krwPerUsd, 1400);

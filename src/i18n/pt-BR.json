@@ -41,6 +41,7 @@
   "set_scale": "Escala da interface",
   "set_autolaunch": "Iniciar ao fazer login",
   "set_check_updates": "Verificar atualizações",
+  "set_accurate": "Limites de uso reais",
   "set_save": "Salvar",
   "set_cancel": "Cancelar"
 }

@@ -22,11 +22,13 @@ test('INT020_대시보드키_10로케일_모두존재', () => {
   }
 });
 
-// UI-040: 설정 화면 라벨 14키가 10로케일에 모두 존재(드리프트 가드).
+// UI-040: 설정 화면 라벨이 10로케일에 모두 존재(드리프트 가드). BL-02로 set_accurate 추가.
 const SET_KEYS = [
   'set_title', 'set_language', 'set_system', 'set_light', 'set_dark',
   'set_timezone', 'set_krw', 'set_token_limit', 'set_reports_dir', 'set_scale',
   'set_autolaunch', 'set_check_updates', 'set_save', 'set_cancel',
+  // BL-02: 실제 사용 한도(oauth /usage) 조회 토글.
+  'set_accurate',
 ];
 test('UI040_설정키_10로케일_모두존재', () => {
   for (const lc of LOCALES) {

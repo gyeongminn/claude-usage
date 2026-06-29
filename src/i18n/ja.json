@@ -41,6 +41,7 @@
   "set_scale": "UI 倍率",
   "set_autolaunch": "ログイン時に起動",
   "set_check_updates": "更新を確認",
+  "set_accurate": "実際の使用上限",
   "set_save": "保存",
   "set_cancel": "キャンセル"
 }

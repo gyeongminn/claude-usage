@@ -41,6 +41,7 @@
   "set_scale": "界面缩放",
   "set_autolaunch": "登录时启动",
   "set_check_updates": "检查更新",
+  "set_accurate": "真实用量额度",
   "set_save": "保存",
   "set_cancel": "取消"
 }

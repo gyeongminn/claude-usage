@@ -41,6 +41,7 @@
   "set_scale": "Scala interfaccia",
   "set_autolaunch": "Avvia all’accesso",
   "set_check_updates": "Controlla aggiornamenti",
+  "set_accurate": "Limiti di utilizzo reali",
   "set_save": "Salva",
   "set_cancel": "Annulla"
 }

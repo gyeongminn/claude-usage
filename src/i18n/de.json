@@ -41,6 +41,7 @@
   "set_scale": "UI-Skalierung",
   "set_autolaunch": "Beim Anmelden starten",
   "set_check_updates": "Nach Updates suchen",
+  "set_accurate": "Echte Nutzungslimits",
   "set_save": "Speichern",
   "set_cancel": "Abbrechen"
 }

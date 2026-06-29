@@ -41,6 +41,7 @@
   "set_scale": "UI 배율",
   "set_autolaunch": "로그인 시 자동 실행",
   "set_check_updates": "업데이트 확인",
+  "set_accurate": "실제 사용 한도",
   "set_save": "저장",
   "set_cancel": "취소"
 }
