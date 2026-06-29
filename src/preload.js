@@ -1,22 +1,25 @@
 const { contextBridge, ipcRenderer } = require('electron');
 const { tFor, resolveLocale, LOCALES } = require('./i18n/i18n');
 
-// UI 로케일은 main이 additionalArguments(--ui-locale=xx)로 전달(§10). 없으면 en.
-const arg = process.argv.find((a) => a.startsWith('--ui-locale='));
-const uiLocale = resolveLocale(arg ? arg.split('=')[1] : 'en');
+// main이 additionalArguments(--name=value)로 넘긴 인자값(없으면 undefined). AUTO-010: 4중복 find+split 단일 헬퍼로.
+const argv = (name) => {
+  const a = process.argv.find((x) => x.startsWith('--' + name + '='));
+  return a ? a.split('=')[1] : undefined;
+};
+
+// UI 로케일은 main이 --ui-locale로 전달(§10). 없으면 en.
+const uiLocale = resolveLocale(argv('ui-locale') || 'en');
 const t = tFor(uiLocale);
 
 // UI 테마(UI-020): main이 --ui-theme로 전달(설정 영속값). dark만 dark, 그 외 light.
-const themeArg = process.argv.find((a) => a.startsWith('--ui-theme='));
-const uiTheme = themeArg && themeArg.split('=')[1] === 'dark' ? 'dark' : 'light';
+const uiTheme = argv('ui-theme') === 'dark' ? 'dark' : 'light';
 
 // UI 배율(UI-030): main이 --ui-scale로 전달. 숫자 아니면 1(실제 clamp·영속은 main이 검증).
-const scaleArg = process.argv.find((a) => a.startsWith('--ui-scale='));
-const uiScale = scaleArg && isFinite(Number(scaleArg.split('=')[1])) ? Number(scaleArg.split('=')[1]) : 1;
+const scaleVal = Number(argv('ui-scale'));
+const uiScale = isFinite(scaleVal) ? scaleVal : 1;
 
 // TILE-020 캡처 검증용(UI_MAIN_TILES): main이 --ui-main-tiles로 전달. 비면 null(렌더러는 settings.mainTiles 사용).
-const mtArg = process.argv.find((a) => a.startsWith('--ui-main-tiles='));
-const mtVal = mtArg ? mtArg.split('=')[1] : '';
+const mtVal = argv('ui-main-tiles') || '';
 const captureMainTiles = mtVal ? mtVal.split(',').filter(Boolean) : null;
 
 // 메인 → 렌더러 집계 push + i18n(t/locale) 노출(contextIsolation 유지, nodeIntegration 없음).
