@@ -22,6 +22,21 @@ test('TRENDH_xAxis_라벨_가로(사용자요청)', () => {
   assert.equal(opt.xAxis.axisLabel.interval, 0); // 모든 날짜 라벨 유지(막대1=하루1)
 });
 
+test('AUTO030_월간_많은날짜_라벨_솎음회전(보고서 가독성·§5)', () => {
+  // 보고서(PDF p2)는 월 전체(예: 31일)를 같은 빌더에 넘김 → interval:0/rotate:0면 31개 라벨이 겹쳐
+  // 검은 뭉텅이로 불가독(§5 가독성 위반). 라벨이 많으면(>8) 솎음(interval>0)+회전(rotate>0)으로 가독성 확보.
+  const month = Array.from({ length: 31 }, (_, i) => ({
+    period: `2026-05-${String(i + 1).padStart(2, '0')}`,
+    totalCost: i + 1,
+    totalTokens: (i + 1) * 1000,
+  }));
+  const opt = buildTrendOption(month, 'cost', theme);
+  assert.ok(opt.xAxis.axisLabel.interval > 0, '많은 라벨은 솎음(interval>0)');
+  assert.ok(opt.xAxis.axisLabel.rotate > 0, '많은 라벨은 회전(rotate>0)');
+  const shown = Math.ceil(31 / (opt.xAxis.axisLabel.interval + 1)); // 표시 라벨 수 상한(과밀 방지)
+  assert.ok(shown <= 12, `표시 라벨 ${shown}개로 제한`);
+});
+
 test('DSH030_cost_메트릭_비용시리즈', () => {
   const opt = buildTrendOption(daily, 'cost', theme);
   assert.deepEqual(opt.series[0].data, [10.5, 22.0, 8.25]);

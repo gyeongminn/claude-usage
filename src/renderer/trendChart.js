@@ -14,6 +14,10 @@
     // 축은 간결하게: 비용 '$1,395'(소수 없음), 토큰 '123.0M'. 툴팁은 더 정밀: 비용 '$91.40'.
     const axisFmt = isTokens ? (v) => F.fmtTokens(v) : (v) => '$' + F.fmtInt(v);
     const tipFmt = isTokens ? (v) => F.fmtTokens(v) : (v) => F.fmtUsd(v);
+    // 라벨 과밀 방지: 대시보드(TREND7=7일)는 전부 가로 표시(interval:0·rotate:0, 사용자 요청), 보고서(월 전체 31일)처럼
+    // 많으면(>8) 솎음(~8개로)+회전으로 가독성 확보(§5). 같은 빌더라 데이터 개수로 분기.
+    const dense = daily.length > 8;
+    const labelInterval = dense ? Math.ceil(daily.length / 8) - 1 : 0;
     return {
       color: theme.color,
       textStyle: theme.textStyle,
@@ -24,9 +28,9 @@
         data: daily.map((d) => d.period),
         axisLine: theme.categoryAxis.axisLine,
         axisTick: theme.categoryAxis.axisTick,
-        // 모든 날짜 라벨 표시(interval:0) — 자동 솎음(예: 5일마다)이 "하루에 막대 여러 개"처럼 보이는 착시 방지.
-        // 막대 1개 = 하루를 라벨로 1:1 확인. TREND7로 최근 7일만이라 가로(rotate:0)로도 겹치지 않음(사용자 요청).
-        axisLabel: Object.assign({}, theme.categoryAxis.axisLabel, { interval: 0, rotate: 0, fontSize: 11 }),
+        // ≤8일(대시보드 TREND7): 모든 날짜 라벨 가로 표시(막대1=하루1·착시 방지·사용자 요청 rotate:0).
+        // >8일(보고서 월 전체): 솎음+회전으로 31개 라벨 겹침(검은 뭉텅이) 방지 — 정확값은 아래 표가 제공.
+        axisLabel: Object.assign({}, theme.categoryAxis.axisLabel, { interval: labelInterval, rotate: dense ? 30 : 0, fontSize: 11 }),
       },
       yAxis: {
         type: 'value',
