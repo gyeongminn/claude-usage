@@ -141,6 +141,14 @@
       // 재초기화 안전: 이미 init된 DOM이면 기존 인스턴스 재사용(printToPDF 주입 시 중복 init 방지).
       const chartOf = (el) => echarts.getInstanceByDom(el) || echarts.init(el);
 
+      // 표 행 렌더 헬퍼(AUTO-010): id 요소 innerHTML을 arr 각 항목 → `<tr><td>…</td></tr>`로 채움(p2/p3×2/p4 4중복 제거).
+      // cells(item)=셀 문자열 배열. 값은 기존과 동일하게 그대로 보간(거동 불변 — 이스케이프 추가/제거 없음).
+      const setRows = (id, arr, cells) => {
+        document.getElementById(id).innerHTML = arr
+          .map((item) => '<tr>' + cells(item).map((c) => `<td>${c}</td>`).join('') + '</tr>')
+          .join('');
+      };
+
       // 정적 라벨을 로케일로 채움(PDF-060, EN/KO §10). data-i18n 키 → 카탈로그 문자열.
       let L = window.ReportLabels.reportLabels('en');
       function applyLabels(locale) {
@@ -176,23 +184,17 @@
           .setOption(window.TrendChart.buildTrendOption(d.daily, 'cost', theme));
         chartOf(document.getElementById('p2-chart-tokens'))
           .setOption(window.TrendChart.buildTrendOption(d.daily, 'tokens', theme));
-        document.getElementById('p2-table').innerHTML = d.daily
-          .map((r) => `<tr><td>${r.period}</td><td>${F.fmtUsd(r.totalCost)}</td><td>${F.fmtTokens(r.totalTokens)}</td></tr>`)
-          .join('');
+        setRows('p2-table', d.daily, (r) => [r.period, F.fmtUsd(r.totalCost), F.fmtTokens(r.totalTokens)]);
       }
 
       // p3 모델 도넛+표 / 토큰 구성 표 / 캐시 효율
       function fillP3(d) {
         chartOf(document.getElementById('p3-donut'))
           .setOption(window.ModelDonut.buildDonutOption(d.models, theme));
-        document.getElementById('p3-models').innerHTML = d.models
-          .map((m) => `<tr><td>${window.ModelDonut.shortModelName(m.modelName)}</td><td>${F.fmtUsd(m.cost)}</td></tr>`)
-          .join('');
+        setRows('p3-models', d.models, (m) => [window.ModelDonut.shortModelName(m.modelName), F.fmtUsd(m.cost)]);
         const comp = window.ReportData.tokenComposition(d.daily);
         const rows = [[L.input, comp.input], [L.output, comp.output], [L.cacheCreate, comp.cacheCreate], [L.cacheRead, comp.cacheRead]];
-        document.getElementById('p3-tokens').innerHTML = rows
-          .map(([k, v]) => `<tr><td>${k}</td><td>${F.fmtTokens(v)}</td></tr>`)
-          .join('');
+        setRows('p3-tokens', rows, ([k, v]) => [k, F.fmtTokens(v)]);
         const rate = window.Verdict.cacheHitRate({
           inputTokens: comp.input, cacheCreationTokens: comp.cacheCreate, cacheReadTokens: comp.cacheRead,
         });
@@ -211,9 +213,7 @@
         );
         const st = window.ReportData.sessionStats(d.sessions);
         document.getElementById('p4-sessions-head').textContent = L.sessions.replace('{n}', st.totalSessions);
-        document.getElementById('p4-sessions').innerHTML = st.top3
-          .map((s) => `<tr><td>${s.project || '(unknown)'}</td><td>${F.fmtUsd(s.totalCost)}</td><td>${F.fmtTokens(s.totalTokens)}</td></tr>`)
-          .join('');
+        setRows('p4-sessions', st.top3, (s) => [s.project || '(unknown)', F.fmtUsd(s.totalCost), F.fmtTokens(s.totalTokens)]);
       }
 
       // PDF-050: main 프로세스가 실데이터를 주입하는 진입점(printToPDF 전 호출). 재초기화 안전.
