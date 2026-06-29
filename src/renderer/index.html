@@ -297,10 +297,10 @@
         { period: '06-25', totalCost: 55.0, totalTokens: 72000 },
         { period: '06-26', totalCost: 91.4, totalTokens: 98000 },
       ];
-      // 차트 테마는 현재 data-theme에서 토큰을 골라 생성(토글 시 redrawCharts가 재생성).
-      let theme = window.EChartsTheme.makeEchartsTheme(
-        window.EChartsTheme.tokensFor(document.documentElement.dataset.theme)
-      );
+      // 차트 테마는 현재 data-theme에서 토큰을 골라 생성(토글 시 redrawCharts가 재생성). 초기·재테마 공용(중복 제거·call-time data-theme 읽기).
+      const makeTheme = () =>
+        window.EChartsTheme.makeEchartsTheme(window.EChartsTheme.tokensFor(document.documentElement.dataset.theme));
+      let theme = makeTheme();
       const chart = echarts.init(document.getElementById('trend-chart'));
       let metric = 'cost';
       function drawTrend() {
@@ -359,9 +359,7 @@
 
       // UI-020: 테마 토글 — data-theme 스왑(CSS 변수 자동) + 차트 JS 재테마 + 설정 영속.
       function redrawCharts() {
-        theme = window.EChartsTheme.makeEchartsTheme(
-          window.EChartsTheme.tokensFor(document.documentElement.dataset.theme)
-        );
+        theme = makeTheme();
         drawTrend();
         drawDonut(); // 재테마 시 도넛 색·범례 색 동기.
       }
