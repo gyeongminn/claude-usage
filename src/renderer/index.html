@@ -15,9 +15,9 @@
 
     <!-- 상단 툴바: 좌측=메인/상세 탭, 우측=아이콘 버튼(같은 row, 사용자 요청). -->
     <header class="toolbar">
-      <nav class="tabs">
-        <button id="tab-main" class="tab active" type="button" data-i18n="tab_main">메인</button>
-        <button id="tab-detail" class="tab" type="button" data-i18n="tab_detail">상세</button>
+      <nav class="tabs" role="tablist">
+        <button id="tab-main" class="tab active" type="button" role="tab" aria-selected="true" aria-controls="view-main" data-i18n="tab_main">메인</button>
+        <button id="tab-detail" class="tab" type="button" role="tab" aria-selected="false" aria-controls="view-detail" data-i18n="tab_detail">상세</button>
       </nav>
       <div class="toolbar-actions">
       <button id="btn-zoom-out" class="icon-btn" type="button" data-i18n-title="dash_zoom_out" aria-label="Zoom out">
@@ -55,7 +55,7 @@
     </header>
 
     <!-- 메인 탭 — 히어로(5h·7d 실제 소진률 좌우분할) / 추세 / 오늘 -->
-    <main id="view-main" class="grid">
+    <main id="view-main" class="grid" role="tabpanel" aria-labelledby="tab-main">
       <section class="card hero" aria-label="usage" data-tile="hero">
         <div class="hero-split">
           <div class="usage-col">
@@ -78,9 +78,9 @@
       <section class="card trend" aria-label="trend" data-tile="trend">
         <div class="card-head">
           <div class="card-label"><span class="live-dot"></span><span data-i18n="dash_trend">일자별 추세</span></div>
-          <div class="toggle">
-            <button id="t-cost" class="toggle-btn active" data-i18n="dash_cost">비용</button>
-            <button id="t-tok" class="toggle-btn" data-i18n="dash_tokens">토큰</button>
+          <div class="toggle" role="group">
+            <button id="t-cost" class="toggle-btn active" type="button" aria-pressed="true" data-i18n="dash_cost">비용</button>
+            <button id="t-tok" class="toggle-btn" type="button" aria-pressed="false" data-i18n="dash_tokens">토큰</button>
           </div>
         </div>
         <div id="trend-chart" class="chart-slot"></div>
@@ -108,7 +108,7 @@
     </main>
 
     <!-- 상세 탭 — 모델별 비중 / 프로젝트 Top 5 -->
-    <main id="view-detail" class="grid-detail" hidden>
+    <main id="view-detail" class="grid-detail" role="tabpanel" aria-labelledby="tab-detail" hidden>
       <!-- TILE-030(§12): 메인 타일 구성(애플 위젯식 추가/제거 토글). 컨트롤 카드 — 타일 인스턴스는 메인/상세 라이브러리에 단일 존재. -->
       <section class="card" aria-label="customize">
         <div class="card-label" data-i18n="tile_customize">메인 타일</div>
@@ -308,8 +308,13 @@
       }
       function setMetric(m) {
         metric = m;
-        document.getElementById('t-cost').classList.toggle('active', m === 'cost');
-        document.getElementById('t-tok').classList.toggle('active', m === 'tokens');
+        const cost = document.getElementById('t-cost');
+        const tok = document.getElementById('t-tok');
+        cost.classList.toggle('active', m === 'cost');
+        tok.classList.toggle('active', m === 'tokens');
+        // A11Y-020: 토글 상태를 ARIA로도 노출(WCAG 4.1.2) — 시각 active와 동기.
+        cost.setAttribute('aria-pressed', String(m === 'cost'));
+        tok.setAttribute('aria-pressed', String(m === 'tokens'));
         drawTrend();
       }
       document.getElementById('t-cost').onclick = () => setMetric('cost');
@@ -720,6 +725,9 @@
           vDetail.hidden = main;
           tMain.classList.toggle('active', main);
           tDetail.classList.toggle('active', !main);
+          // A11Y-020: 탭 선택 상태를 ARIA로도 노출(WCAG 4.1.2) — 시각 active와 동기.
+          tMain.setAttribute('aria-selected', String(main));
+          tDetail.setAttribute('aria-selected', String(!main));
           // 타일 이동(TILE-020)으로 추세·도넛 중 어느 쪽이든 반대 탭에 있을 수 있음 → 표시 후 둘 다 재계산
           // (보이는 쪽만 실효, 숨김 쪽은 0폭→다음 표시 때 재보정). renderMain·window resize와 동일 try/catch 패턴.
           deferResize();
