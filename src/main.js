@@ -16,6 +16,10 @@ const { tFor, resolveLocale } = require('./i18n/i18n');
 
 // 시스템 타임존(§10/OPEN[05]: UTC 계산 + 시스템 TZ 표시)으로 daily 날짜 그룹화.
 const SYSTEM_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+// 표시 타임존(UI-040): 설정의 수동 오버라이드 우선, 없으면 시스템 TZ(§10).
+function effectiveTz() {
+  return (settings && settings.timezone) || SYSTEM_TZ;
+}
 
 // 앱 아이콘(UX-050): build/icon.png. 패키징 시 build/는 asar에 포함되며 createFromPath가 asar 경로도 읽음.
 const ICON_PATH = path.join(__dirname, '..', 'build', 'icon.png');
@@ -24,6 +28,7 @@ let tray = null; // GC 방지로 모듈 스코프 보관(§3 상주).
 let isQuitting = false; // 트레이 Quit/실종료 시에만 true — 그 전엔 창 닫기=트레이로 숨김.
 let schedulerHandle = null; // 월별 스케줄러(OPS-030).
 let settings = null; // 영속 설정(OPS-050) — 기동 시 1회 로드.
+let mainWindow = null; // 설정 즉시 반영(UI-040) — IPC 핸들러가 현재 창 참조.
 
 // 보고서 저장 디렉터리: 설정값 우선, 없으면 앱 데이터 폴더 reports/(§4.2).
 function reportsDir() {
@@ -35,7 +40,8 @@ function reportsDir() {
 // PDF 로케일은 EN/KO만(§10). 실패해도 앱은 유지(에러 로깅).
 async function generateMonthlyReport(ym) {
   try {
-    const tzArgs = SYSTEM_TZ ? ['--timezone', SYSTEM_TZ] : [];
+    const tz = effectiveTz();
+    const tzArgs = tz ? ['--timezone', tz] : [];
     const [daily, monthly, session] = await Promise.all([
       runCcusage('daily', tzArgs),
       runCcusage('monthly'),
@@ -95,7 +101,7 @@ async function refreshFx() {
 async function pushAggregate(win) {
   try {
     const agg = await buildAggregate(runCcusage, {
-      timezone: SYSTEM_TZ,
+      timezone: effectiveTz(), // 표시 타임존(설정 오버라이드 우선, UI-040).
       planTokenLimit: settings && settings.planTokenLimit, // 플랜 한도 소진율(OPEN[09], 미설정 시 시간 소진율).
     });
     agg.krwPerUsd = krwPerUsd; // 통화 병기용(§5.1).
@@ -125,6 +131,17 @@ async function captureAndQuit(win, outPath) {
   if (process.env.CAPTURE_SCROLL) {
     await win.webContents.executeJavaScript(`window.scrollTo(0, ${Number(process.env.CAPTURE_SCROLL)})`);
     await new Promise((r) => setTimeout(r, 300));
+  }
+  // UI-040 설정 모달 검증: SETTINGS_OPEN이면 모달 열고, SETTINGS_LOCALE이면 그 로케일로 저장(즉시 반영 검증).
+  if (process.env.SETTINGS_OPEN) {
+    await win.webContents.executeJavaScript(`document.getElementById('btn-settings').click(); true;`);
+    await new Promise((r) => setTimeout(r, 400));
+    if (process.env.SETTINGS_LOCALE) {
+      await win.webContents.executeJavaScript(
+        `(function(){var s=document.getElementById('set-locale');s.value=${JSON.stringify(process.env.SETTINGS_LOCALE)};document.getElementById('set-save').click();return true;})();`
+      );
+      await new Promise((r) => setTimeout(r, 800));
+    }
   }
   const img = await win.webContents.capturePage();
   fs.writeFileSync(outPath, img.toPNG());
@@ -156,6 +173,7 @@ function createWindow() {
       additionalArguments: [`--ui-locale=${uiLocale}`, `--ui-theme=${uiTheme}`, `--ui-scale=${effScale}`],
     },
   });
+  mainWindow = win; // UI-040 설정 핸들러가 참조하는 현재 창.
   // REPORT_CAPTURE면 보고서 템플릿 로드(PDF-010 시각 검증용). 평소엔 대시보드.
   const reportMode = !!process.env.REPORT_CAPTURE;
   win.loadFile(
@@ -306,6 +324,20 @@ app.whenReady().then(() => {
   // UI-020: 테마 토글 영속 — 렌더러가 setTheme 하면 settings.json에 저장(다음 기동에도 유지).
   ipcMain.on('theme:set', (_e, theme) => {
     settings = saveSettings(app.getPath('userData'), { ...settings, theme });
+  });
+  // UI-040: 설정 화면 — 전체 설정 로드/저장(즉시 반영). saveSettings가 화이트리스트·검증·영속.
+  ipcMain.handle('settings:load', () => settings);
+  ipcMain.handle('settings:save', (_e, partial) => {
+    settings = saveSettings(app.getPath('userData'), { ...settings, ...partial });
+    // 라이브 적용: 자동실행(트레이 모드에서만 레지스트리 기록)·UI 배율·재집계(환율폴백·플랜한도·타임존).
+    if (tray) setAutoLaunch(app, settings.autoLaunch);
+    const w = mainWindow;
+    if (w && !w.isDestroyed()) {
+      w.webContents.setZoomFactor(settings.uiScale);
+      pushAggregate(w);
+    }
+    // 렌더러 즉시 재번역용으로 해석된 UI 로케일 반환(설정 우선, 없으면 시스템 언어).
+    return { settings, uiLocale: resolveLocale(settings.locale || app.getLocale()) };
   });
   const win = createWindow();
   // 캡처/검증 모드가 아니면 트레이 상주 + 로그인 자동실행 등록.

@@ -8,6 +8,33 @@ test('OPS050_DEFAULTS_필수키', () => {
   }
 });
 
+// UI-040: 설정 화면용 신규 키 — timezone(표시 타임존 수동 오버라이드, §10)·checkUpdates(업데이트 토글).
+test('UI040_DEFAULTS_timezone_checkUpdates', () => {
+  assert.ok('timezone' in DEFAULTS);
+  assert.equal(DEFAULTS.timezone, null); // null = 시스템 타임존 자동(§10)
+  assert.ok('checkUpdates' in DEFAULTS);
+  assert.equal(DEFAULTS.checkUpdates, true); // 기본 켜짐(FEAT-010 소비)
+});
+
+test('UI040_validate_timezone_유효IANA_or_null', () => {
+  assert.equal(validateSettings({ timezone: 'Asia/Seoul' }).timezone, 'Asia/Seoul');
+  assert.equal(validateSettings({ timezone: 'America/New_York' }).timezone, 'America/New_York');
+  assert.equal(validateSettings({ timezone: 'UTC' }).timezone, 'UTC');
+  assert.equal(validateSettings({ timezone: 'Not/AZone' }).timezone, null); // 잘못된 IANA → null(시스템)
+  assert.equal(validateSettings({ timezone: '' }).timezone, null);
+  assert.equal(validateSettings({ timezone: 123 }).timezone, null);
+  assert.equal(validateSettings({ timezone: null }).timezone, null);
+  assert.equal(validateSettings({}).timezone, null); // 미지정 → 기본 null
+});
+
+test('UI040_validate_checkUpdates_불린_기본true', () => {
+  assert.equal(validateSettings({}).checkUpdates, true); // 기본 켜짐
+  assert.equal(validateSettings({ checkUpdates: false }).checkUpdates, false);
+  assert.equal(validateSettings({ checkUpdates: true }).checkUpdates, true);
+  assert.equal(validateSettings({ checkUpdates: 'x' }).checkUpdates, true); // 비불린 → 기본
+  assert.equal(validateSettings({ checkUpdates: 0 }).checkUpdates, true); // 비불린 → 기본
+});
+
 test('OPS050_mergeSettings_부분오버라이드', () => {
   const m = mergeSettings({ krwPerUsd: 1400, autoLaunch: false });
   assert.equal(m.krwPerUsd, 1400);

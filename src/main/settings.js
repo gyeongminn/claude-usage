@@ -13,6 +13,8 @@ const DEFAULTS = {
   planTokenLimit: null, // 플랜 토큰 한도(OPEN[09]). null=미설정(시간 소진율만).
   theme: 'light', // UI 테마(UI-020). 'light'|'dark'. 기본 라이트(§5.2).
   uiScale: 1, // UI 배율(UI-030, webContents.setZoomFactor). [0.8,1.5], 0.1 step.
+  timezone: null, // 표시 타임존(UI-040, §10). null=시스템 TZ 자동, 유효 IANA면 수동 오버라이드.
+  checkUpdates: true, // 업데이트 확인 토글(UI-040/FEAT-010). 기본 켜짐.
 };
 const KEYS = Object.keys(DEFAULTS);
 
@@ -24,6 +26,17 @@ const SCALE_MAX = 1.5;
 function clampScale(v) {
   if (typeof v !== 'number' || !isFinite(v)) return 1; // null·문자열 등 비숫자 → 기본 1.
   return Math.min(SCALE_MAX, Math.max(SCALE_MIN, Math.round(v * 10) / 10));
+}
+
+// 표시 타임존(§10): 유효한 IANA 타임존 문자열만 허용(네이티브 Intl로 검증), 그 외 → null(시스템 자동).
+function isValidTimeZone(tz) {
+  if (typeof tz !== 'string' || !tz) return false;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: tz });
+    return true;
+  } catch (e) {
+    return false; // 잘못된 IANA 이름 → RangeError → 시스템 자동으로 폴백.
+  }
 }
 
 // 화이트리스트 키만 기본값 위에 머지(미지정·미지원 키 무시).
@@ -46,6 +59,8 @@ function validateSettings(partial) {
     planTokenLimit: posNum(s.planTokenLimit), // 양수 아니면 null.
     theme: s.theme === 'dark' ? 'dark' : 'light', // dark만 dark, 그 외 light 폴백.
     uiScale: clampScale(s.uiScale),
+    timezone: isValidTimeZone(s.timezone) ? s.timezone : null, // 유효 IANA만, 그 외 시스템 자동.
+    checkUpdates: typeof s.checkUpdates === 'boolean' ? s.checkUpdates : DEFAULTS.checkUpdates,
   };
 }
 

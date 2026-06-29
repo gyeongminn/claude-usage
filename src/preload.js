@@ -1,5 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron');
-const { tFor, resolveLocale } = require('./i18n/i18n');
+const { tFor, resolveLocale, LOCALES } = require('./i18n/i18n');
 
 // UI 로케일은 main이 additionalArguments(--ui-locale=xx)로 전달(§10). 없으면 en.
 const arg = process.argv.find((a) => a.startsWith('--ui-locale='));
@@ -32,4 +32,15 @@ contextBridge.exposeInMainWorld('usage', {
   // UI-030: UI 배율 — 초기값 + 변경(main이 clamp·영속·setZoomFactor).
   uiScale: uiScale,
   setScale: (scale) => ipcRenderer.send('scale:set', scale),
+  // UI-040: 설정 화면 — 전체 설정 load/save(즉시 반영). main이 검증·영속·라이브 적용 후 결과 반환.
+  loadSettings: () => ipcRenderer.invoke('settings:load'),
+  saveSettings: (partial) => ipcRenderer.invoke('settings:save', partial),
+  // 설정 모달 옵션: 지원 로케일 목록 + 시스템 타임존(빈 값=시스템 기본 표시용).
+  locales: LOCALES,
+  systemTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  // 로케일 즉시 전환용 번역기 빌더(렌더러가 새 로케일로 재번역). i18n 카탈로그는 preload(node)가 읽음.
+  makeT: (loc) => {
+    const tt = tFor(resolveLocale(loc));
+    return (key, vars) => tt(key, vars);
+  },
 });

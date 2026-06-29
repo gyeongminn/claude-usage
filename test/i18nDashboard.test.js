@@ -18,6 +18,19 @@ test('INT020_대시보드키_10로케일_모두존재', () => {
   }
 });
 
+// UI-040: 설정 화면 라벨 14키가 10로케일에 모두 존재(드리프트 가드).
+const SET_KEYS = [
+  'set_title', 'set_language', 'set_system', 'set_light', 'set_dark',
+  'set_timezone', 'set_krw', 'set_token_limit', 'set_reports_dir', 'set_scale',
+  'set_autolaunch', 'set_check_updates', 'set_save', 'set_cancel',
+];
+test('UI040_설정키_10로케일_모두존재', () => {
+  for (const lc of LOCALES) {
+    const cat = loadCatalog(lc);
+    for (const k of SET_KEYS) assert.ok(k in cat && cat[k], `${lc} 누락/빈값: ${k}`);
+  }
+});
+
 test('AUDIT010_프로젝트_빈상태_키_en_ko_비어있지않음', () => {
   // 가짜 프로젝트 데이터 대신 t() 경유 빈상태 문구. 10로케일 존재는 위 테스트가, 핵심 2종 값 검증.
   for (const lc of ['en', 'ko']) {

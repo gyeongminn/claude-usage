@@ -19,5 +19,19 @@
   "dash_zoom_in": "放大",
   "dash_zoom_out": "缩小",
   "dash_per_hour": "/h",
-  "dash_tok_per_hour": "tok/h"
+  "dash_tok_per_hour": "tok/h",
+  "set_title": "设置",
+  "set_language": "语言",
+  "set_system": "系统默认",
+  "set_light": "浅色",
+  "set_dark": "深色",
+  "set_timezone": "显示时区",
+  "set_krw": "汇率 (KRW/USD)",
+  "set_token_limit": "套餐令牌上限",
+  "set_reports_dir": "报告文件夹",
+  "set_scale": "界面缩放",
+  "set_autolaunch": "登录时启动",
+  "set_check_updates": "检查更新",
+  "set_save": "保存",
+  "set_cancel": "取消"
 }

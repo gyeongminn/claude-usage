@@ -19,5 +19,19 @@
   "dash_zoom_in": "Ampliar",
   "dash_zoom_out": "Reduzir",
   "dash_per_hour": "/h",
-  "dash_tok_per_hour": "tok/h"
+  "dash_tok_per_hour": "tok/h",
+  "set_title": "Configurações",
+  "set_language": "Idioma",
+  "set_system": "Padrão do sistema",
+  "set_light": "Claro",
+  "set_dark": "Escuro",
+  "set_timezone": "Fuso horário de exibição",
+  "set_krw": "Taxa de câmbio (KRW/USD)",
+  "set_token_limit": "Limite de tokens do plano",
+  "set_reports_dir": "Pasta de relatórios",
+  "set_scale": "Escala da interface",
+  "set_autolaunch": "Iniciar ao fazer login",
+  "set_check_updates": "Verificar atualizações",
+  "set_save": "Salvar",
+  "set_cancel": "Cancelar"
 }

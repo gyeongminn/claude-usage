@@ -19,5 +19,19 @@
   "dash_zoom_in": "Agrandir",
   "dash_zoom_out": "Réduire",
   "dash_per_hour": "/h",
-  "dash_tok_per_hour": "tok/h"
+  "dash_tok_per_hour": "tok/h",
+  "set_title": "Paramètres",
+  "set_language": "Langue",
+  "set_system": "Par défaut du système",
+  "set_light": "Clair",
+  "set_dark": "Sombre",
+  "set_timezone": "Fuseau horaire d’affichage",
+  "set_krw": "Taux de change (KRW/USD)",
+  "set_token_limit": "Limite de jetons du forfait",
+  "set_reports_dir": "Dossier des rapports",
+  "set_scale": "Échelle de l’interface",
+  "set_autolaunch": "Lancer à la connexion",
+  "set_check_updates": "Rechercher des mises à jour",
+  "set_save": "Enregistrer",
+  "set_cancel": "Annuler"
 }

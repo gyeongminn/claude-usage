@@ -34,6 +34,12 @@
           <path d="M21 12a9 9 0 0 1-15 6.7L3 16" /><path d="M3 21v-5h5" />
         </svg>
       </button>
+      <button id="btn-settings" class="icon-btn" type="button" data-i18n-title="set_title" aria-label="Settings">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+      </button>
     </header>
 
     <!-- 배치 B(라이브 우선형, §4.1): 히어로 / 추세·오늘 / 프로젝트 -->
@@ -78,6 +84,45 @@
       </section>
     </main>
 
+    <!-- 설정 화면(UI-040): 전체 설정 편집 + 즉시 반영. 토스풍 모달(흰 카드·소프트 그림자). -->
+    <div id="settings-overlay" class="modal-overlay" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="set-title">
+        <div class="modal-head">
+          <span id="set-title" data-i18n="set_title">설정</span>
+          <button id="set-close" class="icon-btn" type="button" aria-label="Close">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <label class="set-row"><span data-i18n="set_language">언어</span>
+            <select id="set-locale"></select></label>
+          <label class="set-row"><span data-i18n="dash_theme">테마</span>
+            <select id="set-theme">
+              <option value="light" data-i18n="set_light">라이트</option>
+              <option value="dark" data-i18n="set_dark">다크</option>
+            </select></label>
+          <label class="set-row"><span data-i18n="set_timezone">표시 타임존</span>
+            <input id="set-timezone" type="text" /></label>
+          <label class="set-row"><span data-i18n="set_krw">환율 (₩/$)</span>
+            <input id="set-krw" type="number" min="1" step="1" /></label>
+          <label class="set-row"><span data-i18n="set_token_limit">플랜 토큰 한도</span>
+            <input id="set-token-limit" type="number" min="0" step="1000000" /></label>
+          <label class="set-row"><span data-i18n="set_reports_dir">보고서 폴더</span>
+            <input id="set-reports-dir" type="text" /></label>
+          <label class="set-row"><span data-i18n="set_scale">UI 배율</span>
+            <input id="set-scale" type="number" min="0.8" max="1.5" step="0.1" /></label>
+          <label class="set-row"><span data-i18n="set_autolaunch">로그인 시 자동 실행</span>
+            <input id="set-autolaunch" type="checkbox" /></label>
+          <label class="set-row"><span data-i18n="set_check_updates">업데이트 확인</span>
+            <input id="set-check-updates" type="checkbox" /></label>
+        </div>
+        <div class="modal-foot">
+          <button id="set-cancel" class="btn-secondary" type="button" data-i18n="set_cancel">취소</button>
+          <button id="set-save" class="btn-primary" type="button" data-i18n="set_save">저장</button>
+        </div>
+      </div>
+    </div>
+
     <script src="../../node_modules/echarts/dist/echarts.min.js"></script>
     <script src="echartsTheme.js"></script>
     <script src="trendChart.js"></script>
@@ -87,21 +132,25 @@
     <script src="chartResize.js"></script>
     <script>
       // i18n(OPEN[07] 해소): preload가 노출한 t/locale. 정적 라벨(data-i18n) 일괄 적용 + 동적 문자열은 t() 보간.
-      const t = (window.usage && window.usage.t) || ((k) => k);
+      // UI-040: t는 로케일 변경 시 재바인딩되므로 let. applyI18n()으로 재번역 재사용.
+      let t = (window.usage && window.usage.t) || ((k) => k);
       // AUDIT-030: 숫자·통화 포맷을 UI 로케일 Intl로(§10, de/fr/it/vi 자리구분 다름). 첫 포맷 전 1회.
       if (window.usage && window.usage.locale && window.Fmt) window.Fmt.setLocale(window.usage.locale);
-      document.querySelectorAll('[data-i18n]').forEach((e) => {
-        const v = t(e.getAttribute('data-i18n'));
-        if (v) e.textContent = v;
-      });
-      // 아이콘 버튼 등은 텍스트 대신 title/aria-label만 번역(UI-010 툴바).
-      document.querySelectorAll('[data-i18n-title]').forEach((e) => {
-        const v = t(e.getAttribute('data-i18n-title'));
-        if (v) {
-          e.title = v;
-          e.setAttribute('aria-label', v);
-        }
-      });
+      function applyI18n() {
+        document.querySelectorAll('[data-i18n]').forEach((e) => {
+          const v = t(e.getAttribute('data-i18n'));
+          if (v) e.textContent = v;
+        });
+        // 아이콘 버튼 등은 텍스트 대신 title/aria-label만 번역(UI-010 툴바).
+        document.querySelectorAll('[data-i18n-title]').forEach((e) => {
+          const v = t(e.getAttribute('data-i18n-title'));
+          if (v) {
+            e.title = v;
+            e.setAttribute('aria-label', v);
+          }
+        });
+      }
+      applyI18n();
       // 새로고침(재계산): 메인에 재집계 요청(결과는 onAggregate로 갱신).
       const btnRefresh = document.getElementById('btn-refresh');
       if (btnRefresh && window.usage && window.usage.refresh) {
@@ -197,6 +246,95 @@
       if (btnZoomIn) btnZoomIn.onclick = () => setScale(uiScale + 0.1);
       if (btnZoomOut) btnZoomOut.onclick = () => setScale(uiScale - 0.1);
 
+      // UI-040: 설정 모달 — 열기(현재값 채움)·저장(main이 검증·영속·즉시반영)·취소.
+      (function setupSettings() {
+        if (!window.usage || !window.usage.loadSettings) return;
+        const overlay = document.getElementById('settings-overlay');
+        const $ = (id) => document.getElementById(id);
+        const localeSel = $('set-locale');
+
+        // 언어 옵션: '시스템 기본'(빈 값=null) + 지원 로케일(네이티브 이름, Intl.DisplayNames).
+        function fillLocaleOptions() {
+          const cur = localeSel.value;
+          localeSel.innerHTML = '';
+          const sys = document.createElement('option');
+          sys.value = '';
+          sys.textContent = t('set_system');
+          localeSel.appendChild(sys);
+          for (const lc of window.usage.locales || []) {
+            const o = document.createElement('option');
+            o.value = lc;
+            try {
+              o.textContent = new Intl.DisplayNames([lc], { type: 'language' }).of(lc) || lc;
+            } catch (e) {
+              o.textContent = lc;
+            }
+            localeSel.appendChild(o);
+          }
+          localeSel.value = cur;
+        }
+
+        async function open() {
+          const s = await window.usage.loadSettings();
+          fillLocaleOptions();
+          localeSel.value = s.locale || '';
+          $('set-theme').value = s.theme;
+          $('set-timezone').value = s.timezone || '';
+          $('set-timezone').placeholder = window.usage.systemTimezone || '';
+          $('set-krw').value = s.krwPerUsd;
+          $('set-token-limit').value = s.planTokenLimit != null ? s.planTokenLimit : '';
+          $('set-reports-dir').value = s.reportsDir || '';
+          $('set-scale').value = s.uiScale;
+          $('set-autolaunch').checked = !!s.autoLaunch;
+          $('set-check-updates').checked = !!s.checkUpdates;
+          overlay.hidden = false;
+        }
+        const close = () => (overlay.hidden = true);
+
+        async function save() {
+          const tz = $('set-timezone').value.trim();
+          const limit = $('set-token-limit').value;
+          const res = await window.usage.saveSettings({
+            locale: localeSel.value || null,
+            theme: $('set-theme').value,
+            timezone: tz || null,
+            krwPerUsd: Number($('set-krw').value),
+            planTokenLimit: limit === '' ? null : Number(limit),
+            reportsDir: $('set-reports-dir').value.trim(),
+            uiScale: Number($('set-scale').value),
+            autoLaunch: $('set-autolaunch').checked,
+            checkUpdates: $('set-check-updates').checked,
+          });
+          applyLive(res && res.settings, res && res.uiLocale);
+          close();
+        }
+
+        // 즉시 반영(렌더러): 테마·로케일 재번역·숫자 포맷. 배율·재집계·자동실행은 main이 적용.
+        function applyLive(s, uiLocale) {
+          if (s) {
+            document.documentElement.dataset.theme = s.theme;
+            redrawCharts();
+          }
+          if (uiLocale && window.usage.makeT) {
+            t = window.usage.makeT(uiLocale);
+            applyI18n();
+            fillLocaleOptions();
+            if (window.Fmt) window.Fmt.setLocale(uiLocale);
+            document.documentElement.lang = uiLocale;
+            if (lastAgg) renderAgg(lastAgg); // 마지막 집계로 동적 문자열(소진%·ETA) 즉시 새 t 재렌더.
+            if (window.usage.refresh) window.usage.refresh(); // 최신 데이터로도 갱신.
+          }
+        }
+
+        $('btn-settings').onclick = open;
+        $('set-close').onclick = close;
+        $('set-cancel').onclick = close;
+        $('set-save').onclick = save;
+        overlay.onclick = (e) => {
+          if (e.target === overlay) close(); // 카드 바깥(오버레이) 클릭 시 닫기.
+        };
+      })();
+
       // UX-010: 창 크기 변경 시 차트(추세·도넛)를 따라 리사이즈(디바운스). 미동작 시 레이아웃이 안 따라옴.
       window.addEventListener(
         'resize',
@@ -208,8 +346,11 @@
       const fmtTok = (n) => window.Fmt.fmtTokens(n);
 
       // 실데이터 수신 → 게이지·추세·도넛·KPI 갱신(프로젝트는 데이터원 없어 빈상태, OPEN[08]).
-      window.usage.onAggregate((agg) => {
+      // lastAgg 캐시(UI-040): 로케일 전환 시 동적 문자열(소진%·ETA 등)을 즉시 새 t로 재렌더. 멱등해야 함.
+      let lastAgg = null;
+      function renderAgg(agg) {
         if (!agg || !agg.burn) return;
+        lastAgg = agg;
         // 플랜 토큰 한도 설정 시 토큰 소진율, 없으면 시간 소진율(§4.1, OPEN[09]).
         renderGauge(agg.burn.tokenPct != null ? agg.burn.tokenPct : agg.burn.timePct);
         document.getElementById('burn-cost').textContent = fmtCost(agg.burn.costPerHour);
@@ -218,9 +359,9 @@
         document.getElementById('gauge-eta').textContent = t('dash_eta', { cost: fmtCost(agg.burn.projectedCost) }) + rem;
 
         if (agg.daily && agg.daily.length) {
-          for (const d of agg.daily) d.period = String(d.period).slice(5); // MM-DD
+          // 비파괴 매핑(원본 period 보존 → 재렌더 시 재슬라이스 안전).
           sampleDaily.length = 0;
-          sampleDaily.push(...agg.daily);
+          sampleDaily.push(...agg.daily.map((d) => ({ ...d, period: String(d.period).slice(5) }))); // MM-DD
           drawTrend();
         }
         if (agg.today) {
@@ -233,7 +374,8 @@
             donut.setOption(window.ModelDonut.buildDonutOption(currentModels, theme));
           }
         }
-      });
+      }
+      window.usage.onAggregate(renderAgg);
     </script>
   </body>
 </html>
