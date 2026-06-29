@@ -62,6 +62,17 @@ test('FND070_t_비문자열값_TypeError없이안전', () => {
   assert.equal(t('count'), '123'); // 숫자 값도 replace 폭발 없이 문자열화
 });
 
+test('AUTO020_t_보간_프로토타입체인키_미보간_own키만', () => {
+  // interpolate가 `k in vars`로 판정하면 Object.prototype 멤버명({constructor}/{toString} 등)이
+  // vars에 own 키가 없어도 프로토타입에서 끌려와 가비지(함수 문자열)가 UI 텍스트에 주입됨.
+  // own 키만 보간해야 안전 — 매칭 안 되면 원문({constructor}) 그대로 보존.
+  const t = makeT('en', { msg: 'X {constructor} Y {toString}' });
+  assert.equal(t('msg', {}), 'X {constructor} Y {toString}');
+  // 회귀 가드: 진짜 own 키는 그대로 보간.
+  const t2 = makeT('en', { greet: 'Hi {name}' });
+  assert.equal(t2('greet', { name: 'Sam' }), 'Hi Sam');
+});
+
 test('FND070_loadCatalog_화이트리스트_traversal차단', () => {
   const { loadCatalog } = require('../src/i18n/i18n');
   assert.deepEqual(loadCatalog('../../package'), {}); // 경로 탈출 시도 → 빈 객체

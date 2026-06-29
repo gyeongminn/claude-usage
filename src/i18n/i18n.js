@@ -14,7 +14,10 @@ function resolveLocale(sys) {
 
 function interpolate(str, vars) {
   if (typeof str !== 'string') return String(str); // 카탈로그에 숫자/불린 들어와도 안전.
-  return str.replace(/\{(\w+)\}/g, (m, k) => (vars && k in vars ? String(vars[k]) : m));
+  // own 키만 보간 — `k in vars`는 프로토타입 체인까지 봐서 {constructor}/{toString} 등
+  // Object.prototype 멤버명 플레이스홀더가 가비지(함수 문자열)로 치환됨(AUTO-020).
+  const has = (k) => vars != null && Object.prototype.hasOwnProperty.call(vars, k);
+  return str.replace(/\{(\w+)\}/g, (m, k) => (has(k) ? String(vars[k]) : m));
 }
 
 // t(key, vars): localeCatalog → enCatalog → key 순 폴백 + {var} 보간.
