@@ -236,6 +236,14 @@
       // 임계 색전환 토큰(tokens.css와 동일). 게이지 fill 색을 BurnGauge.burnColor로 결정(≥85 warn·≥95 over).
       const TK = { accent: '#3182F6', warn: '#FFC94D', over: '#F04452' };
 
+      // 게이지 채우기 공통(AUTO-010): clampPct→큰 tabular %·fill 폭·임계 색(burnColor). renderUsageCol·setSysGauge 공유.
+      function paintGauge(pctEl, fill, value) {
+        const p = window.BurnGauge.clampPct(value);
+        pctEl.textContent = Math.round(p) + '%';
+        fill.style.width = p + '%';
+        fill.style.background = window.BurnGauge.burnColor(p, TK);
+      }
+
       // 재시작/예상소진 시각을 로케일 표시(24h 내면 시각만, 그 이상은 요일+시각). Intl 위임.
       function fmtClock(ms) {
         const d = new Date(ms);
@@ -264,10 +272,7 @@
           if (etaEl) etaEl.textContent = '';
           return;
         }
-        const p = window.BurnGauge.clampPct(w.utilization);
-        pctEl.textContent = Math.round(p) + '%';
-        fill.style.width = p + '%';
-        fill.style.background = window.BurnGauge.burnColor(p, TK);
+        paintGauge(pctEl, fill, w.utilization);
         resetEl.textContent = w.resetsAt ? t('usage_reset', { t: fmtClock(Date.parse(w.resetsAt)) }) : '';
         if (etaEl) etaEl.textContent = w.etaMinutes != null ? t('usage_eta', { t: fmtClock(Date.now() + w.etaMinutes * 60000) }) : '';
       }
@@ -590,10 +595,7 @@
           fill.style.background = 'var(--track)';
           return;
         }
-        const p = window.BurnGauge.clampPct(pct);
-        pctEl.textContent = Math.round(p) + '%';
-        fill.style.width = p + '%';
-        fill.style.background = window.BurnGauge.burnColor(p, TK);
+        paintGauge(pctEl, fill, pct);
       }
       // bytes → "GB"(이진 GiB, Windows 표기 관례). NaN/0 안전.
       function fmtGB(bytes) { return (Number(bytes) / (1024 ** 3) || 0).toFixed(1); }
