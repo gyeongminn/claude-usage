@@ -716,7 +716,9 @@
           vDetail.hidden = main;
           tMain.classList.toggle('active', main);
           tDetail.classList.toggle('active', !main);
-          setTimeout(() => (main ? chart.resize() : donut.resize()), 0); // 표시 후 차트 크기 재계산.
+          // 타일 이동(TILE-020)으로 추세·도넛 중 어느 쪽이든 반대 탭에 있을 수 있음 → 표시 후 둘 다 재계산
+          // (보이는 쪽만 실효, 숨김 쪽은 0폭→다음 표시 때 재보정). renderMain·window resize와 동일 try/catch 패턴.
+          setTimeout(() => { try { chart.resize(); } catch (e) {} try { donut.resize(); } catch (e) {} }, 0);
         }
         tMain.onclick = () => show(true);
         tDetail.onclick = () => show(false);
