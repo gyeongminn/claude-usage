@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { buildAggregate, buildBurn, shapeBurn, gaugePct, blockHasClaude, sumRecentDays } = require('../src/main/aggregate');
+const { buildAggregate, buildBurn, shapeBurn, gaugePct, blockHasClaude, sumRecentDays, recentDays } = require('../src/main/aggregate');
 
 test('DSH060_shapeBurn_활성블록_정규화', () => {
   const block = {
@@ -169,6 +169,24 @@ test('STAT7_sumRecentDays_빈배열_0', () => {
   assert.deepEqual(sumRecentDays(null, 7), { totalCost: 0, totalTokens: 0 });
 });
 
+// TREND7: 일자별 추세를 최근 7일로 제한(사용자 요청, 날짜 과다 방지). recentDays = 최신 날짜 기준 n일 이내 '행' 반환.
+test('TREND7_recentDays_최근n일_행반환', () => {
+  const daily = [
+    { period: '2026-06-20', totalCost: 1 }, // 컷오프(06-23) 밖
+    { period: '2026-06-23', totalCost: 2 },
+    { period: '2026-06-29', totalCost: 3 }, // 최신
+  ];
+  const r = recentDays(daily, 7); // 06-29 기준 7일 = 06-23~06-29
+  assert.equal(r.length, 2);
+  assert.equal(r[0].period, '2026-06-23');
+  assert.equal(r[1].period, '2026-06-29');
+});
+
+test('TREND7_recentDays_빈배열_빈', () => {
+  assert.deepEqual(recentDays([], 7), []);
+  assert.deepEqual(recentDays(null, 7), []);
+});
+
 test('STAT7_buildAggregate_last7_포함', async () => {
   const run = fakeRun({
     daily: { daily: [
@@ -199,6 +217,20 @@ test('BL05_buildAggregate_tokens_구성_claude만합산', async () => {
   const agg = await buildAggregate(run);
   // codex 제외 후 두 날 claude 합산.
   assert.deepEqual(agg.tokens, { input: 110, output: 25, cacheCreate: 50, cacheRead: 500 });
+});
+
+test('TREND7_buildAggregate_daily_최근7일만', async () => {
+  // 10일치 데이터 → 트렌드(agg.daily)는 최근 7일(06-23~06-29)만(사용자 요청: 날짜 과다 방지).
+  const days = [];
+  for (let i = 20; i <= 29; i++) {
+    days.push({ period: `2026-06-${i}`, modelBreakdowns: [{ modelName: 'claude-opus-4-8', cost: 1, inputTokens: 10, outputTokens: 0, cacheCreationTokens: 0, cacheReadTokens: 0 }] });
+  }
+  const agg = await buildAggregate(fakeRun({ daily: { daily: days }, blocks: { blocks: [] } }));
+  assert.equal(agg.daily.length, 7); // 06-23~06-29
+  assert.equal(agg.daily[0].period, '2026-06-23');
+  assert.equal(agg.daily[6].period, '2026-06-29');
+  // last7 KPI·tokens 구성은 여전히 전체 기간 기준(트렌드 창과 무관).
+  assert.equal(agg.tokens.input, 100); // 10일 × 10
 });
 
 test('DSH060_buildAggregate_빈데이터_안전', async () => {

@@ -54,25 +54,28 @@ function gaugePct(burn) {
   return { pct: (burn && burn.timePct) || 0, mode: 'time' };
 }
 
-// 최근 n일(달력) 합계 — daily(오름차순 period 'YYYY-MM-DD')에서 최신 날짜 기준 n일 이내 합산.
+// 최근 n일(달력) '행' 선택 — daily(오름차순 period 'YYYY-MM-DD')에서 최신 날짜 기준 n일 이내 행만.
 // 데이터 최신일 기준(시스템 now 아님)이라 표시 TZ와 무관·안전. 문자열 사전식 비교 = 시간순.
-function sumRecentDays(daily, n) {
+function recentDays(daily, n) {
   const arr = Array.isArray(daily) ? daily : [];
-  if (!arr.length) return { totalCost: 0, totalTokens: 0 };
+  if (!arr.length) return [];
   const last = String(arr[arr.length - 1].period);
   const d = new Date(last + 'T00:00:00Z');
-  if (isNaN(d.getTime())) return { totalCost: 0, totalTokens: 0 };
+  if (isNaN(d.getTime())) return [];
   d.setUTCDate(d.getUTCDate() - (n - 1));
   const cutoff = d.toISOString().slice(0, 10);
-  return arr
-    .filter((x) => String(x.period) >= cutoff)
-    .reduce(
-      (a, x) => ({
-        totalCost: a.totalCost + (Number(x.totalCost) || 0),
-        totalTokens: a.totalTokens + (Number(x.totalTokens) || 0),
-      }),
-      { totalCost: 0, totalTokens: 0 }
-    );
+  return arr.filter((x) => String(x.period) >= cutoff);
+}
+
+// 최근 n일 합계 — recentDays 행을 비용·토큰 합산(메인 탭 KPI).
+function sumRecentDays(daily, n) {
+  return recentDays(daily, n).reduce(
+    (a, x) => ({
+      totalCost: a.totalCost + (Number(x.totalCost) || 0),
+      totalTokens: a.totalTokens + (Number(x.totalTokens) || 0),
+    }),
+    { totalCost: 0, totalTokens: 0 }
+  );
 }
 
 // ccusage 실데이터 → 렌더러용 집계 shape. runCcusage 주입(테스트), timezone 전달(§10/OPEN[05]).
@@ -91,7 +94,7 @@ async function buildAggregate(runCcusage, opts = {}) {
   const block = blocks.find((b) => b.isActive) || blocks[0] || null;
   const dailyShaped = daily.map((d) => ({ period: d.period, totalCost: d.totalCost, totalTokens: d.totalTokens }));
   return {
-    daily: dailyShaped,
+    daily: recentDays(dailyShaped, 7), // 일자별 추세: 최근 7일만(날짜 과다 방지, 사용자 요청). last7/tokens는 전체 기간.
     last7: sumRecentDays(dailyShaped, 7), // 메인 탭 최근 7일 통계.
     today: last
       ? { totalCost: last.totalCost, totalTokens: last.totalTokens, models: last.modelBreakdowns }
@@ -115,4 +118,4 @@ async function buildBurn(runCcusage, opts = {}) {
   return { burn: shapeBurn(block, nowMs, opts.planTokenLimit) };
 }
 
-module.exports = { buildAggregate, buildBurn, shapeBurn, blockTimePct, gaugePct, blockHasClaude, sumRecentDays };
+module.exports = { buildAggregate, buildBurn, shapeBurn, blockTimePct, gaugePct, blockHasClaude, sumRecentDays, recentDays };
