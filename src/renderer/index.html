@@ -108,6 +108,16 @@
         <div class="card-label" data-i18n="dash_today">오늘</div>
         <div id="model-donut" class="donut-slot"></div>
       </section>
+      <section class="card" aria-label="token composition">
+        <div class="card-label" data-i18n="detail_token_comp">토큰 구성</div>
+        <div class="tok-comp">
+          <div class="tok-row"><span class="tok-name" data-i18n="tok_input">입력</span><div class="tok-bar"><div class="tok-fill" id="tc-input-fill"></div></div><span class="tok-val" id="tc-input">0</span></div>
+          <div class="tok-row"><span class="tok-name" data-i18n="tok_output">출력</span><div class="tok-bar"><div class="tok-fill" id="tc-output-fill"></div></div><span class="tok-val" id="tc-output">0</span></div>
+          <div class="tok-row"><span class="tok-name" data-i18n="tok_cache_create">캐시 생성</span><div class="tok-bar"><div class="tok-fill" id="tc-create-fill"></div></div><span class="tok-val" id="tc-create">0</span></div>
+          <div class="tok-row"><span class="tok-name" data-i18n="tok_cache_read">캐시 읽기</span><div class="tok-bar"><div class="tok-fill" id="tc-read-fill"></div></div><span class="tok-val" id="tc-read">0</span></div>
+        </div>
+        <div class="cache-eff"><span data-i18n="cache_efficiency">캐시 효율</span><span class="cache-eff-val" id="cache-eff">0%</span></div>
+      </section>
       <section class="card" aria-label="projects">
         <div class="card-label" data-i18n="dash_projects">프로젝트 Top 5</div>
         <!-- AUDIT-010: 가짜 샘플 제거(§2). ccusage v20 프로젝트 축 미노출(OPEN[08]) → 빈상태. -->
@@ -461,6 +471,21 @@
           document.getElementById('last7-cost').textContent = window.Fmt.fmtUsd(agg.last7.totalCost);
           document.getElementById('last7-tok').textContent = fmtTok(agg.last7.totalTokens);
         }
+        if (agg.tokens) renderTokens(agg.tokens);
+      }
+
+      // BL-05: 상세 탭 토큰 구성(입력·출력·캐시생성·캐시읽기) 바 + 캐시 효율(PDF p3와 동일 식).
+      function renderTokens(tk) {
+        const v = { input: Number(tk.input) || 0, output: Number(tk.output) || 0, create: Number(tk.cacheCreate) || 0, read: Number(tk.cacheRead) || 0 };
+        const max = Math.max(v.input, v.output, v.create, v.read, 1); // 0 나눗셈 방지.
+        const set = (id, n) => {
+          document.getElementById('tc-' + id).textContent = fmtTok(n);
+          document.getElementById('tc-' + id + '-fill').style.width = (n / max) * 100 + '%';
+        };
+        set('input', v.input); set('output', v.output); set('create', v.create); set('read', v.read);
+        // 캐시 효율 = 캐시 읽기 / (입력 + 캐시 생성 + 캐시 읽기). 분모 0 안전.
+        const denom = v.input + v.create + v.read;
+        document.getElementById('cache-eff').textContent = (denom > 0 ? Math.round((v.read / denom) * 100) : 0) + '%';
       }
       window.usage.onAggregate(renderAgg);
       // PERF-010: 8s 인터벌의 활성 블록 burn-only 갱신(전체 daily 재파싱 없이 게이지·burn rates만).

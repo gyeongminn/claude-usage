@@ -182,11 +182,31 @@ test('STAT7_buildAggregate_last7_포함', async () => {
   assert.equal(agg.last7.totalTokens, 100);
 });
 
+// BL-05: 상세 탭 토큰 구성(입력·출력·캐시생성·캐시읽기). claude만 합산(codex 제외), PDF p3와 동일 reportData.tokenComposition.
+test('BL05_buildAggregate_tokens_구성_claude만합산', async () => {
+  const run = fakeRun({
+    daily: { daily: [
+      { period: '2026-06-28', modelBreakdowns: [
+        { modelName: 'claude-opus-4-8', cost: 1, inputTokens: 100, outputTokens: 20, cacheCreationTokens: 50, cacheReadTokens: 300 },
+        { modelName: 'gpt-5-codex', cost: 9, inputTokens: 999, outputTokens: 999, cacheCreationTokens: 999, cacheReadTokens: 999 },
+      ] },
+      { period: '2026-06-29', modelBreakdowns: [
+        { modelName: 'claude-sonnet-4-6', cost: 2, inputTokens: 10, outputTokens: 5, cacheCreationTokens: 0, cacheReadTokens: 200 },
+      ] },
+    ] },
+    blocks: { blocks: [] },
+  });
+  const agg = await buildAggregate(run);
+  // codex 제외 후 두 날 claude 합산.
+  assert.deepEqual(agg.tokens, { input: 110, output: 25, cacheCreate: 50, cacheRead: 500 });
+});
+
 test('DSH060_buildAggregate_빈데이터_안전', async () => {
   const run = fakeRun({ daily: {}, blocks: {} });
   const agg = await buildAggregate(run);
   assert.deepEqual(agg.daily, []);
   assert.deepEqual(agg.today, { totalCost: 0, totalTokens: 0, models: [] });
+  assert.deepEqual(agg.tokens, { input: 0, output: 0, cacheCreate: 0, cacheRead: 0 }); // BL-05 빈 구성 안전
   assert.equal(agg.burn.pct, 0);
 });
 

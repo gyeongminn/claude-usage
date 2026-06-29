@@ -15,6 +15,8 @@ const DASH_KEYS = [
   'tab_main', 'tab_detail', 'usage_5h', 'usage_weekly', 'usage_reset', 'usage_eta',
   // BL-03: OAuth 토큰 만료/없음 → 재로그인 안내.
   'usage_reauth',
+  // BL-05: 상세 탭 토큰 구성·캐시 효율.
+  'detail_token_comp', 'tok_input', 'tok_output', 'tok_cache_create', 'tok_cache_read', 'cache_efficiency',
 ];
 
 test('INT020_대시보드키_10로케일_모두존재', () => {

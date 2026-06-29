@@ -1,4 +1,5 @@
 const { filterClaude, isClaudeModel } = require('./claudeFilter');
+const { tokenComposition } = require('../report/reportData'); // BL-05: 토큰 구성(입력·출력·캐시) 재사용(PDF p3 정합).
 
 // 활성 5h 블록에 Claude 모델이 있는지(§2/AUDIT-020). ccusage blocks엔 modelBreakdowns가 없어 비용·burn을
 // 모델별로 분해할 수 없다 → 블록의 models 배열로 판정. 순수 비-Claude(Codex 전용) 블록만 제외하고,
@@ -95,6 +96,7 @@ async function buildAggregate(runCcusage, opts = {}) {
     today: last
       ? { totalCost: last.totalCost, totalTokens: last.totalTokens, models: last.modelBreakdowns }
       : { totalCost: 0, totalTokens: 0, models: [] },
+    tokens: tokenComposition(daily), // BL-05: 상세 탭 토큰 구성(전체 기간 claude 합산).
     burn: shapeBurn(block, nowMs, opts.planTokenLimit),
   };
 }
