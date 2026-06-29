@@ -34,6 +34,12 @@ contextBridge.exposeInMainWorld('usage', {
     ipcRenderer.on('usage:limits', handler);
     return () => ipcRenderer.removeListener('usage:limits', handler);
   },
+  // 시스템 리소스(§11/SYS-020): 2s push {cpu, mem:{pct,usedBytes,totalBytes}, gpu:%|null}. GPU null=NVIDIA 부재/오류.
+  onSysStats: (cb) => {
+    const handler = (_e, stats) => cb(stats);
+    ipcRenderer.on('sys:stats', handler);
+    return () => ipcRenderer.removeListener('sys:stats', handler);
+  },
   locale: uiLocale,
   t: (key, vars) => t(key, vars),
   // UI-010: 새로고침(재계산) — 메인에 즉시 재집계 요청(결과는 onAggregate로 되돌아옴).

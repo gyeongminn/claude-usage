@@ -1,8 +1,11 @@
 const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
+const { execFile } = require('node:child_process');
 const { runCcusage } = require('./main/ccusage');
 const { buildAggregate, buildBurn } = require('./main/aggregate');
+const { cpuPercent, memUsage, parseNvidiaSmi } = require('./main/sysStats');
 const { startWatcher, startCredentialsWatcher } = require('./main/watcher');
 const { fetchKrwPerUsd } = require('./main/fxRate');
 const { renderReportToPdf, reportPath } = require('./main/reportPdf');
@@ -169,6 +172,28 @@ async function pushBurn(win) {
   }
 }
 
+// 시스템 리소스 사용량(§11/SYS-020). CPU/RAM은 표준 os(동기·경량), GPU는 nvidia-smi best-effort(부재 graceful).
+let prevCpus = os.cpus(); // CPU 델타용 이전 스냅샷(다음 샘플과 비교). 단일 창이라 모듈 1개로 충분.
+let lastGpu = null; // 마지막 GPU 사용률(%) 또는 null(NVIDIA 부재/오류). GPU는 더 긴 간격으로 갱신해 캐시.
+function pushSysStats(win) {
+  const cur = os.cpus();
+  const cpu = cpuPercent(prevCpus, cur);
+  prevCpus = cur;
+  const mem = memUsage(os.totalmem(), os.freemem());
+  if (!win.isDestroyed()) win.webContents.send('sys:stats', { cpu, mem, gpu: lastGpu });
+}
+// GPU best-effort: nvidia-smi spawn(windowsHide=콘솔 깜빡임 방지·2s 타임아웃·ENOENT/실패/비정상 → null). NVIDIA 없으면 영구 null.
+function refreshGpu() {
+  execFile(
+    'nvidia-smi',
+    ['--query-gpu=utilization.gpu', '--format=csv,noheader,nounits'],
+    { windowsHide: true, timeout: 2000 },
+    (err, stdout) => {
+      lastGpu = err ? null : parseNvidiaSmi(stdout);
+    }
+  );
+}
+
 // 업데이트 확인(FEAT-010): 토글 켜짐일 때만 GitHub Releases 비교 → 새 버전이면 렌더러에 배너 push.
 // 실패·오프라인은 checkForUpdate가 null 반환(조용히 무시). URL은 main이 보관(pendingUpdate)해 openExternal 시 사용.
 async function runUpdateCheck(win) {
@@ -284,6 +309,12 @@ function createWindow() {
     const watcher = startWatcher(() => pushAggregate(win));
     // PERF-010/§3: 짧은 간격(8s) 갱신은 활성 블록 burn만(전체 daily 재파싱 X). 전체는 워처/새로고침/기동에서.
     const timer = setInterval(() => pushBurn(win), 8000);
+    // 시스템 리소스(§11/SYS-020): CPU/RAM 2s push, GPU는 6s best-effort(spawn 부담↓). prevCpus 재초기화로 첫 델타 정확.
+    prevCpus = os.cpus();
+    refreshGpu();
+    pushSysStats(win);
+    const sysTimer = setInterval(() => pushSysStats(win), 2000);
+    const gpuTimer = setInterval(refreshGpu, 6000);
     // 업데이트 확인(FEAT-010): 기동 시 1회 + 6h 주기. 토글 꺼지면 runUpdateCheck가 즉시 반환(체크 0).
     runUpdateCheck(win).catch(() => {});
     const updTimer = setInterval(() => runUpdateCheck(win).catch(() => {}), UPDATE_INTERVAL_MS);
@@ -307,6 +338,8 @@ function createWindow() {
     ipcMain.on('scale:set', onScale);
     win.on('closed', () => {
       clearInterval(timer);
+      clearInterval(sysTimer);
+      clearInterval(gpuTimer);
       clearInterval(updTimer);
       clearInterval(limitsTimer);
       watcher.close();
