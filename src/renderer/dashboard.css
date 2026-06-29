@@ -200,6 +200,7 @@ body {
 }
 .gauge-fill {
   height: 100%;
+  width: 0; /* 데이터 도착 전 첫 페인트가 auto(=100%)로 '소진 100%' 오해를 주지 않게 빈 바로 시작(renderUsageCol가 실제 %로 덮음). */
   border-radius: 999px;
   background: var(--accent);
   transition: width 160ms ease-out;
