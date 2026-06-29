@@ -712,17 +712,18 @@
         renderMain(currentMainTiles);
         renderCustomize(currentMainTiles);
       }
-      // 토글: 추가(끝에 append)/제거 → saveSettings(main이 {...settings,...partial} 머지로 다른 설정 보존) → 권위값으로 재반영.
+      // 토글: 추가(끝에 append)/제거 → saveSettings(main이 {...settings,...partial} 머지로 다른 설정 보존).
       async function toggleTile(id) {
         const next = currentMainTiles.includes(id)
           ? currentMainTiles.filter((x) => x !== id)
           : currentMainTiles.concat(id);
-        let saved = next;
+        // AUTO-020: 낙관적 즉시 반영 — currentMainTiles를 await '전'에 갱신(applyTiles가 갱신)해 연속 토글이
+        // 최신 base를 보게 한다(stale 스냅샷 lost-update 레이스 방지). applyTiles의 normalize는 main
+        // saveSettings(settings.js)와 동일 tiles.js 단일출처(§12)라 권위 저장값과 항상 일치 → 재반영 불필요.
+        applyTiles(next);
         try {
-          const res = await window.usage.saveSettings({ mainTiles: next });
-          saved = (res && res.settings && res.settings.mainTiles) || next;
-        } catch (e) { /* 저장 실패해도 로컬 반영(다음 기동 재로드) */ }
-        applyTiles(saved);
+          await window.usage.saveSettings({ mainTiles: next });
+        } catch (e) { /* 저장 실패해도 로컬 반영 유지(다음 기동 재로드) */ }
       }
       // 초기 1회: captureMainTiles(검증용 env) 우선, 없으면 설정의 mainTiles(기본 현행4=거동 보존).
       if (window.usage && window.Tiles) {
