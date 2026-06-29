@@ -52,5 +52,10 @@
   "set_check_updates": "Check for updates",
   "set_accurate": "Accurate usage limits",
   "set_save": "Save",
-  "set_cancel": "Cancel"
+  "set_cancel": "Cancel",
+  "sys_title": "System",
+  "sys_cpu": "CPU",
+  "sys_ram": "RAM",
+  "sys_gpu": "GPU",
+  "sys_gpu_na": "N/A"
 }

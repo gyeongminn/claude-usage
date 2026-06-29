@@ -52,5 +52,10 @@
   "set_check_updates": "Kiểm tra cập nhật",
   "set_accurate": "Hạn mức sử dụng thực tế",
   "set_save": "Lưu",
-  "set_cancel": "Hủy"
+  "set_cancel": "Hủy",
+  "sys_title": "Hệ thống",
+  "sys_cpu": "CPU",
+  "sys_ram": "RAM",
+  "sys_gpu": "GPU",
+  "sys_gpu_na": "N/A"
 }

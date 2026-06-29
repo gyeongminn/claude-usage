@@ -124,6 +124,25 @@
         </div>
         <div class="cache-eff"><span data-i18n="cache_efficiency">캐시 효율</span><span class="cache-eff-val" id="cache-eff">0%</span></div>
       </section>
+      <!-- SYS-030: 시스템 리소스(CPU·RAM·(가능 시)GPU) 게이지. main이 sys:stats로 2s push, burnGauge 톤 재사용. -->
+      <section class="card" aria-label="system">
+        <div class="card-label" data-i18n="sys_title">시스템</div>
+        <div class="sys-list">
+          <div class="sys-item">
+            <div class="sys-top"><span class="sys-name" data-i18n="sys_cpu">CPU</span><span class="sys-pct" id="sys-cpu-pct">—</span></div>
+            <div class="gauge-track"><div class="gauge-fill" id="sys-cpu-fill"></div></div>
+          </div>
+          <div class="sys-item">
+            <div class="sys-top"><span class="sys-name" data-i18n="sys_ram">RAM</span><span class="sys-pct" id="sys-ram-pct">—</span></div>
+            <div class="gauge-track"><div class="gauge-fill" id="sys-ram-fill"></div></div>
+            <div class="sys-meta" id="sys-ram-meta"></div>
+          </div>
+          <div class="sys-item">
+            <div class="sys-top"><span class="sys-name" data-i18n="sys_gpu">GPU</span><span class="sys-pct" id="sys-gpu-pct">—</span></div>
+            <div class="gauge-track"><div class="gauge-fill" id="sys-gpu-fill"></div></div>
+          </div>
+        </div>
+      </section>
       <section class="card" aria-label="projects">
         <div class="card-label" data-i18n="dash_projects">프로젝트 Top 5</div>
         <!-- AUDIT-010: 가짜 샘플 제거(§2). ccusage v20 프로젝트 축 미노출(OPEN[08]) → 빈상태. -->
@@ -554,9 +573,45 @@
         const denom = v.input + v.create + v.read;
         document.getElementById('cache-eff').textContent = (denom > 0 ? Math.round((v.read / denom) * 100) : 0) + '%';
       }
+      // SYS-030: 상세 탭 시스템 리소스(CPU·RAM·GPU). burnGauge 톤 재사용(평소 accent·≥85 warn·≥95 over).
+      function setSysGauge(prefix, pct) {
+        const pctEl = document.getElementById(prefix + '-pct');
+        const fill = document.getElementById(prefix + '-fill');
+        if (!pctEl || !fill) return;
+        if (typeof pct !== 'number' || !isFinite(pct)) {
+          pctEl.textContent = '—';
+          fill.style.width = '0%';
+          fill.style.background = 'var(--track)';
+          return;
+        }
+        const p = window.BurnGauge.clampPct(pct);
+        pctEl.textContent = Math.round(p) + '%';
+        fill.style.width = p + '%';
+        fill.style.background = window.BurnGauge.burnColor(p, TK);
+      }
+      // bytes → "GB"(이진 GiB, Windows 표기 관례). NaN/0 안전.
+      function fmtGB(bytes) { return (Number(bytes) / (1024 ** 3) || 0).toFixed(1); }
+      function renderSysStats(s) {
+        if (!s) return;
+        setSysGauge('sys-cpu', typeof s.cpu === 'number' ? s.cpu : null);
+        setSysGauge('sys-ram', s.mem ? s.mem.pct : null);
+        const ramMeta = document.getElementById('sys-ram-meta');
+        if (ramMeta) ramMeta.textContent = s.mem ? fmtGB(s.mem.usedBytes) + ' / ' + fmtGB(s.mem.totalBytes) + ' GB' : '';
+        // GPU null = NVIDIA 부재/오류 → N/A·게이지 회색(§11 best-effort). 값이면 일반 게이지.
+        if (s.gpu == null) {
+          const g = document.getElementById('sys-gpu-pct');
+          if (g) g.textContent = t('sys_gpu_na');
+          const gf = document.getElementById('sys-gpu-fill');
+          if (gf) { gf.style.width = '0%'; gf.style.background = 'var(--track)'; }
+        } else {
+          setSysGauge('sys-gpu', s.gpu);
+        }
+      }
       window.usage.onAggregate(renderAgg);
       // PERF-010: 8s 인터벌의 활성 블록 burn-only 갱신(전체 daily 재파싱 없이 게이지·burn rates만).
       if (window.usage.onBurn) window.usage.onBurn(renderBurn);
+      // SYS-020/030: 시스템 리소스 2s push 구독(상세 탭 시스템 카드 갱신).
+      if (window.usage.onSysStats) window.usage.onSysStats(renderSysStats);
       // 실제 사용 한도(5h·주간) — Claude 설정창과 동일 소스. main이 5분 주기로 push.
       if (window.usage.onLimits) window.usage.onLimits(renderLimits);
 

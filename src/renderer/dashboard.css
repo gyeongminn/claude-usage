@@ -255,6 +255,14 @@ body {
 .cache-eff { display: flex; justify-content: space-between; align-items: baseline; margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--track); font-size: 14px; color: var(--text-2); }
 .cache-eff-val { font-size: 22px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
 
+/* SYS-030: 상세 탭 시스템 리소스 카드(CPU·RAM·GPU 게이지, burnGauge 톤·tabular %). */
+.sys-list { display: flex; flex-direction: column; gap: var(--space-4); margin-top: var(--space-2); }
+.sys-item { min-width: 0; }
+.sys-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--space-2); }
+.sys-name { font-size: 14px; color: var(--text-2); }
+.sys-pct { font-size: 28px; font-weight: 700; color: var(--text-1); font-variant-numeric: tabular-nums; line-height: 1; }
+.sys-meta { margin-top: var(--space-2); font-size: 13px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
 /* 오늘 KPI(비용·토큰 동급) + 도넛 */
 /* Today KPI(비용·토큰) — §5.1 "KPI 38–56px". 세로 스택(각 KPI 전폭)이라 긴 로케일 값(de "341,1 Mio.")도 1fr 열에서 오버플로 없음(UX-080). */
 .kpi-row { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-2); }

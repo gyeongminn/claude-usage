@@ -52,5 +52,10 @@
   "set_check_updates": "检查更新",
   "set_accurate": "真实用量额度",
   "set_save": "保存",
-  "set_cancel": "取消"
+  "set_cancel": "取消",
+  "sys_title": "系统",
+  "sys_cpu": "CPU",
+  "sys_ram": "RAM",
+  "sys_gpu": "GPU",
+  "sys_gpu_na": "N/A"
 }

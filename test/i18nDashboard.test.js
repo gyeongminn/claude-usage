@@ -21,6 +21,8 @@ const DASH_KEYS = [
   'model_share',
   // WEEK5: 메인 탭 최근 5주 주차별 사용량.
   'dash_weekly5',
+  // SYS-030: 상세 탭 시스템 리소스(CPU·RAM·GPU) 카드.
+  'sys_title', 'sys_cpu', 'sys_ram', 'sys_gpu', 'sys_gpu_na',
 ];
 
 test('INT020_대시보드키_10로케일_모두존재', () => {

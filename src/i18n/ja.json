@@ -52,5 +52,10 @@
   "set_check_updates": "更新を確認",
   "set_accurate": "実際の使用上限",
   "set_save": "保存",
-  "set_cancel": "キャンセル"
+  "set_cancel": "キャンセル",
+  "sys_title": "システム",
+  "sys_cpu": "CPU",
+  "sys_ram": "RAM",
+  "sys_gpu": "GPU",
+  "sys_gpu_na": "N/A"
 }
