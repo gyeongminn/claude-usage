@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { buildAggregate, shapeBurn, gaugePct } = require('../src/main/aggregate');
+const { buildAggregate, shapeBurn, gaugePct, blockHasClaude } = require('../src/main/aggregate');
 
 test('DSH060_shapeBurn_활성블록_정규화', () => {
   const block = {
@@ -82,6 +82,39 @@ test('DSH060_buildAggregate_daily_claude필터·shape', async () => {
   assert.equal(agg.daily[0].totalCost, 90);
   assert.equal(agg.today.totalCost, 90);
   assert.equal(agg.today.models.length, 1); // claude만
+  assert.equal(agg.burn.pct, 25); // 5/20
+});
+
+// AUDIT-020: 히어로 burn 게이지는 Claude 활성 블록만 — 순수 비-Claude(Codex 등) 블록 제외.
+// ccusage blocks엔 modelBreakdowns 없음(모델별 분해 불가) → 블록 models 배열로 판정. 혼합 블록은 유지(천장).
+test('AUDIT020_blockHasClaude_판정', () => {
+  assert.equal(blockHasClaude({ models: ['claude-opus-4-8'] }), true);
+  assert.equal(blockHasClaude({ models: ['gpt-5-codex'] }), false); // 순수 비-Claude → 제외
+  assert.equal(blockHasClaude({ models: ['claude-opus-4-8', 'gpt-5-codex'] }), true); // 혼합 → 유지(분해 불가)
+  assert.equal(blockHasClaude({ models: [] }), true); // 모델정보 없으면 보수적 유지(오탐 드롭 방지)
+  assert.equal(blockHasClaude({}), true);
+});
+
+test('AUDIT020_buildAggregate_순수비클로드블록_burn제외', async () => {
+  const run = fakeRun({
+    daily: { daily: [] },
+    blocks: { blocks: [{ isActive: true, models: ['gpt-5-codex'], costUSD: 99, burnRate: { costPerHour: 88, tokensPerMinute: 7000 }, projection: { totalCost: 200 } }] },
+  });
+  const agg = await buildAggregate(run);
+  // Codex 전용 활성 블록 → 드롭 → 게이지 0(히어로에 Codex burn 노출 안 함, §2).
+  assert.equal(agg.burn.costPerHour, 0);
+  assert.equal(agg.burn.tokPerHour, 0);
+  assert.equal(agg.burn.pct, 0);
+  assert.equal(agg.burn.totalTokens, 0);
+});
+
+test('AUDIT020_buildAggregate_클로드블록_유지', async () => {
+  const run = fakeRun({
+    daily: { daily: [] },
+    blocks: { blocks: [{ isActive: true, models: ['claude-opus-4-8'], costUSD: 5, burnRate: { costPerHour: 10, tokensPerMinute: 100 }, projection: { totalCost: 20 } }] },
+  });
+  const agg = await buildAggregate(run);
+  assert.equal(agg.burn.costPerHour, 10);
   assert.equal(agg.burn.pct, 25); // 5/20
 });
 

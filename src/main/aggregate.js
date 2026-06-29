@@ -1,4 +1,16 @@
-const { filterClaude } = require('./claudeFilter');
+const { filterClaude, isClaudeModel } = require('./claudeFilter');
+
+// 활성 5h 블록에 Claude 모델이 있는지(§2/AUDIT-020). ccusage blocks엔 modelBreakdowns가 없어 비용·burn을
+// 모델별로 분해할 수 없다 → 블록의 models 배열로 판정. 순수 비-Claude(Codex 전용) 블록만 제외하고,
+// 모델 정보가 없으면(빈/누락) 보수적으로 유지(정상 블록 오탐 드롭 방지).
+// ponytail: 혼합 블록(Claude+Codex)은 burn이 합산값이라 모델별 분해 불가 — 그대로 노출(천장). ccusage가
+//           블록별 modelBreakdowns를 제공하면 그때 Claude 몫만 추려 정밀화.
+function blockHasClaude(block) {
+  if (!block) return false; // falsy 엔트리는 드롭(이후 find(isActive) 크래시 방지).
+  const models = block.models;
+  if (!Array.isArray(models) || models.length === 0) return true;
+  return models.some(isClaudeModel);
+}
 
 // 5h 블록 시간 소진율(§4.1) — now 주입(Clock, 절대규칙). 시각은 UTC ms 비교(OPEN[05]).
 function blockTimePct(startTime, endTime, nowMs) {
@@ -52,7 +64,8 @@ async function buildAggregate(runCcusage, opts = {}) {
   ]);
   const daily = filterClaude((dailyRaw && dailyRaw.daily) || []);
   const last = daily[daily.length - 1] || null;
-  const blocks = (blocksRaw && blocksRaw.blocks) || [];
+  // 순수 비-Claude(Codex 전용) 활성 블록은 제외 — 히어로 게이지에 타 에이전트 burn이 섞이지 않게(§2/AUDIT-020).
+  const blocks = ((blocksRaw && blocksRaw.blocks) || []).filter(blockHasClaude);
   const block = blocks.find((b) => b.isActive) || blocks[0] || null;
   return {
     daily: daily.map((d) => ({ period: d.period, totalCost: d.totalCost, totalTokens: d.totalTokens })),
@@ -63,4 +76,4 @@ async function buildAggregate(runCcusage, opts = {}) {
   };
 }
 
-module.exports = { buildAggregate, shapeBurn, blockTimePct, gaugePct };
+module.exports = { buildAggregate, shapeBurn, blockTimePct, gaugePct, blockHasClaude };
