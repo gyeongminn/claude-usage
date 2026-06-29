@@ -46,6 +46,13 @@ function reportsDir() {
   return d ? d : path.join(app.getPath('userData'), 'reports');
 }
 
+// 설정 패치를 머지·검증·영속하고 모듈 ref 갱신(AUTO-010: userData 경로+머지+재할당 3중복 단일화).
+// saveSettings가 화이트리스트·검증·디스크 쓰기. 반환=검증된 설정(호출부 라이브 적용·반환에 재사용).
+function persistSettings(patch) {
+  settings = saveSettings(app.getPath('userData'), { ...settings, ...patch });
+  return settings;
+}
+
 // 월 보고서 생성(INT-010): ccusage 월/일/세션 → 어셈블러 → printToPDF → reports/YYYY-MM.pdf.
 // PDF 로케일은 EN/KO만(§10). 실패해도 앱은 유지(에러 로깅).
 async function generateMonthlyReport(ym) {
@@ -351,7 +358,7 @@ function createWindow() {
     ipcMain.on('usage:refresh', onRefresh);
     // UI-030: 배율 변경 → 검증·영속 후 setZoomFactor(차트+글씨 균일 스케일).
     const onScale = (_e, scale) => {
-      settings = saveSettings(app.getPath('userData'), { ...settings, uiScale: scale });
+      persistSettings({ uiScale: scale });
       if (!win.isDestroyed()) win.webContents.setZoomFactor(settings.uiScale);
     };
     ipcMain.on('scale:set', onScale);
@@ -482,7 +489,7 @@ app.whenReady().then(() => {
   settings = loadSettings(app.getPath('userData')); // 영속 설정 로드(OPS-050).
   // UI-020: 테마 토글 영속 — 렌더러가 setTheme 하면 settings.json에 저장(다음 기동에도 유지).
   ipcMain.on('theme:set', (_e, theme) => {
-    settings = saveSettings(app.getPath('userData'), { ...settings, theme });
+    persistSettings({ theme });
   });
   // FEAT-010: "받기" 클릭 → main이 보관한 릴리즈 URL을 외부 브라우저로(렌더러가 URL을 넘기지 않음 = 임의 sink 차단).
   ipcMain.on('update:open', () => {
@@ -491,7 +498,7 @@ app.whenReady().then(() => {
   // UI-040: 설정 화면 — 전체 설정 로드/저장(즉시 반영). saveSettings가 화이트리스트·검증·영속.
   ipcMain.handle('settings:load', () => settings);
   ipcMain.handle('settings:save', (_e, partial) => {
-    settings = saveSettings(app.getPath('userData'), { ...settings, ...partial });
+    persistSettings(partial);
     // 라이브 적용: 자동실행(트레이 모드에서만 레지스트리 기록)·UI 배율·재집계(환율폴백·플랜한도·타임존).
     if (tray) {
       setAutoLaunch(app, settings.autoLaunch);
