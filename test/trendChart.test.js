@@ -15,6 +15,13 @@ test('DSH030_xAxis_날짜', () => {
   assert.deepEqual(opt.xAxis.data, ['2026-06-24', '2026-06-25', '2026-06-26']);
 });
 
+test('TRENDH_xAxis_라벨_가로(사용자요청)', () => {
+  // 사용자 요청: 날짜 표기 세로 말고 가로로. TREND7로 최근 7일만이라 가로여도 겹치지 않음.
+  const opt = buildTrendOption(daily, 'cost', theme);
+  assert.equal(opt.xAxis.axisLabel.rotate, 0); // 가로(회전 0)
+  assert.equal(opt.xAxis.axisLabel.interval, 0); // 모든 날짜 라벨 유지(막대1=하루1)
+});
+
 test('DSH030_cost_메트릭_비용시리즈', () => {
   const opt = buildTrendOption(daily, 'cost', theme);
   assert.deepEqual(opt.series[0].data, [10.5, 22.0, 8.25]);

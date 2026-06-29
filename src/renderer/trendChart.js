@@ -24,9 +24,9 @@
         data: daily.map((d) => d.period),
         axisLine: theme.categoryAxis.axisLine,
         axisTick: theme.categoryAxis.axisTick,
-        // 모든 날짜 라벨 표시(회전) — 자동 솎음(예: 5일마다)이 "하루에 막대 여러 개"처럼 보이는 착시 방지.
-        // 막대 1개 = 하루를 라벨로 1:1 확인 가능. 라벨 많으면 회전으로 겹침 회피.
-        axisLabel: Object.assign({}, theme.categoryAxis.axisLabel, { interval: 0, rotate: 90, fontSize: 10 }),
+        // 모든 날짜 라벨 표시(interval:0) — 자동 솎음(예: 5일마다)이 "하루에 막대 여러 개"처럼 보이는 착시 방지.
+        // 막대 1개 = 하루를 라벨로 1:1 확인. TREND7로 최근 7일만이라 가로(rotate:0)로도 겹치지 않음(사용자 요청).
+        axisLabel: Object.assign({}, theme.categoryAxis.axisLabel, { interval: 0, rotate: 0, fontSize: 11 }),
       },
       yAxis: {
         type: 'value',
