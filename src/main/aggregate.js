@@ -76,4 +76,17 @@ async function buildAggregate(runCcusage, opts = {}) {
   };
 }
 
-module.exports = { buildAggregate, shapeBurn, blockTimePct, gaugePct, blockHasClaude };
+// 활성 블록 burn만 경량 갱신(PERF-010/§3: "활성 블록 burn만 짧은 간격 갱신"). daily 전체 파싱 없이
+// blocks --active만 fetch → 매-8s 인터벌이 100억+ 토큰 daily를 재파싱하지 않게 한다(daily/today는 워처 이벤트로 갱신).
+// ponytail: 파일별 AggCache(DAT-010)는 우리가 JSONL을 직접 파싱하지 않으므로(ccusage 자식프로세스가 불투명 전체
+//           파싱) 연결 불가 — per-file totals를 채우려면 ccusage 집계를 재구현해야 해 §8 위반. §3은 캐시 대신
+//           "워처 트리거 전체 재집계 + 인터벌 burn-only"로 충족(전체 재파싱을 이벤트 기반으로 한정).
+async function buildBurn(runCcusage, opts = {}) {
+  const nowMs = opts.nowMs != null ? opts.nowMs : Date.now();
+  const blocksRaw = await runCcusage('blocks', ['--active']);
+  const blocks = ((blocksRaw && blocksRaw.blocks) || []).filter(blockHasClaude);
+  const block = blocks.find((b) => b.isActive) || blocks[0] || null;
+  return { burn: shapeBurn(block, nowMs, opts.planTokenLimit) };
+}
+
+module.exports = { buildAggregate, buildBurn, shapeBurn, blockTimePct, gaugePct, blockHasClaude };

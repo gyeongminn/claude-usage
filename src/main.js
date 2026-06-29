@@ -2,7 +2,7 @@ const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell } = require(
 const fs = require('node:fs');
 const path = require('node:path');
 const { runCcusage } = require('./main/ccusage');
-const { buildAggregate } = require('./main/aggregate');
+const { buildAggregate, buildBurn } = require('./main/aggregate');
 const { startWatcher } = require('./main/watcher');
 const { fetchKrwPerUsd } = require('./main/fxRate');
 const { renderReportToPdf, reportPath } = require('./main/reportPdf');
@@ -104,6 +104,7 @@ async function refreshFx() {
 }
 
 // 실데이터 집계 → 렌더러 push. 실패해도 앱은 유지(빈 화면 방지 위해 에러 무시).
+// 전체 집계(daily+blocks)는 기동·워처 이벤트·새로고침에서만(PERF-010/§3: 전체 재파싱은 이벤트 기반으로 한정).
 async function pushAggregate(win) {
   try {
     const agg = await buildAggregate(runCcusage, {
@@ -114,6 +115,19 @@ async function pushAggregate(win) {
     if (!win.isDestroyed()) win.webContents.send('usage:aggregate', agg);
   } catch (e) {
     console.error('집계 실패:', e.message);
+  }
+}
+
+// 활성 블록 burn만 경량 갱신(PERF-010/§3: "활성 블록 burn만 짧은 간격 갱신"). 인터벌이 daily 전체 파싱을
+// 반복하지 않게 blocks --active만. daily/today는 워처 이벤트(파일 변경 시)로만 갱신 → 매-8s 전체 재파싱 제거.
+async function pushBurn(win) {
+  try {
+    const { burn } = await buildBurn(runCcusage, {
+      planTokenLimit: settings && settings.planTokenLimit,
+    });
+    if (!win.isDestroyed()) win.webContents.send('usage:burn', burn);
+  } catch (e) {
+    console.error('burn 갱신 실패:', e.message);
   }
 }
 
@@ -225,7 +239,8 @@ function createWindow() {
     refreshFx().catch(() => {}).finally(() => pushAggregate(win));
     // 파일 변경 감시(DAT-020) → 변경 시 재집계. 활성 블록 burn 신선도 위해 주기 갱신도 병행(§4.1: 5~10s).
     const watcher = startWatcher(() => pushAggregate(win));
-    const timer = setInterval(() => pushAggregate(win), 8000);
+    // PERF-010/§3: 짧은 간격(8s) 갱신은 활성 블록 burn만(전체 daily 재파싱 X). 전체는 워처/새로고침/기동에서.
+    const timer = setInterval(() => pushBurn(win), 8000);
     // 업데이트 확인(FEAT-010): 기동 시 1회 + 6h 주기. 토글 꺼지면 runUpdateCheck가 즉시 반환(체크 0).
     runUpdateCheck(win).catch(() => {});
     const updTimer = setInterval(() => runUpdateCheck(win).catch(() => {}), UPDATE_INTERVAL_MS);

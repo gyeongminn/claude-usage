@@ -22,6 +22,12 @@ contextBridge.exposeInMainWorld('usage', {
     ipcRenderer.on('usage:aggregate', handler);
     return () => ipcRenderer.removeListener('usage:aggregate', handler);
   },
+  // PERF-010: 활성 블록 burn만 경량 갱신(8s 인터벌). 전체 집계와 별도 채널 — daily/today는 안 건드림.
+  onBurn: (cb) => {
+    const handler = (_e, burn) => cb(burn);
+    ipcRenderer.on('usage:burn', handler);
+    return () => ipcRenderer.removeListener('usage:burn', handler);
+  },
   locale: uiLocale,
   t: (key, vars) => t(key, vars),
   // UI-010: 새로고침(재계산) — 메인에 즉시 재집계 요청(결과는 onAggregate로 되돌아옴).

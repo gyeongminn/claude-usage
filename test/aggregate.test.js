@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { buildAggregate, shapeBurn, gaugePct, blockHasClaude } = require('../src/main/aggregate');
+const { buildAggregate, buildBurn, shapeBurn, gaugePct, blockHasClaude } = require('../src/main/aggregate');
 
 test('DSH060_shapeBurn_활성블록_정규화', () => {
   const block = {
@@ -116,6 +116,38 @@ test('AUDIT020_buildAggregate_클로드블록_유지', async () => {
   const agg = await buildAggregate(run);
   assert.equal(agg.burn.costPerHour, 10);
   assert.equal(agg.burn.pct, 25); // 5/20
+});
+
+// PERF-010(§3): 활성 블록 burn만 짧은 간격 갱신. buildBurn은 daily 전체 파싱 없이 blocks --active만 호출.
+test('PERF010_buildBurn_blocks만호출_daily안함', async () => {
+  const calls = [];
+  const run = async (cmd, args) => {
+    calls.push(cmd);
+    if (cmd === 'blocks') return { blocks: [{ isActive: true, models: ['claude-opus-4-8'], costUSD: 5, burnRate: { costPerHour: 10, tokensPerMinute: 100 }, projection: { totalCost: 20 } }] };
+    return { daily: [{ period: '2026-06-25', totalCost: 999 }] }; // 호출되면 안 됨
+  };
+  const r = await buildBurn(run);
+  assert.deepEqual(calls, ['blocks']); // daily 미호출(매-8s 전체 파싱 제거)
+  assert.equal(r.burn.costPerHour, 10);
+  assert.equal(r.burn.pct, 25); // 5/20
+  assert.ok(!('daily' in r) && !('today' in r)); // burn만 반환
+});
+
+test('PERF010_buildBurn_순수비클로드_제외·nowMs·planLimit', async () => {
+  const run = async () => ({ blocks: [{ isActive: true, models: ['gpt-5-codex'], costUSD: 99, burnRate: { costPerHour: 88, tokensPerMinute: 7000 }, projection: { totalCost: 200 } }] });
+  const r = await buildBurn(run);
+  assert.equal(r.burn.costPerHour, 0); // Codex 전용 → 드롭(§2/AUDIT-020 일관)
+  // nowMs/planTokenLimit 주입 경로(active Claude 블록).
+  const run2 = async () => ({ blocks: [{ isActive: true, models: ['claude-opus-4-8'], totalTokens: 50000, startTime: '2026-06-25T00:00:00Z', endTime: '2026-06-25T05:00:00Z', burnRate: {}, projection: {} }] });
+  const r2 = await buildBurn(run2, { nowMs: Date.parse('2026-06-25T02:30:00Z'), planTokenLimit: 100000 });
+  assert.equal(r2.burn.timePct, 50); // 2.5h / 5h
+  assert.equal(r2.burn.tokenPct, 50); // 50000/100000
+});
+
+test('PERF010_buildBurn_빈블록_0안전', async () => {
+  const r = await buildBurn(async () => ({ blocks: [] }));
+  assert.equal(r.burn.pct, 0);
+  assert.equal(r.burn.tokenPct, null);
 });
 
 test('DSH060_buildAggregate_빈데이터_안전', async () => {

@@ -362,15 +362,21 @@
         document.getElementById('update-text').textContent = t('update_available', { version: updateVersion });
         document.getElementById('update-banner').hidden = false;
       }
+      // 히어로 게이지+burn rates만 렌더(PERF-010: 8s burn-only 갱신과 전체 집계가 공유). lastAgg.burn 동기화로
+      // 로케일 전환 시 최신 burn으로 재렌더. 플랜 토큰 한도 설정 시 토큰 소진율, 없으면 시간 소진율(§4.1, OPEN[09]).
+      function renderBurn(burn) {
+        if (!burn) return;
+        if (lastAgg) lastAgg.burn = burn; else lastAgg = { burn };
+        renderGauge(burn.tokenPct != null ? burn.tokenPct : burn.timePct);
+        document.getElementById('burn-cost').textContent = fmtCost(burn.costPerHour);
+        document.getElementById('burn-tok').textContent = fmtTok(burn.tokPerHour);
+        const rem = burn.remainingMinutes ? ' · ' + t('dash_remaining', { n: burn.remainingMinutes }) : '';
+        document.getElementById('gauge-eta').textContent = t('dash_eta', { cost: fmtCost(burn.projectedCost) }) + rem;
+      }
       function renderAgg(agg) {
         if (!agg || !agg.burn) return;
         lastAgg = agg;
-        // 플랜 토큰 한도 설정 시 토큰 소진율, 없으면 시간 소진율(§4.1, OPEN[09]).
-        renderGauge(agg.burn.tokenPct != null ? agg.burn.tokenPct : agg.burn.timePct);
-        document.getElementById('burn-cost').textContent = fmtCost(agg.burn.costPerHour);
-        document.getElementById('burn-tok').textContent = fmtTok(agg.burn.tokPerHour);
-        const rem = agg.burn.remainingMinutes ? ' · ' + t('dash_remaining', { n: agg.burn.remainingMinutes }) : '';
-        document.getElementById('gauge-eta').textContent = t('dash_eta', { cost: fmtCost(agg.burn.projectedCost) }) + rem;
+        renderBurn(agg.burn);
 
         if (agg.daily && agg.daily.length) {
           // 비파괴 매핑(원본 period 보존 → 재렌더 시 재슬라이스 안전).
@@ -390,6 +396,8 @@
         }
       }
       window.usage.onAggregate(renderAgg);
+      // PERF-010: 8s 인터벌의 활성 블록 burn-only 갱신(전체 daily 재파싱 없이 게이지·burn rates만).
+      if (window.usage.onBurn) window.usage.onBurn(renderBurn);
 
       // FEAT-010: 업데이트 알림 — main이 새 버전 감지 시 'update:available' push → 배너 표시.
       // "받기"는 main이 보관한 릴리즈 URL을 외부 브라우저로 연다(렌더러는 URL을 모름 = sink 주입 차단).
