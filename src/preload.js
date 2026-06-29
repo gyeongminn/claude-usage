@@ -14,6 +14,11 @@ const uiTheme = themeArg && themeArg.split('=')[1] === 'dark' ? 'dark' : 'light'
 const scaleArg = process.argv.find((a) => a.startsWith('--ui-scale='));
 const uiScale = scaleArg && isFinite(Number(scaleArg.split('=')[1])) ? Number(scaleArg.split('=')[1]) : 1;
 
+// TILE-020 캡처 검증용(UI_MAIN_TILES): main이 --ui-main-tiles로 전달. 비면 null(렌더러는 settings.mainTiles 사용).
+const mtArg = process.argv.find((a) => a.startsWith('--ui-main-tiles='));
+const mtVal = mtArg ? mtArg.split('=')[1] : '';
+const captureMainTiles = mtVal ? mtVal.split(',').filter(Boolean) : null;
+
 // 메인 → 렌더러 집계 push + i18n(t/locale) 노출(contextIsolation 유지, nodeIntegration 없음).
 // ponytail: t는 함수 프록시로 전달 — 렌더러는 카탈로그/노드 접근 없이 번역만 사용(OPEN[07] 해소).
 contextBridge.exposeInMainWorld('usage', {
@@ -50,6 +55,8 @@ contextBridge.exposeInMainWorld('usage', {
   // UI-030: UI 배율 — 초기값 + 변경(main이 clamp·영속·setZoomFactor).
   uiScale: uiScale,
   setScale: (scale) => ipcRenderer.send('scale:set', scale),
+  // TILE-020: 캡처 검증용 메인 타일 오버라이드(평소 null → renderMain이 settings.mainTiles 사용).
+  captureMainTiles: captureMainTiles,
   // UI-040: 설정 화면 — 전체 설정 load/save(즉시 반영). main이 검증·영속·라이브 적용 후 결과 반환.
   loadSettings: () => ipcRenderer.invoke('settings:load'),
   saveSettings: (partial) => ipcRenderer.invoke('settings:save', partial),

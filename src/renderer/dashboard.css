@@ -103,13 +103,11 @@ body {
 .tab:hover { background: var(--track); }
 .tab.active { background: var(--accent-light); color: var(--accent); }
 
+/* TILE-020(§12): 고정 grid-template-areas → auto-flow 2열. 타일은 mainTiles 순서대로 렌더(renderMain). */
 .grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  grid-template-areas:
-    'hero hero'
-    'trend today'
-    'weekly weekly';
+  grid-auto-flow: row dense;
   gap: var(--space-3);
   padding: var(--space-3);
   max-width: 1100px;
@@ -128,10 +126,8 @@ body {
 }
 .grid-detail[hidden] { display: none; }
 
-.hero { grid-area: hero; }
-.trend { grid-area: trend; }
-.today { grid-area: today; }
-.weekly { grid-area: weekly; }
+/* TILE-020(§12): 타일 span — full=전폭(1/-1), wide/narrow는 auto-flow가 2fr/1fr 열에 순서대로 배치(위치 기반·v1 천장). 기본 set(hero full·trend wide·today narrow·weekly full)은 현행 레이아웃 보존. */
+.tile-full { grid-column: 1 / -1; }
 
 /* WEEK5: 최근 5주 주차별(이번 주 포함) — 주 라벨·비례 바·비용·토큰 한 줄(최신 위). */
 .week-list { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-2); }
@@ -356,12 +352,7 @@ body {
    비율·크기 변동·축소에도 안깨지게. 차트 폭 추종은 UX-010 resize 핸들러가 처리. */
 @media (max-width: 760px) {
   .grid {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      'hero'
-      'trend'
-      'today'
-      'weekly';
+    grid-template-columns: 1fr; /* TILE-020: 단일열이면 모든 타일이 DOM(=mainTiles) 순서로 스택. tile-full도 1열이라 전폭. */
     padding: var(--space-2);
     gap: var(--space-2);
   }

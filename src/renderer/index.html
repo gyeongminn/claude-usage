@@ -56,7 +56,7 @@
 
     <!-- 메인 탭 — 히어로(5h·7d 실제 소진률 좌우분할) / 추세 / 오늘 -->
     <main id="view-main" class="grid">
-      <section class="card hero" aria-label="usage">
+      <section class="card hero" aria-label="usage" data-tile="hero">
         <div class="hero-split">
           <div class="usage-col">
             <div class="card-label" data-i18n="usage_5h">5시간 한도</div>
@@ -75,7 +75,7 @@
         <div class="usage-reauth" id="usage-reauth" data-i18n="usage_reauth" hidden>Sign in to Claude Code to refresh usage</div>
       </section>
 
-      <section class="card trend" aria-label="trend">
+      <section class="card trend" aria-label="trend" data-tile="trend">
         <div class="card-head">
           <div class="card-label"><span class="live-dot"></span><span data-i18n="dash_trend">일자별 추세</span></div>
           <div class="toggle">
@@ -86,7 +86,7 @@
         <div id="trend-chart" class="chart-slot"></div>
       </section>
 
-      <section class="card today" aria-label="today">
+      <section class="card today" aria-label="today" data-tile="today">
         <div class="card-label" data-i18n="dash_today">오늘</div>
         <div class="kpi-row">
           <div class="kpi">
@@ -101,7 +101,7 @@
         </div>
       </section>
 
-      <section class="card weekly" aria-label="weekly">
+      <section class="card weekly" aria-label="weekly" data-tile="weekly">
         <div class="card-label" data-i18n="dash_weekly5">최근 5주</div>
         <div id="week-list" class="week-list"></div>
       </section>
@@ -109,12 +109,12 @@
 
     <!-- 상세 탭 — 모델별 비중 / 프로젝트 Top 5 -->
     <main id="view-detail" class="grid-detail" hidden>
-      <section class="card" aria-label="models">
+      <section class="card" aria-label="models" data-tile="models">
         <div class="card-label" data-i18n="model_share">모델 사용 비중</div>
         <div id="model-donut" class="donut-slot"></div>
         <div id="model-legend" class="model-legend"></div>
       </section>
-      <section class="card" aria-label="token composition">
+      <section class="card" aria-label="token composition" data-tile="tokens">
         <div class="card-label" data-i18n="detail_token_comp">토큰 구성</div>
         <div class="tok-comp">
           <div class="tok-row"><span class="tok-name" data-i18n="tok_input">입력</span><div class="tok-bar"><div class="tok-fill" id="tc-input-fill"></div></div><span class="tok-val" id="tc-input">0</span></div>
@@ -125,7 +125,7 @@
         <div class="cache-eff"><span data-i18n="cache_efficiency">캐시 효율</span><span class="cache-eff-val" id="cache-eff">0%</span></div>
       </section>
       <!-- SYS-030: 시스템 리소스(CPU·RAM·(가능 시)GPU) 게이지. main이 sys:stats로 2s push, burnGauge 톤 재사용. -->
-      <section class="card" aria-label="system">
+      <section class="card" aria-label="system" data-tile="system">
         <div class="card-label" data-i18n="sys_title">시스템</div>
         <div class="sys-list">
           <div class="sys-item">
@@ -196,6 +196,7 @@
     <script src="trendChart.js"></script>
     <script src="modelDonut.js"></script>
     <script src="burnGauge.js"></script>
+    <script src="tiles.js"></script>
     <script src="format.js"></script>
     <script src="chartResize.js"></script>
     <script>
@@ -614,6 +615,44 @@
       if (window.usage.onSysStats) window.usage.onSysStats(renderSysStats);
       // 실제 사용 한도(5h·주간) — Claude 설정창과 동일 소스. main이 5분 주기로 push.
       if (window.usage.onLimits) window.usage.onLimits(renderLimits);
+
+      // TILE-020(§12): 메인 탭 타일 동적 배치 — settings.mainTiles 순서대로 메인 그리드 구성.
+      // 단일 인스턴스 이동 모델: 선택 타일 카드 DOM을 메인으로, 미선택 카탈로그 타일은 상세 라이브러리로 이동(복제 금지).
+      function renderMain(mainTiles) {
+        if (!window.Tiles) return;
+        const order = window.Tiles.normalizeMainTiles(mainTiles);
+        const main = document.getElementById('view-main');
+        const detail = document.getElementById('view-detail');
+        const projects = detail && detail.querySelector('[aria-label="projects"]');
+        const spanOf = {};
+        for (const tdef of window.Tiles.TILES) spanOf[tdef.id] = tdef.span;
+        // 선택 타일 → 메인(순서대로) + span 클래스. 전체를 순서대로 append하므로 최종 순서 = order.
+        for (const id of order) {
+          const node = document.querySelector('[data-tile="' + id + '"]');
+          if (!node) continue;
+          node.classList.remove('tile-full', 'tile-wide', 'tile-narrow');
+          node.classList.add('tile-' + (spanOf[id] || 'narrow'));
+          main.appendChild(node);
+        }
+        // 미선택 카탈로그 타일 → 상세 라이브러리(카탈로그 순서, projects 카드 앞) + span 클래스 제거.
+        for (const tdef of window.Tiles.TILES) {
+          if (order.includes(tdef.id)) continue;
+          const node = document.querySelector('[data-tile="' + tdef.id + '"]');
+          if (!node) continue;
+          node.classList.remove('tile-full', 'tile-wide', 'tile-narrow');
+          if (projects) detail.insertBefore(node, projects);
+          else if (detail) detail.appendChild(node);
+        }
+        // 이동으로 컨테이너 폭이 바뀌므로 차트 크기 재계산(숨김 뷰는 다음 탭 전환서 재계산).
+        setTimeout(() => { try { chart.resize(); } catch (e) {} try { donut.resize(); } catch (e) {} }, 0);
+      }
+      // 초기 1회: 설정의 mainTiles로 메인 구성(기본 ['hero','trend','today','weekly']=현행, 거동 보존).
+      // captureMainTiles(검증용 env)가 있으면 우선(없으면 null → 설정값).
+      if (window.usage && window.Tiles) {
+        const override = window.usage.captureMainTiles;
+        if (override) renderMain(override);
+        else if (window.usage.loadSettings) window.usage.loadSettings().then((s) => renderMain(s && s.mainTiles)).catch(() => renderMain(null));
+      }
 
       // 메인/상세 탭 전환. 상세 탭의 도넛은 표시될 때 resize(숨김 중 init은 크기 0이라).
       (function setupTabs() {
