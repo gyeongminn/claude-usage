@@ -314,33 +314,41 @@ async function generatePdfAndQuit(outPath) {
 }
 
 // 트레이 아이콘(UX-050): 실제 icon.png 우선, 못 읽으면(빈 이미지) 단색 비트맵 폴백.
+// ponytail: createFromPath는 패키징(asar) 경로에서 빈 이미지를 주는 사례가 있어 fs로 읽어 createFromBuffer
+//           (Electron이 asar용 fs를 패치해 안전) — dev/패키징 공통으로 실아이콘 로드 보장.
 function trayImage() {
-  const img = nativeImage.createFromPath(ICON_PATH);
-  if (!img.isEmpty()) {
-    console.log('트레이 아이콘: icon.png');
-    return img.resize({ width: 16, height: 16 });
+  try {
+    const img = nativeImage.createFromBuffer(fs.readFileSync(ICON_PATH));
+    if (!img.isEmpty()) {
+      console.log('트레이 아이콘: icon.png');
+      return img.resize({ width: 16, height: 16 });
+    }
+  } catch (e) {
+    console.error('트레이 아이콘 로드 실패:', e.message);
   }
   console.log('트레이 아이콘: fallback bitmap');
   const ico = trayIconBitmap(16);
   return nativeImage.createFromBitmap(ico.buffer, { width: ico.width, height: ico.height });
 }
 
-// 트레이 상주(OPS-010): 아이콘 + 메뉴(대시보드 열기·이번 달 미리 뽑기·종료). UI 로케일로 라벨.
-function setupTray(getWin) {
+// 대시보드 창 표시(트레이 메뉴/클릭 공용).
+function showMainWindow() {
+  const w = mainWindow;
+  if (w && !w.isDestroyed()) {
+    w.show();
+    w.focus();
+  }
+}
+
+// 트레이 컨텍스트 메뉴·툴팁을 현재 UI 로케일로 (재)빌드. 설정에서 언어 바꾸면 다시 호출해 라벨 갱신.
+function refreshTrayMenu() {
+  if (!tray) return;
   // 설정 locale 우선(§10), null이면 시스템 언어 자동.
   const t = tFor((settings && settings.locale) || app.getLocale());
-  tray = new Tray(trayImage());
   tray.setToolTip(t('app_title'));
-  const showWin = () => {
-    const w = getWin();
-    if (w && !w.isDestroyed()) {
-      w.show();
-      w.focus();
-    }
-  };
   const template = buildTrayMenuTemplate(
     {
-      onOpen: showWin,
+      onOpen: showMainWindow,
       // UX-060: "이번 달 미리 뽑기" — 이번 달(UTC YM) 보고서를 지금 생성(reports/YYYY-MM.pdf).
       onReport: () => generateMonthlyReport(currentYM(Date.now())),
       onQuit: () => {
@@ -352,7 +360,13 @@ function setupTray(getWin) {
     t
   );
   tray.setContextMenu(Menu.buildFromTemplate(template));
-  tray.on('click', showWin); // 아이콘 클릭=대시보드 열기(Windows 관례).
+}
+
+// 트레이 상주(OPS-010): 아이콘 + 메뉴(대시보드 열기·이번 달 미리 뽑기·종료). UI 로케일로 라벨.
+function setupTray() {
+  tray = new Tray(trayImage());
+  refreshTrayMenu();
+  tray.on('click', showMainWindow); // 아이콘 클릭=대시보드 열기(Windows 관례).
 }
 
 app.whenReady().then(() => {
@@ -377,7 +391,10 @@ app.whenReady().then(() => {
   ipcMain.handle('settings:save', (_e, partial) => {
     settings = saveSettings(app.getPath('userData'), { ...settings, ...partial });
     // 라이브 적용: 자동실행(트레이 모드에서만 레지스트리 기록)·UI 배율·재집계(환율폴백·플랜한도·타임존).
-    if (tray) setAutoLaunch(app, settings.autoLaunch);
+    if (tray) {
+      setAutoLaunch(app, settings.autoLaunch);
+      refreshTrayMenu(); // 언어 변경 시 트레이 컨텍스트 메뉴·툴팁도 새 로케일로 재빌드.
+    }
     const w = mainWindow;
     if (w && !w.isDestroyed()) {
       w.webContents.setZoomFactor(settings.uiScale);
@@ -389,7 +406,7 @@ app.whenReady().then(() => {
   const win = createWindow();
   // 캡처/검증 모드가 아니면 트레이 상주 + 로그인 자동실행 등록.
   if (!process.env.CAPTURE_PATH) {
-    setupTray(() => win);
+    setupTray();
     // 자동실행(OPS-020/050): 설정값 우선, AUTO_LAUNCH=0 env면 강제 해제(검증용).
     // ponytail: getLoginItemSettings 비교로 idempotent — 매 기동 레지스트리 재기록 안 함.
     const want = process.env.AUTO_LAUNCH === '0' ? false : settings.autoLaunch;
