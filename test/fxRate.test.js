@@ -93,3 +93,23 @@ test('AUDIT050_오프라인_커스텀환율_기동시_사용자값_적용', asyn
   assert.equal(r.krwPerUsd, 1500);
   assert.equal(r.source, 'fixed');
 });
+
+// NET-010: fetch가 reject 아닌 hang(캡티브 포털: TCP 연결되나 HTTP 스톨)이어도 timeoutMs로 abort→폴백.
+// signal abort에만 reject하는 hang fetch — 타임아웃 없으면 영원히 pending(test timeout=Red), 있으면 폴백 반환(Green).
+test('NET010_환율fetch_hang시_타임아웃_폴백', { timeout: 3000 }, async () => {
+  const hangFetch = (url, init) =>
+    new Promise((_, reject) => {
+      const sig = init && init.signal;
+      if (sig) sig.addEventListener('abort', () => reject(new Error('aborted')));
+    });
+  const r = await fetchKrwPerUsd({ fetchImpl: hangFetch, timeoutMs: 50, lastKnown: 1400 });
+  assert.equal(r.source, 'lastKnown');
+  assert.equal(r.krwPerUsd, 1400);
+});
+
+// NET-010: 정상 응답은 타임아웃 타이머를 정리하고 online 반환(타이머 누수·핸들 잔존 없음).
+test('NET010_정상응답_타임아웃_무간섭_online', async () => {
+  const r = await fetchKrwPerUsd({ fetchImpl: okFetch(1377), timeoutMs: 1000 });
+  assert.equal(r.source, 'online');
+  assert.equal(r.krwPerUsd, 1377);
+});
