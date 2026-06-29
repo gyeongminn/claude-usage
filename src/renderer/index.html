@@ -88,6 +88,8 @@
     <script>
       // i18n(OPEN[07] 해소): preload가 노출한 t/locale. 정적 라벨(data-i18n) 일괄 적용 + 동적 문자열은 t() 보간.
       const t = (window.usage && window.usage.t) || ((k) => k);
+      // AUDIT-030: 숫자·통화 포맷을 UI 로케일 Intl로(§10, de/fr/it/vi 자리구분 다름). 첫 포맷 전 1회.
+      if (window.usage && window.usage.locale && window.Fmt) window.Fmt.setLocale(window.usage.locale);
       document.querySelectorAll('[data-i18n]').forEach((e) => {
         const v = t(e.getAttribute('data-i18n'));
         if (v) e.textContent = v;

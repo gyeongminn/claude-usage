@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { fmtUsd, fmtKrw, fmtUsdKrw, fmtTokens, fmtInt } = require('../src/renderer/format');
+const { fmtUsd, fmtKrw, fmtUsdKrw, fmtTokens, fmtInt, setLocale } = require('../src/renderer/format');
 
 test('DAT050_fmtUsd_달러_2자리천단위', () => {
   assert.equal(fmtUsd(1234.5), '$1,234.50');
@@ -48,4 +48,30 @@ test('DAT050_fmtTokens_경계', () => {
 test('DAT050_fmtInt_천단위_그룹', () => {
   assert.equal(fmtInt(1234567), '1,234,567');
   assert.equal(fmtInt(0), '0');
+});
+
+// AUDIT-030: 숫자·통화는 UI 로케일 Intl 포맷(§10). $/₩ 글리프는 접두 고정(§5.1), 숫자만 로케일.
+test('AUDIT030_setLocale_de_자리구분_소수기호', () => {
+  setLocale('de'); // 자리구분 '.', 소수 ','
+  try {
+    assert.equal(fmtInt(1234567), '1.234.567');
+    assert.equal(fmtUsd(1234.5), '$1.234,50'); // $ 접두 유지 + de 숫자
+    assert.equal(fmtKrw(1234567.8), '₩1.234.568');
+    assert.equal(fmtUsdKrw(10, 1350), '$10,00 (₩13.500)');
+  } finally {
+    setLocale('en-US'); // 싱글톤 누수 방지 — 다른 테스트는 en 기대
+  }
+});
+
+test('AUDIT030_setLocale_en_복원_기존동작', () => {
+  setLocale('en-US');
+  assert.equal(fmtUsd(1234.5), '$1,234.50');
+  assert.equal(fmtInt(1234567), '1,234,567');
+});
+
+test('AUDIT030_setLocale_잘못된입력_무시', () => {
+  setLocale('en-US');
+  setLocale(null); // 비문자열 → 무시(기존 유지)
+  setLocale(''); // 빈 문자열 → 무시
+  assert.equal(fmtUsd(1234.5), '$1,234.50'); // en 유지
 });
