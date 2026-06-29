@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { readOAuth, parseUsage, fetchUsage, etaMinutes } = require('../src/main/claudeUsage');
+const { readOAuth, parseUsage, fetchUsage, etaMinutes, etaFromWindow } = require('../src/main/claudeUsage');
 
 // 실제 /api/oauth/usage 응답 형태(검증된 실데이터 구조).
 const SAMPLE = {
@@ -89,4 +89,23 @@ test('USAGE_etaMinutes_비증가_입력부족_null', () => {
   assert.equal(etaMinutes(60, t0, 55, t0 + 60000), null); // 감소
   assert.equal(etaMinutes(50, t0, 60, t0), null); // dt<=0
   assert.equal(etaMinutes(NaN, t0, 60, t0 + 60000), null); // 입력부족
+});
+
+test('USAGE_etaFromWindow_첫폴링_평균burn추정', () => {
+  // BL-01: 직전 샘플이 없는 첫 폴링도 윈도우 시작 이후 평균 burn으로 즉시 추정.
+  const now = Date.parse('2026-06-29T03:00:00Z');
+  // 5h(300분) 윈도우의 절반(150분) 경과 → 재시작은 now+150분. util 50% → 같은 속도로 50%p 더 = 150분.
+  const resets = new Date(now + 150 * 60000).toISOString();
+  assert.equal(etaFromWindow(50, resets, 300, now), 150);
+  // 이미 100%면 0.
+  assert.equal(etaFromWindow(100, resets, 300, now), 0);
+});
+
+test('USAGE_etaFromWindow_경계_null안전', () => {
+  const now = Date.parse('2026-06-29T03:00:00Z');
+  const resetFull = new Date(now + 300 * 60000).toISOString(); // 윈도우 시작=now → 경과 0
+  assert.equal(etaFromWindow(50, resetFull, 300, now), null); // elapsed<=0
+  assert.equal(etaFromWindow(0, new Date(now + 150 * 60000).toISOString(), 300, now), null); // util 0 → 추세 없음
+  assert.equal(etaFromWindow(50, null, 300, now), null); // resetsAt 없음
+  assert.equal(etaFromWindow(50, 'nope', 300, now), null); // 파싱 불가
 });

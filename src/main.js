@@ -13,7 +13,7 @@ const { scheduleMonthly, currentYM } = require('./main/scheduler');
 const { missingMonths } = require('./main/catchup');
 const { loadSettings, saveSettings, clampScale } = require('./main/settings');
 const { checkForUpdate, isSafeReleaseUrl } = require('./main/updateCheck');
-const { fetchUsage, etaMinutes } = require('./main/claudeUsage');
+const { fetchUsage, etaMinutes, etaFromWindow } = require('./main/claudeUsage');
 const { tFor, resolveLocale } = require('./i18n/i18n');
 
 // 업데이트 알림(FEAT-010): GitHub Releases와 app 버전 비교. 기동 시 + 6h 주기.
@@ -132,7 +132,12 @@ async function pushLimits(win) {
       const w = u[key];
       if (!w) continue;
       const p = usagePrev[key];
-      w.etaMinutes = p ? etaMinutes(p.util, p.t, w.utilization, nowMs) : null;
+      const windowMin = key === 'fiveHour' ? 300 : 7 * 24 * 60;
+      // 첫 폴링(직전 샘플 없음)은 윈도우 시작 이후 평균 burn으로 즉시 추정(BL-01) — 5분 뒤 2번째
+      // 폴링부터는 두 샘플 증가율(최근 추세)로 갱신, 정체·감소면 의도적 null(과장 방지).
+      w.etaMinutes = p
+        ? etaMinutes(p.util, p.t, w.utilization, nowMs)
+        : etaFromWindow(w.utilization, w.resetsAt, windowMin, nowMs);
       usagePrev[key] = { util: w.utilization, t: nowMs };
     }
     lastLimits = u;

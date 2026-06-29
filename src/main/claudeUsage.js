@@ -81,4 +81,19 @@ function etaMinutes(prevUtil, prevMs, curUtil, nowMs) {
   return Number.isFinite(mins) && mins >= 0 ? Math.round(mins) : null;
 }
 
-module.exports = { readOAuth, parseUsage, fetchUsage, etaMinutes, credentialsPath, USAGE_URL, UA_VERSION };
+// 예상 소진(분) — 단일 샘플판(BL-01 첫 폴링용). 직전 샘플이 없어 증가율을 못 구하는 첫 조회에서,
+// 윈도우의 알려진 시작 시각(resetsAt - windowMinutes) 이후 '평균 burn'으로 100% 도달까지 남은 분을 추정.
+// 평균이라 5분 증가율판보다 덜 출렁이고(과장 방지) 즉시 값을 준다. 윈도우 미시작·미사용이면 null.
+function etaFromWindow(util, resetsAt, windowMinutes, nowMs) {
+  if (!Number.isFinite(util) || !Number.isFinite(windowMinutes) || !Number.isFinite(nowMs)) return null;
+  if (util >= 100) return 0;
+  const resetMs = Date.parse(resetsAt);
+  if (!Number.isFinite(resetMs)) return null;
+  const elapsedMin = (nowMs - (resetMs - windowMinutes * 60000)) / 60000;
+  if (elapsedMin <= 0 || util <= 0) return null; // 시작 전·아직 미사용 → 추세 없음
+  const ratePerMin = util / elapsedMin;
+  const mins = (100 - util) / ratePerMin;
+  return Number.isFinite(mins) && mins >= 0 ? Math.round(mins) : null;
+}
+
+module.exports = { readOAuth, parseUsage, fetchUsage, etaMinutes, etaFromWindow, credentialsPath, USAGE_URL, UA_VERSION };
