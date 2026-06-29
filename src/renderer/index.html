@@ -217,6 +217,9 @@
         if (isNaN(d.getTime())) return '';
         const within = ms - Date.now() < 24 * 3600 * 1000;
         const opts = within ? { hour: '2-digit', minute: '2-digit' } : { weekday: 'short', hour: '2-digit', minute: '2-digit' };
+        // UX-070: 표시 타임존 오버라이드(설정→집계 페이로드 timezone=effectiveTz) 적용. 없으면 시스템 TZ(기존 거동·§10 핵심).
+        const tz = lastAgg && lastAgg.timezone;
+        if (tz) opts.timeZone = tz;
         try {
           return new Intl.DateTimeFormat((window.usage && window.usage.locale) || undefined, opts).format(d);
         } catch (e) {
@@ -478,6 +481,7 @@
         if (!agg || !agg.burn) return;
         lastAgg = agg;
         renderBurn(agg.burn);
+        if (lastLimits) renderLimits(lastLimits); // UX-070: 새 집계의 timezone으로 재시작/소진 시계 즉시 갱신(첫 폴링 순서 무관·캡처 결정성).
 
         if (agg.daily && agg.daily.length) {
           // 비파괴 매핑(원본 period 보존 → 재렌더 시 재슬라이스 안전).

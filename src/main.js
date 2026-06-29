@@ -25,7 +25,7 @@ let pendingUpdate = null; // 최신 릴리즈 {version,url}. openExternal은 이
 const SYSTEM_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // 표시 타임존(UI-040): 설정의 수동 오버라이드 우선, 없으면 시스템 TZ(§10).
 function effectiveTz() {
-  return (settings && settings.timezone) || SYSTEM_TZ;
+  return process.env.UI_TZ || (settings && settings.timezone) || SYSTEM_TZ; // UI_TZ=검증용 오버라이드(UI_LOCALE 패턴, UX-070).
 }
 
 // 앱 아이콘(UX-050): build/icon.png. 패키징 시 build/는 asar에 포함되며 createFromPath가 asar 경로도 읽음.
@@ -108,11 +108,13 @@ async function refreshFx() {
 // 전체 집계(daily+blocks)는 기동·워처 이벤트·새로고침에서만(PERF-010/§3: 전체 재파싱은 이벤트 기반으로 한정).
 async function pushAggregate(win) {
   try {
+    const tz = effectiveTz(); // 표시 타임존(설정 오버라이드 우선, UI-040).
     const agg = await buildAggregate(runCcusage, {
-      timezone: effectiveTz(), // 표시 타임존(설정 오버라이드 우선, UI-040).
+      timezone: tz,
       planTokenLimit: settings && settings.planTokenLimit, // 플랜 한도 소진율(OPEN[09], 미설정 시 시간 소진율).
     });
     agg.krwPerUsd = krwPerUsd; // 통화 병기용(§5.1).
+    agg.timezone = tz; // UX-070: 렌더러 fmtClock이 표시 TZ 오버라이드를 reset/eta 시계에 적용(데이터·시계 TZ 정합).
     if (!win.isDestroyed()) win.webContents.send('usage:aggregate', agg);
   } catch (e) {
     console.error('집계 실패:', e.message);
