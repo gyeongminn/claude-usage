@@ -7,6 +7,8 @@ const DASH_KEYS = [
   'dash_today', 'dash_projects', 'dash_used', 'dash_eta', 'dash_remaining',
   // AUDIT-010: 프로젝트 카드 빈상태(가짜 데이터 제거, ccusage 데이터원 부재 OPEN[08]).
   'dash_projects_empty',
+  // AUDIT-040: 히어로 burn 단위(하드코딩 제거, §10 t() 경유).
+  'dash_per_hour', 'dash_tok_per_hour',
 ];
 
 test('INT020_대시보드키_10로케일_모두존재', () => {

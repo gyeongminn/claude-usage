@@ -6,7 +6,7 @@
     totalTokens: 'Total tokens',
     dailyAvg: 'Daily average',
     vsLastMonth: 'vs last month',
-    pricingSource: 'Pricing source: ccusage',
+    pricingSource: 'Pricing source: ccusage pricing',
     dailyTrend: 'Daily Trend',
     date: 'Date',
     cost: 'Cost',
@@ -25,6 +25,7 @@
     projectsSessions: 'Projects & Sessions',
     topProjects: 'Top projects',
     project: 'Project',
+    other: 'Other',
     generated: 'Generated {t}',
     sessions: 'Sessions — {n} total, top 3 by cost',
   };
@@ -33,7 +34,7 @@
     totalTokens: '총 토큰',
     dailyAvg: '일 평균',
     vsLastMonth: '전월 대비',
-    pricingSource: '단가 출처: ccusage',
+    pricingSource: '단가 출처: ccusage pricing',
     dailyTrend: '일자별 추세',
     date: '날짜',
     cost: '비용',
@@ -52,6 +53,7 @@
     projectsSessions: '프로젝트 · 세션',
     topProjects: '상위 프로젝트',
     project: '프로젝트',
+    other: '기타',
     generated: '{t} 생성',
     sessions: '세션 — 총 {n}개, 비용 상위 3',
   };

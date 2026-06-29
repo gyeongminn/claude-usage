@@ -1,10 +1,11 @@
 // 프로젝트 Top N + '기타' 묶음(§7: Top 5 + 기타). 가로 바 차트.
 // UMD: node 테스트·렌더러(window.ProjectBars).
 (function (root) {
-  const OTHER = '기타'; // ponytail: 라벨은 i18n 배선(OPEN[07]) 후 t() 경유로 교체.
+  const OTHER = '기타'; // 기본 라벨(하위호환). 호출부가 로케일 라벨(reportLabels.other 등)을 주입 가능(AUDIT-040).
 
   // ccusage --instances 항목 → {project, totalCost}. name 우선, 없으면 project.
-  function topNWithOther(projects, n) {
+  // otherLabel: '나머지' 묶음 라벨(주입 시 로케일화, 미주입 시 '기타').
+  function topNWithOther(projects, n, otherLabel = OTHER) {
     const norm = projects.map((p) => ({
       project: p.name || p.project || '(unknown)',
       totalCost: Number(p.totalCost) || 0,
@@ -13,7 +14,7 @@
     if (sorted.length <= n) return sorted;
     const top = sorted.slice(0, n);
     const otherCost = sorted.slice(n).reduce((s, p) => s + p.totalCost, 0);
-    if (otherCost > 0) top.push({ project: OTHER, totalCost: otherCost });
+    if (otherCost > 0) top.push({ project: otherLabel, totalCost: otherCost });
     return top;
   }
 

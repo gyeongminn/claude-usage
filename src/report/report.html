@@ -31,7 +31,11 @@
     <!-- p2 추세 -->
     <section class="page" id="p2">
       <h2 class="section-title" data-i18n="dailyTrend">Daily Trend</h2>
-      <div id="p2-chart" class="report-chart"></div>
+      <!-- §4.2 "비용/토큰 2단 차트": 비용·토큰 추세를 나란히(AUDIT-040). -->
+      <div class="cols-2">
+        <div><div class="sub-title" data-i18n="cost">Cost</div><div id="p2-chart" class="report-chart"></div></div>
+        <div><div class="sub-title" data-i18n="tokens">Tokens</div><div id="p2-chart-tokens" class="report-chart"></div></div>
+      </div>
       <table class="r-table"><thead><tr><th data-i18n="date">Date</th><th data-i18n="cost">Cost</th><th data-i18n="tokens">Tokens</th></tr></thead><tbody id="p2-table"></tbody></table>
       <footer class="page-footer">
         <span class="r-generated"></span>
@@ -162,10 +166,12 @@
           window.Verdict.buildVerdict({ momPct: mom, cacheHitRate: rate }, d.locale);
       }
 
-      // p2 추세 차트(비용) + 일자별 표
+      // p2 추세 — 비용/토큰 2단 차트(§4.2) + 일자별 표
       function fillP2(d) {
         chartOf(document.getElementById('p2-chart'))
           .setOption(window.TrendChart.buildTrendOption(d.daily, 'cost', theme));
+        chartOf(document.getElementById('p2-chart-tokens'))
+          .setOption(window.TrendChart.buildTrendOption(d.daily, 'tokens', theme));
         document.getElementById('p2-table').innerHTML = d.daily
           .map((r) => `<tr><td>${r.period}</td><td>${F.fmtUsd(r.totalCost)}</td><td>${F.fmtTokens(r.totalTokens)}</td></tr>`)
           .join('');
@@ -192,7 +198,7 @@
       // p4 프로젝트 Top N 바 / 세션 통계 Top 3
       function fillP4(d) {
         chartOf(document.getElementById('p4-projects')).setOption(
-          window.ProjectBars.buildProjectBarOption(window.ProjectBars.topNWithOther(d.projects, 5), theme)
+          window.ProjectBars.buildProjectBarOption(window.ProjectBars.topNWithOther(d.projects, 5, L.other), theme)
         );
         const st = window.ReportData.sessionStats(d.sessions);
         document.getElementById('p4-sessions-head').textContent = L.sessions.replace('{n}', st.totalSessions);

@@ -31,6 +31,16 @@ test('PDF060_reportLabels_생성·세션_템플릿보간', () => {
   assert.equal(ko.sessions.replace('{n}', '4'), '세션 — 총 4개, 비용 상위 3');
 });
 
+// AUDIT-040: 푸터 "단가 출처: ccusage pricing"(§4.2 — 끝 "pricing" 단어) + '기타'(other) 로케일화.
+test('AUDIT040_pricingSource_pricing단어_other라벨', () => {
+  const en = reportLabels('en');
+  const ko = reportLabels('ko');
+  assert.match(en.pricingSource, /ccusage pricing$/);
+  assert.match(ko.pricingSource, /ccusage pricing$/);
+  assert.equal(en.other, 'Other');
+  assert.equal(ko.other, '기타');
+});
+
 test('PDF060_reportLabels_키집합_동일', () => {
   // en/ko 키 누락 방지(자체 드리프트 가드).
   const a = Object.keys(reportLabels('en')).sort();

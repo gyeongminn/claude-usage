@@ -21,6 +21,12 @@ test('DSH050_Top5_나머지_기타묶음', () => {
   assert.equal(rows[5].totalCost, 10); // f(6)+g(4)
 });
 
+// AUDIT-040: '기타'(OTHER) t()/로케일 미경유 → otherLabel 주입(PDF EN='Other'·KO='기타').
+test('AUDIT040_topNWithOther_otherLabel_주입', () => {
+  assert.equal(topNWithOther(projects, 5, 'Other')[5].project, 'Other'); // 주입 라벨 사용
+  assert.equal(topNWithOther(projects, 5)[5].project, '기타'); // 기본값 하위호환
+});
+
 test('DSH050_정렬_내림차순', () => {
   const rows = topNWithOther([{ project: 'x', totalCost: 1 }, { project: 'y', totalCost: 9 }], 5);
   assert.deepEqual(rows.map((r) => r.project), ['y', 'x']); // 큰 비용 먼저

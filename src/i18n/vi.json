@@ -17,5 +17,7 @@
   "dash_refresh": "Làm mới",
   "dash_theme": "Giao diện",
   "dash_zoom_in": "Phóng to",
-  "dash_zoom_out": "Thu nhỏ"
+  "dash_zoom_out": "Thu nhỏ",
+  "dash_per_hour": "/h",
+  "dash_tok_per_hour": "tok/h"
 }

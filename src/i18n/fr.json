@@ -17,5 +17,7 @@
   "dash_refresh": "Actualiser",
   "dash_theme": "Thème",
   "dash_zoom_in": "Agrandir",
-  "dash_zoom_out": "Réduire"
+  "dash_zoom_out": "Réduire",
+  "dash_per_hour": "/h",
+  "dash_tok_per_hour": "tok/h"
 }

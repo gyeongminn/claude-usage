@@ -17,5 +17,7 @@
   "dash_refresh": "새로고침",
   "dash_theme": "테마",
   "dash_zoom_in": "확대",
-  "dash_zoom_out": "축소"
+  "dash_zoom_out": "축소",
+  "dash_per_hour": "/h",
+  "dash_tok_per_hour": "tok/h"
 }
