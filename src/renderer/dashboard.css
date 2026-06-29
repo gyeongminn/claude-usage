@@ -45,7 +45,7 @@ body {
   background: transparent;
   color: var(--text-2);
   cursor: pointer;
-  transition: background 160ms ease-out, color 160ms ease-out;
+  transition: background var(--motion), color var(--motion);
 }
 .icon-btn:hover { background: var(--track); color: var(--text-1); }
 .icon-btn:active { background: var(--accent-light); color: var(--accent); }
@@ -79,7 +79,7 @@ body {
   padding: 6px 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: background 160ms ease-out;
+  transition: background var(--motion);
 }
 .btn-update:hover { background: var(--accent-hover); }
 
@@ -98,7 +98,7 @@ body {
   color: var(--text-2);
   padding: 8px 16px;
   border-radius: 10px;
-  transition: background 160ms ease-out, color 160ms ease-out;
+  transition: background var(--motion), color var(--motion);
 }
 .tab:hover { background: var(--track); }
 .tab.active { background: var(--accent-light); color: var(--accent); }
@@ -134,7 +134,7 @@ body {
 .week-row { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: var(--space-3); }
 .week-label { font-size: 13px; color: var(--text-2); font-variant-numeric: tabular-nums; }
 .week-bar { height: 8px; background: var(--track); border-radius: 999px; overflow: hidden; }
-.week-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width 160ms ease-out; }
+.week-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width var(--motion); }
 .week-val { font-size: 13px; color: var(--text-1); font-variant-numeric: tabular-nums; text-align: right; }
 
 /* 히어로 5h·7d 좌우분할(사용자 요청) — 좁으면 자동 1열(최소창 절반에서도 정상). */
@@ -196,7 +196,7 @@ body {
   width: 0; /* 데이터 도착 전 첫 페인트가 auto(=100%)로 '소진 100%' 오해를 주지 않게 빈 바로 시작(renderUsageCol가 실제 %로 덮음). */
   border-radius: 999px;
   background: var(--accent);
-  transition: width 160ms ease-out;
+  transition: width var(--motion);
 }
 .gauge-meta {
   display: flex;
@@ -248,7 +248,7 @@ body {
 .tok-row { display: grid; grid-template-columns: 72px 1fr auto; align-items: center; gap: var(--space-2); }
 .tok-name { font-size: 13px; color: var(--text-2); }
 .tok-bar { height: 8px; background: var(--track); border-radius: 999px; overflow: hidden; }
-.tok-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width 160ms ease-out; }
+.tok-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width var(--motion); }
 .tok-val { font-size: 13px; color: var(--text-1); font-variant-numeric: tabular-nums; text-align: right; min-width: 56px; }
 .cache-eff { display: flex; justify-content: space-between; align-items: baseline; margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--track); font-size: 14px; color: var(--text-2); }
 .cache-eff-val { font-size: 22px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
@@ -265,7 +265,7 @@ body {
 .tile-cz-list { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-2); }
 .tile-cz-row { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
 .tile-cz-name { font-size: 14px; color: var(--text-1); }
-.tile-cz-toggle { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--track); background: var(--card); color: var(--text-3); cursor: pointer; transition: background 160ms ease-out, color 160ms ease-out, border-color 160ms ease-out; }
+.tile-cz-toggle { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--track); background: var(--card); color: var(--text-3); cursor: pointer; transition: background var(--motion), color var(--motion), border-color var(--motion); }
 .tile-cz-toggle:hover { background: var(--track); }
 .tile-cz-toggle.active { background: var(--accent-light); color: var(--accent); border-color: transparent; } /* 메인에 있음(핀됨) */
 
@@ -351,7 +351,7 @@ body {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: background 160ms ease-out;
+  transition: background var(--motion);
 }
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-primary:hover { background: var(--accent-hover); }

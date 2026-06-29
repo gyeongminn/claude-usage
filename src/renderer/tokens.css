@@ -40,6 +40,9 @@
   --space-2: 16px;
   --space-3: 24px;
   --space-4: 32px;
+
+  /* 모션(§5.1: 120–200ms ease-out·장식성 트랜지션 금지). 테마 무관 단일값. */
+  --motion: 160ms ease-out;
 }
 
 /* 다크 테마(UI-020) — 같은 토스 원칙으로 재설계(네온 금지). 색값은 echartsTheme.js TOKENS_DARK와 동기화. */
