@@ -6,10 +6,12 @@
   // §10: 숫자는 UI 로케일의 Intl 포맷(자리구분·소수기호가 de/fr/it/vi 등에서 다름).
   // §5.1: 통화 글리프($·₩)는 토스 디자인대로 접두 고정 — 로케일은 '숫자 포맷'만 좌우(기호는 브랜드 일관).
   // AUDIT-030: 기존 'en-US' 하드코딩 → setLocale로 주입. 미설정 시 en-US(기존 동작 보존).
-  let usdFmt, intFmt;
+  let usdFmt, intFmt, tokFmt;
   function build(locale) {
     usdFmt = new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     intFmt = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
+    // 토큰 큰수 표기: 로케일별 표준 컴팩트(ko 만/억, ja 万/億, zh 万/亿, en K/M/B, de Mio./Mrd. …).
+    tokFmt = new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 });
   }
   build('en-US');
 
@@ -43,15 +45,10 @@
     return `${base} (${fmtKrw(num(usd) * rate)})`;
   }
 
-  // 토큰 축약 K/M/B(영문 컴팩트). ponytail: K/M/B 접미는 $/₩ 글리프처럼 브랜드 일관 표기로 고정 —
-  // 로케일 컴팩트(de '1,2 Mio.' 등)는 토스 톤·tabular 정렬을 깨 미적용. 필요 시 notation:'compact'로 교체.
+  // 토큰 큰수 표기 — 로케일별 표준 컴팩트(사용자 요청: 한국 1230만·10억, ja 万/億, zh 万/亿, en K/M/B).
+  // 네이티브 Intl 컴팩트에 위임(setLocale로 로케일 주입). 직접 자릿수 구현 안 함.
   function fmtTokens(v) {
-    const n = num(v);
-    const abs = Math.abs(n);
-    if (abs >= 1e9) return (n / 1e9).toFixed(1) + 'B';
-    if (abs >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-    if (abs >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-    return String(Math.round(n));
+    return tokFmt.format(Math.round(num(v)));
   }
 
   const api = { fmtUsd, fmtKrw, fmtUsdKrw, fmtTokens, fmtInt, setLocale };

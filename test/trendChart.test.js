@@ -53,7 +53,7 @@ test('UX030_cost_yAxis_달러단위_정수', () => {
 
 test('UX030_tokens_yAxis_KMB축약', () => {
   const opt = buildTrendOption(daily, 'tokens', theme);
-  assert.equal(opt.yAxis.axisLabel.formatter(123000000), '123.0M');
+  assert.equal(opt.yAxis.axisLabel.formatter(123000000), '123M'); // Intl 컴팩트(꼬리 .0 제거)
   assert.equal(opt.yAxis.axisLabel.formatter(46700), '46.7K');
 });
 

@@ -32,17 +32,38 @@ test('DAT050_fmtUsdKrw_환율0이면_USD만', () => {
   assert.equal(fmtUsdKrw(10, NaN), '$10.00');
 });
 
-test('DAT050_fmtTokens_K_M_축약', () => {
+test('DAT050_fmtTokens_K_M_축약_en컴팩트', () => {
+  setLocale('en-US');
   assert.equal(fmtTokens(500), '500');
   assert.equal(fmtTokens(1500), '1.5K');
   assert.equal(fmtTokens(1234567), '1.2M');
   assert.equal(fmtTokens(2500000000), '2.5B');
 });
 
-test('DAT050_fmtTokens_경계', () => {
+test('DAT050_fmtTokens_경계_en', () => {
+  setLocale('en-US');
   assert.equal(fmtTokens(999), '999');
-  assert.equal(fmtTokens(1000), '1.0K');
-  assert.equal(fmtTokens(1000000), '1.0M');
+  assert.equal(fmtTokens(1000), '1K'); // Intl 컴팩트는 꼬리 .0 제거
+  assert.equal(fmtTokens(1000000), '1M');
+});
+
+// 사용자 요청: 언어별 큰수 표기. 한국어는 만/억 단위.
+test('TOKFMT_ko_만_억', () => {
+  setLocale('ko');
+  try {
+    assert.equal(fmtTokens(12300000), '1230만');
+    assert.equal(fmtTokens(1000000000), '10억');
+    assert.equal(fmtTokens(1234567890), '12.3억');
+  } finally {
+    setLocale('en-US'); // 싱글톤 누수 방지
+  }
+});
+
+test('TOKFMT_ja_zh_CJK단위', () => {
+  setLocale('ja');
+  try { assert.equal(fmtTokens(12300000), '1230万'); assert.equal(fmtTokens(1000000000), '10億'); } finally { setLocale('en-US'); }
+  setLocale('zh-CN');
+  try { assert.equal(fmtTokens(1000000000), '10亿'); } finally { setLocale('en-US'); }
 });
 
 test('DAT050_fmtInt_천단위_그룹', () => {
