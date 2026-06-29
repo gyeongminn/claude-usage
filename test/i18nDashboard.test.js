@@ -13,6 +13,8 @@ const DASH_KEYS = [
   'update_available', 'update_get',
   // 메인/상세 탭 + 실제 사용 한도(5h·주간) 히어로.
   'tab_main', 'tab_detail', 'usage_5h', 'usage_weekly', 'usage_reset', 'usage_eta',
+  // BL-03: OAuth 토큰 만료/없음 → 재로그인 안내.
+  'usage_reauth',
 ];
 
 test('INT020_대시보드키_10로케일_모두존재', () => {

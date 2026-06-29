@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { readOAuth, parseUsage, fetchUsage, etaMinutes, etaFromWindow } = require('../src/main/claudeUsage');
+const { readOAuth, parseUsage, fetchUsage, etaMinutes, etaFromWindow, authStatus } = require('../src/main/claudeUsage');
 
 // 실제 /api/oauth/usage 응답 형태(검증된 실데이터 구조).
 const SAMPLE = {
@@ -99,6 +99,19 @@ test('USAGE_etaFromWindow_첫폴링_평균burn추정', () => {
   assert.equal(etaFromWindow(50, resets, 300, now), 150);
   // 이미 100%면 0.
   assert.equal(etaFromWindow(100, resets, 300, now), 0);
+});
+
+test('BL03_authStatus_만료_없음_정상_분류', () => {
+  const now = 1_000_000;
+  // 토큰 없음 → 재로그인 안내(missing).
+  assert.equal(authStatus(null, now), 'missing');
+  assert.equal(authStatus({ accessToken: '' }, now), 'missing');
+  // 만료(expiresAt < now) → 재로그인 필요(expired).
+  assert.equal(authStatus({ accessToken: 't', expiresAt: now - 1 }, now), 'expired');
+  // 유효 → ok.
+  assert.equal(authStatus({ accessToken: 't', expiresAt: now + 1 }, now), 'ok');
+  // expiresAt 미상(0) → 오탐 금지(ok). readOAuth는 누락 시 0을 준다.
+  assert.equal(authStatus({ accessToken: 't', expiresAt: 0 }, now), 'ok');
 });
 
 test('USAGE_etaFromWindow_경계_null안전', () => {

@@ -27,6 +27,7 @@
   "usage_weekly": "Hạn mức tuần",
   "usage_reset": "Đặt lại {t}",
   "usage_eta": "Cạn lúc {t}",
+  "usage_reauth": "Đăng nhập Claude Code để cập nhật mức sử dụng",
   "update_available": "Phiên bản mới {version}",
   "update_get": "Tải về",
   "set_title": "Cài đặt",

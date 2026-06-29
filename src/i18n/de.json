@@ -27,6 +27,7 @@
   "usage_weekly": "Wochenlimit",
   "usage_reset": "Reset {t}",
   "usage_eta": "Erschöpft {t}",
+  "usage_reauth": "Bei Claude Code anmelden, um die Nutzung zu aktualisieren",
   "update_available": "Neue Version {version}",
   "update_get": "Herunterladen",
   "set_title": "Einstellungen",

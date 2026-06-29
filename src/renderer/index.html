@@ -72,6 +72,7 @@
             <div class="gauge-meta"><span id="u7d-reset"></span><span id="u7d-eta"></span></div>
           </div>
         </div>
+        <div class="usage-reauth" id="usage-reauth" data-i18n="usage_reauth" hidden>Sign in to Claude Code to refresh usage</div>
       </section>
 
       <section class="card trend" aria-label="trend">
@@ -230,6 +231,9 @@
       function renderLimits(limits) {
         if (!limits) return;
         lastLimits = limits;
+        // BL-03: 토큰 만료/없음(authExpired) → 재로그인 안내 노출(캐시 %는 그대로 표시).
+        const reauth = document.getElementById('usage-reauth');
+        if (reauth) reauth.hidden = !limits.authExpired;
         renderUsageCol('u5h', limits.fiveHour);
         renderUsageCol('u7d', limits.sevenDay);
       }

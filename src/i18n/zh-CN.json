@@ -27,6 +27,7 @@
   "usage_weekly": "每周额度",
   "usage_reset": "重置 {t}",
   "usage_eta": "预计耗尽 {t}",
+  "usage_reauth": "登录 Claude Code 以刷新用量",
   "update_available": "新版本 {version}",
   "update_get": "获取",
   "set_title": "设置",

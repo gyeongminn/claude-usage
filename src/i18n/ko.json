@@ -27,6 +27,7 @@
   "usage_weekly": "주간 한도",
   "usage_reset": "재시작 {t}",
   "usage_eta": "소진 예상 {t}",
+  "usage_reauth": "사용량을 갱신하려면 Claude Code에 다시 로그인하세요",
   "update_available": "새 버전 {version}",
   "update_get": "받기",
   "set_title": "설정",

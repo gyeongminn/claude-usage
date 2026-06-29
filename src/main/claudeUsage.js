@@ -96,4 +96,13 @@ function etaFromWindow(util, resetsAt, windowMinutes, nowMs) {
   return Number.isFinite(mins) && mins >= 0 ? Math.round(mins) : null;
 }
 
-module.exports = { readOAuth, parseUsage, fetchUsage, etaMinutes, etaFromWindow, credentialsPath, USAGE_URL, UA_VERSION };
+// OAuth 자격 상태 분류(BL-03). refresh 토큰 흐름이 없어 만료/없음이면 fetchUsage가 영구 null →
+// 게이지 '—'로 멈춤. 'expired'/'missing'을 구분해 렌더러에 재로그인 안내를 띄운다(Claude Code 재로그인 시 갱신).
+// expiresAt 미상(0)은 오탐 방지로 ok 취급(fetchUsage의 만료 판정과 동일 규칙).
+function authStatus(cred, now) {
+  if (!cred || !cred.accessToken) return 'missing';
+  if (cred.expiresAt && cred.expiresAt < now) return 'expired';
+  return 'ok';
+}
+
+module.exports = { readOAuth, parseUsage, fetchUsage, etaMinutes, etaFromWindow, authStatus, credentialsPath, USAGE_URL, UA_VERSION };

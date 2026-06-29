@@ -137,6 +137,9 @@ body {
 .usage-pct { font-size: 44px; font-weight: 700; color: var(--text-1); margin-bottom: var(--space-2); line-height: 1.1; }
 .usage-burn { margin-top: var(--space-1); color: var(--text-2); font-size: 13px; }
 .usage-burn .rate-unit { font-size: 12px; }
+/* BL-03: 토큰 만료/없음 재로그인 안내(over 색 pill). [hidden] 가드 — display 지정 시 hidden 무력화 방지. */
+.usage-reauth { margin-top: var(--space-3); padding: 8px 12px; border-radius: 10px; background: var(--accent-light); color: var(--over); font-size: 13px; font-weight: 600; text-align: center; }
+.usage-reauth[hidden] { display: none; }
 
 /* 오늘 비용: $ 흰색(text-1) 위 / ₩ 작게 white-gray(text-2) 아래(사용자 요청). */
 .cost-stack { display: flex; flex-direction: column; line-height: 1.15; }

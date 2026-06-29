@@ -13,7 +13,7 @@ const { scheduleMonthly, currentYM } = require('./main/scheduler');
 const { missingMonths } = require('./main/catchup');
 const { loadSettings, saveSettings, clampScale } = require('./main/settings');
 const { checkForUpdate, isSafeReleaseUrl } = require('./main/updateCheck');
-const { fetchUsage, etaMinutes, etaFromWindow } = require('./main/claudeUsage');
+const { fetchUsage, etaMinutes, etaFromWindow, readOAuth, authStatus } = require('./main/claudeUsage');
 const { tFor, resolveLocale } = require('./i18n/i18n');
 
 // 업데이트 알림(FEAT-010): GitHub Releases와 app 버전 비교. 기동 시 + 6h 주기.
@@ -125,9 +125,18 @@ let lastLimits = null; // 마지막 성공 조회 결과(429/오프라인이면 
 const usagePrev = {}; // 윈도우별 {util, t} — 증가율로 eta 산출.
 async function pushLimits(win) {
   if (!settings || !settings.accurateUsage) return; // 토글 끄면 호출 0.
-  const u = await fetchUsage(); // 실패·만료·429 → null(캐시 유지).
+  const nowMs = Date.now();
+  const cred = readOAuth();
+  // BL-03: 만료/없는 토큰은 fetchUsage가 영구 null → 게이지가 '—'로 멈춰 원인 불명. refresh 흐름이
+  // 없으므로(Claude Code 재로그인 필요) 네트워크 호출 없이 재로그인 안내만 보낸다(마지막 캐시는 유지).
+  if (authStatus(cred, nowMs) !== 'ok') {
+    if (!win.isDestroyed()) {
+      win.webContents.send('usage:limits', { ...(lastLimits || {}), authExpired: true });
+    }
+    return;
+  }
+  const u = await fetchUsage({ cred }); // 유효 토큰. 429·오프라인 → null(캐시 유지).
   if (u) {
-    const nowMs = Date.now();
     for (const key of ['fiveHour', 'sevenDay']) {
       const w = u[key];
       if (!w) continue;
