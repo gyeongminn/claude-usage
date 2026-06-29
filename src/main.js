@@ -324,20 +324,22 @@ function createWindow() {
     refreshFx().catch(() => {}).finally(() => pushAggregate(win));
     // 파일 변경 감시(DAT-020) → 변경 시 재집계. 활성 블록 burn 신선도 위해 주기 갱신도 병행(§4.1: 5~10s).
     const watcher = startWatcher(() => pushAggregate(win));
+    // AUTO-010: 모든 인터벌 타이머를 timers에 모아 closed에서 일괄 clear(추가 타이머가 clearInterval 누락돼 누수되는 일 방지).
+    const timers = [];
     // PERF-010/§3: 짧은 간격(8s) 갱신은 활성 블록 burn만(전체 daily 재파싱 X). 전체는 워처/새로고침/기동에서.
-    const timer = setInterval(() => pushBurn(win), 8000);
+    timers.push(setInterval(() => pushBurn(win), 8000));
     // 시스템 리소스(§11/SYS-020): CPU/RAM 2s push, GPU는 6s best-effort(spawn 부담↓). prevCpus 재초기화로 첫 델타 정확.
     prevCpus = os.cpus();
     refreshGpu();
     pushSysStats(win);
-    const sysTimer = setInterval(() => pushSysStats(win), 2000);
-    const gpuTimer = setInterval(refreshGpu, 6000);
+    timers.push(setInterval(() => pushSysStats(win), 2000));
+    timers.push(setInterval(refreshGpu, 6000));
     // 업데이트 확인(FEAT-010): 기동 시 1회 + 6h 주기. 토글 꺼지면 runUpdateCheck가 즉시 반환(체크 0).
     runUpdateCheck(win).catch(() => {});
-    const updTimer = setInterval(() => runUpdateCheck(win).catch(() => {}), UPDATE_INTERVAL_MS);
+    timers.push(setInterval(() => runUpdateCheck(win).catch(() => {}), UPDATE_INTERVAL_MS));
     // 실제 사용 한도(5h·주간): 기동 시 1회 + 5분 주기(엔드포인트 공격적 429라 저빈도). 실패는 캐시 유지.
     pushLimits(win).catch(() => {});
-    const limitsTimer = setInterval(() => pushLimits(win).catch(() => {}), 5 * 60 * 1000);
+    timers.push(setInterval(() => pushLimits(win).catch(() => {}), 5 * 60 * 1000));
     // BL-04: 계정 전환/토큰 갱신(.credentials.json 변경) 즉시 한도 재조회 — 5분 폴링을 기다리지 않음(현재 계정 기준).
     // 계정이 바뀌면 이전 계정의 eta 샘플(usagePrev)은 무의미 → 비워 첫폴링 추정(etaFromWindow)으로 재시작.
     const credWatcher = startCredentialsWatcher(() => {
@@ -354,11 +356,7 @@ function createWindow() {
     };
     ipcMain.on('scale:set', onScale);
     win.on('closed', () => {
-      clearInterval(timer);
-      clearInterval(sysTimer);
-      clearInterval(gpuTimer);
-      clearInterval(updTimer);
-      clearInterval(limitsTimer);
+      timers.forEach(clearInterval);
       watcher.close();
       credWatcher.close();
       ipcMain.removeListener('usage:refresh', onRefresh);
