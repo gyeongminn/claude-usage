@@ -248,7 +248,8 @@ body {
 .tok-row { display: grid; grid-template-columns: 72px 1fr auto; align-items: center; gap: var(--space-2); }
 .tok-name { font-size: 13px; color: var(--text-2); }
 .tok-bar { height: 8px; background: var(--track); border-radius: 999px; overflow: hidden; }
-.tok-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width var(--motion); }
+/* width:0로 시작 — 무데이터(agg.tokens 부재 시 renderTokens 미실행) 첫 페인트가 auto(=100%)로 '꽉 찬 바' 오해를 주지 않게(gauge-fill와 동일 가드, 값 0과 정합). 데이터 있으면 renderTokens가 실제 %로 덮음. */
+.tok-fill { height: 100%; width: 0; background: var(--accent); border-radius: 999px; transition: width var(--motion); }
 .tok-val { font-size: 13px; color: var(--text-1); font-variant-numeric: tabular-nums; text-align: right; min-width: 56px; }
 .cache-eff { display: flex; justify-content: space-between; align-items: baseline; margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--track); font-size: 14px; color: var(--text-2); }
 .cache-eff-val { font-size: 22px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
