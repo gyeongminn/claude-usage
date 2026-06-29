@@ -301,11 +301,15 @@
       let theme = makeTheme();
       const chart = echarts.init(document.getElementById('trend-chart'));
       let metric = 'cost';
+      // AUTO-010: 차트 ↔ 빈상태 가시성 토글(drawTrend·drawDonut 2중복·has면 차트 표시·아니면 빈상태).
+      const toggleEmpty = (chartId, emptyId, has) => {
+        document.getElementById(chartId).hidden = !has;
+        document.getElementById(emptyId).hidden = has;
+      };
       function drawTrend() {
         // AUDIT-060: 데이터 없으면 빈상태(가짜 데이터 금지·§2), 있으면 차트. resize=숨김→표시 후 0폭 보정.
         const has = sampleDaily.length > 0;
-        document.getElementById('trend-chart').hidden = !has;
-        document.getElementById('trend-empty').hidden = has;
+        toggleEmpty('trend-chart', 'trend-empty', has);
         if (has) {
           chart.setOption(window.TrendChart.buildTrendOption(sampleDaily, metric, theme), true);
           chart.resize();
@@ -353,8 +357,7 @@
       function drawDonut() {
         // AUDIT-060: 모델 데이터 없으면 빈상태(§2), 있으면 도넛+범례.
         const has = currentModels.length > 0;
-        document.getElementById('model-donut').hidden = !has;
-        document.getElementById('model-empty').hidden = has;
+        toggleEmpty('model-donut', 'model-empty', has);
         // AUTO-010(r61): model-legend는 has=true에만 renderLegend로 채워지고 무데이터 시 빈 박스(자식 0)라
         //   hidden 토글 불필요 — `.model-legend{display:flex}`로 [hidden]이 어차피 no-op이던 죽은 라인 제거.
         if (has) {
