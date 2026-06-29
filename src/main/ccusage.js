@@ -1,4 +1,5 @@
 const { execFile } = require('node:child_process');
+const fs = require('node:fs');
 const path = require('node:path');
 
 // ccusage 가 집계해주는 4개 축(§2). 그 외 명령은 거부.
@@ -11,20 +12,44 @@ function unpackedPath(p) {
   return p.split(seg).join(`${path.sep}app.asar.unpacked${path.sep}`);
 }
 
-// ccusage 진입점은 ESM CLI(node_modules/ccusage/src/cli.js). electron-builder는 node_modules/.bin 셰임을
-// 패킹에서 제거하므로 .bin에 의존하지 않는다. 패키지 앱엔 별도 node도 없어 Electron 바이너리를
-// node 모드(ELECTRON_RUN_AS_NODE=1)로 띄워 CLI를 직접 실행한다(dev/패키징 공통).
-const CLI = unpackedPath(path.join(__dirname, '..', '..', 'node_modules', 'ccusage', 'src', 'cli.js'));
+// ccusage 엔진은 플랫폼별 네이티브 바이너리(@ccusage/ccusage-<platform>-<arch>, §2)다. ccusage의 cli.js 런처는
+// 이 바이너리를 windowsHide 없이 `stdio:'inherit'`로 spawn해 Windows에서 콘솔 창이 깜빡인다(8초마다 spawn).
+// → 런처(cli.js·electron-as-node)를 건너뛰고 네이티브 바이너리를 우리가 직접 windowsHide:true로 띄운다.
+// ponytail: 플랫폼 매핑은 ccusage cli.js의 getNativePackageName 미러(소수 고정값). 신규 타깃 추가 시 여기에 한 줄.
+const NATIVE_PKG = {
+  'win32-x64': '@ccusage/ccusage-win32-x64',
+  'win32-arm64': '@ccusage/ccusage-win32-arm64',
+  'darwin-arm64': '@ccusage/ccusage-darwin-arm64',
+  'darwin-x64': '@ccusage/ccusage-darwin-x64',
+  'linux-x64': '@ccusage/ccusage-linux-x64',
+  'linux-arm64': '@ccusage/ccusage-linux-arm64',
+};
+
+function nativeBinaryPath() {
+  const pkg = NATIVE_PKG[`${process.platform}-${process.arch}`];
+  if (!pkg) throw new Error(`ccusage 네이티브 바이너리 미지원 플랫폼: ${process.platform}-${process.arch}`);
+  const sub = process.platform === 'win32' ? 'bin/ccusage.exe' : 'bin/ccusage';
+  // require.resolve로 optionalDependencies 설치 위치를 찾고, asar면 unpacked로 리다이렉트.
+  const bin = unpackedPath(require.resolve(`${pkg}/${sub}`));
+  // macOS/Linux: cli.js를 우회하므로 실행권한을 직접 보장(ccusage ensureNativeBinaryExecutable 미러). win32는 무의미.
+  if (process.platform !== 'win32') {
+    try {
+      if ((fs.statSync(bin).mode & 0o111) === 0) fs.chmodSync(bin, 0o755);
+    } catch (e) {
+      // 권한 확인/설정 실패는 무시 — 실제 문제면 execFile EACCES로 드러나 caller가 처리.
+    }
+  }
+  return bin;
+}
 
 function defaultRunner(args) {
   return new Promise((resolve, reject) => {
-    // 100억+ 토큰 규모 → stdout 큼. maxBuffer 넉넉히.
+    // 네이티브 바이너리를 직접 실행(env 미지정 → process.env 상속, CLAUDE_CONFIG_DIR 등 존중).
+    // windowsHide:true가 이제 실제 콘솔 앱(ccusage.exe)에 적용돼 창 깜빡임 제거. maxBuffer는 100억+ 토큰 stdout 대비 넉넉히.
     execFile(
-      process.execPath,
-      [CLI, ...args],
-      // windowsHide: ELECTRON_RUN_AS_NODE로 electron.exe를 띄우면 Windows에서 콘솔 창이 깜빡인다.
-      // 라이브 집계가 8초마다 spawn하므로 필수.
-      { maxBuffer: 256 * 1024 * 1024, env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, windowsHide: true },
+      nativeBinaryPath(),
+      args,
+      { maxBuffer: 256 * 1024 * 1024, windowsHide: true },
       (err, stdout, stderr) => {
         if (err) return reject(new Error(`ccusage 실행 실패: ${stderr || err.message}`));
         resolve(stdout);
