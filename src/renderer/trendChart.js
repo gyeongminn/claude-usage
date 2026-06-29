@@ -21,7 +21,9 @@
     return {
       color: theme.color,
       textStyle: theme.textStyle,
-      grid: { left: 8, right: 8, top: 16, bottom: 8, containLabel: true },
+      // RPT-020: dense(보고서 월간·rotate:30)면 첫 x축 라벨의 좌측 overhang이 캔버스 경계서 잘리므로
+      // grid.left 패딩을 늘려 수용(containLabel은 y축 폭만 예약·회전 라벨 좌측 돌출 미계산=ECharts 한계).
+      grid: { left: dense ? 28 : 8, right: 8, top: 16, bottom: 8, containLabel: true },
       tooltip: { trigger: 'axis', valueFormatter: tipFmt },
       xAxis: {
         type: 'category',

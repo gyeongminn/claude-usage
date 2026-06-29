@@ -37,6 +37,26 @@ test('AUTO030_월간_많은날짜_라벨_솎음회전(보고서 가독성·§5)'
   assert.ok(shown <= 12, `표시 라벨 ${shown}개로 제한`);
 });
 
+test('RPT020_월간_회전라벨_좌측패딩_클리핑방지', () => {
+  // 보고서(>8일·rotate:30) 첫 x축 날짜 라벨 "2026-05-01"의 선두가 좌측 캔버스 경계서 잘리지 않게
+  // grid.left 패딩 확보(containLabel은 y축 폭만 예약·회전 라벨 좌측 overhang 미계산=ECharts 한계).
+  const month = Array.from({ length: 31 }, (_, i) => ({
+    period: `2026-05-${String(i + 1).padStart(2, '0')}`,
+    totalCost: i + 1,
+    totalTokens: (i + 1) * 1000,
+  }));
+  const opt = buildTrendOption(month, 'cost', theme);
+  assert.ok(opt.xAxis.axisLabel.rotate > 0, '월간은 회전(전제)');
+  assert.ok(opt.grid.left >= 28, `회전 라벨 좌측 overhang 수용(left=${opt.grid.left})`);
+  assert.equal(opt.grid.containLabel, true); // y축 폭은 여전히 자동 예약(거동 보존)
+});
+
+test('RPT020_주간_좁은패딩_유지_거동보존', () => {
+  // 대시보드(≤8일·rotate:0)는 좌측 돌출 微 → 기존 left:8 유지(불필요한 여백 금지).
+  const opt = buildTrendOption(daily, 'cost', theme);
+  assert.equal(opt.grid.left, 8);
+});
+
 test('DSH030_cost_메트릭_비용시리즈', () => {
   const opt = buildTrendOption(daily, 'cost', theme);
   assert.deepEqual(opt.series[0].data, [10.5, 22.0, 8.25]);
