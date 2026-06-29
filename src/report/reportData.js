@@ -2,12 +2,14 @@
 // UMD: node 테스트·렌더러(window.ReportData).
 (function (root) {
   const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  // 행 배열에서 숫자 필드 k 합산(num 가드). monthSummary·tokenComposition 공유(reduce+guard idiom 단일화).
+  const sumField = (rows, k) => rows.reduce((s, d) => s + num(d[k]), 0);
 
   // daily(claude 필터된 월 데이터) → 총비용·총토큰·일수·일평균비용.
   function monthSummary(daily) {
     const rows = Array.isArray(daily) ? daily : [];
-    const totalCost = rows.reduce((s, d) => s + num(d.totalCost), 0);
-    const totalTokens = rows.reduce((s, d) => s + num(d.totalTokens), 0);
+    const totalCost = sumField(rows, 'totalCost');
+    const totalTokens = sumField(rows, 'totalTokens');
     const days = rows.length;
     return {
       totalCost,
@@ -28,12 +30,11 @@
   // 월 토큰 구성(p3): 입력·출력·캐시생성·캐시읽기 합산. claudeFilter 필드명 따름.
   function tokenComposition(daily) {
     const rows = Array.isArray(daily) ? daily : [];
-    const sum = (k) => rows.reduce((s, d) => s + num(d[k]), 0);
     return {
-      input: sum('inputTokens'),
-      output: sum('outputTokens'),
-      cacheCreate: sum('cacheCreationTokens'),
-      cacheRead: sum('cacheReadTokens'),
+      input: sumField(rows, 'inputTokens'),
+      output: sumField(rows, 'outputTokens'),
+      cacheCreate: sumField(rows, 'cacheCreationTokens'),
+      cacheRead: sumField(rows, 'cacheReadTokens'),
     };
   }
 
