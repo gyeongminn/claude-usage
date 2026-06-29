@@ -544,7 +544,10 @@
         const max = Math.max(v.input, v.output, v.create, v.read, 1); // 0 나눗셈 방지.
         const set = (id, n) => {
           document.getElementById('tc-' + id).textContent = fmtTok(n);
-          document.getElementById('tc-' + id + '-fill').style.width = (n / max) * 100 + '%';
+          // 바 길이는 sqrt 지각 스케일(AUTO-030): cache read가 input/output보다 ~100× 커 선형이면 작은 값이 0폭으로 사라진다.
+          // sqrt는 순서를 보존하며 작은 값도 보이게 한다(정확 수치는 우측 숫자 라벨이 제공). 0은 빈 바, max는 100%(sqrt(1)=1).
+          const pct = n > 0 ? Math.sqrt(n / max) * 100 : 0;
+          document.getElementById('tc-' + id + '-fill').style.width = pct + '%';
         };
         set('input', v.input); set('output', v.output); set('create', v.create); set('read', v.read);
         // 캐시 효율 = 캐시 읽기 / (입력 + 캐시 생성 + 캐시 읽기). 분모 0 안전.
