@@ -153,7 +153,7 @@ body {
 
 /* 오늘 비용: $ 흰색(text-1) 위 / ₩ 작게 white-gray(text-2) 아래(사용자 요청). */
 .cost-stack { display: flex; flex-direction: column; line-height: 1.15; }
-.cost-usd { font-size: 28px; font-weight: 700; color: var(--text-1); }
+.cost-usd { font-size: 38px; font-weight: 700; color: var(--text-1); }
 .cost-krw { font-size: 16px; font-weight: 600; color: var(--text-2); }
 
 /* 최근 7일 통계(메인 탭) — '오늘' 아래 간단 1줄(라벨 좌 / 값 우). */
@@ -256,8 +256,9 @@ body {
 .cache-eff-val { font-size: 22px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
 
 /* 오늘 KPI(비용·토큰 동급) + 도넛 */
-.kpi-row { display: flex; gap: var(--space-4); margin-bottom: var(--space-2); }
-.kpi-val { font-size: 28px; font-weight: 700; color: var(--text-1); }
+/* Today KPI(비용·토큰) — §5.1 "KPI 38–56px". 세로 스택(각 KPI 전폭)이라 긴 로케일 값(de "341,1 Mio.")도 1fr 열에서 오버플로 없음(UX-080). */
+.kpi-row { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-2); }
+.kpi-val { font-size: 38px; font-weight: 700; color: var(--text-1); }
 .kpi-cap { font-size: 13px; color: var(--text-2); }
 .donut-slot { min-height: 180px; }
 /* MODELSHARE: 도넛 우측 하단 범례(색·모델명·비중%). 오른쪽 정렬, tabular 퍼센트. */
