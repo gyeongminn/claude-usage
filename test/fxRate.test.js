@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { fetchKrwPerUsd, FALLBACK_KRW, API_URL } = require('../src/main/fxRate');
+const { fetchKrwPerUsd, fxOptsFor, FALLBACK_KRW, API_URL } = require('../src/main/fxRate');
 
 // fetch 주입(node fetch 시그니처 흉내). ok·json() 제공.
 const okFetch = (krw) => async () => ({ ok: true, json: async () => ({ result: 'success', rates: { KRW: krw } }) });
@@ -69,4 +69,27 @@ test('DAT040_KRW누락_폴백', async () => {
     fixed: 1310,
   });
   assert.equal(r.krwPerUsd, 1310);
+});
+
+// AUDIT-050: refreshFx 배선 회귀 가드 — opts에 설정 고정값(settings.krwPerUsd)이 fixed로 실려야 §7 폴백이 산다.
+test('AUDIT050_fxOptsFor_설정고정값_fixed로_전달', () => {
+  const o = fxOptsFor(null, { krwPerUsd: 1500 });
+  assert.equal(o.fixed, 1500); // 사용자 커스텀 환율이 폴백·강제용으로 전달
+  assert.equal(o.lastKnown, null); // 마지막 성공값도 함께
+});
+
+test('AUDIT050_fxOptsFor_settings_null_안전', () => {
+  const o = fxOptsFor(1400, null);
+  assert.equal(o.lastKnown, 1400);
+  assert.ok(!Number.isFinite(o.fixed)); // settings 없으면 fixed는 사용 불가값(null) → fetchKrwPerUsd가 lastKnown/default로 폴백
+});
+
+// 통합 회귀: 오프라인 + 마지막값 없음(기동 리셋) + 사용자 커스텀 환율 → fxOptsFor 경유 시 1350이 아닌 1500.
+test('AUDIT050_오프라인_커스텀환율_기동시_사용자값_적용', async () => {
+  const r = await fetchKrwPerUsd({
+    fetchImpl: async () => { throw new Error('offline'); },
+    ...fxOptsFor(null, { krwPerUsd: 1500 }),
+  });
+  assert.equal(r.krwPerUsd, 1500);
+  assert.equal(r.source, 'fixed');
 });

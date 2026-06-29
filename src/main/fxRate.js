@@ -25,4 +25,10 @@ async function fetchKrwPerUsd(opts = {}) {
   }
 }
 
-module.exports = { fetchKrwPerUsd, FALLBACK_KRW, API_URL };
+// refreshFx 배선용 opts 빌더(AUDIT-050): 마지막 성공값 + 설정 고정값(§7 "폴백·강제용")을 모두 넘긴다.
+// main.js가 fixed를 빠뜨려 오프라인+커스텀 환율 시 사용자값이 무시되던 실결함을 이 단일 출처로 방지.
+function fxOptsFor(lastKnown, settings) {
+  return { lastKnown, fixed: settings && settings.krwPerUsd };
+}
+
+module.exports = { fetchKrwPerUsd, fxOptsFor, FALLBACK_KRW, API_URL };

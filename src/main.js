@@ -7,7 +7,7 @@ const { runCcusage } = require('./main/ccusage');
 const { buildAggregate, buildBurn } = require('./main/aggregate');
 const { cpuPercent, memUsage, parseNvidiaSmi } = require('./main/sysStats');
 const { startWatcher, startCredentialsWatcher } = require('./main/watcher');
-const { fetchKrwPerUsd } = require('./main/fxRate');
+const { fetchKrwPerUsd, fxOptsFor } = require('./main/fxRate');
 const { renderReportToPdf, reportPath } = require('./main/reportPdf');
 const { buildReportInput } = require('./main/reportAssembler');
 const { buildTrayMenuTemplate, trayIconBitmap } = require('./main/tray');
@@ -101,9 +101,11 @@ function runCatchUp() {
 }
 
 // KRW 환율 — 기동 시 1회 fetch, 마지막 성공값 보관(§7). 실패해도 폴백.
+// AUDIT-050: lastKnown(마지막 성공값) + 설정 고정값(settings.krwPerUsd) 둘 다 전달 — 오프라인+커스텀 환율 시
+// §7 "설정 고정값 폴백·강제용"이 살아나 하드코딩 1350이 아닌 사용자값을 쓴다. settings는 ready-to-show 전 로드됨.
 let krwPerUsd = null;
 async function refreshFx() {
-  const r = await fetchKrwPerUsd({ lastKnown: krwPerUsd });
+  const r = await fetchKrwPerUsd(fxOptsFor(krwPerUsd, settings));
   krwPerUsd = r.krwPerUsd;
 }
 
