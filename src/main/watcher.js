@@ -49,7 +49,10 @@ function startWatcher(onChange, opts = {}) {
     ignoreInitial: true, // 기동 시 기존 파일은 catch-up이 처리, 워처는 변경만.
     awaitWriteFinish: { stabilityThreshold: 300, pollInterval: 100 },
   });
-  w.on('add', debounced).on('change', debounced).on('unlink', debounced);
+  // error 핸들러 필수(§11 크래시 금지): chokidar는 FS 오류(EACCES·EBUSY·EMFILE 등)를 'error'로 방출,
+  // 리스너 없으면 EventEmitter가 throw → 트레이 상주 메인 프로세스(§3) 크래시. 로그만 남기고 계속 감시.
+  w.on('add', debounced).on('change', debounced).on('unlink', debounced)
+    .on('error', (e) => console.error('워처 오류:', (e && e.message) || e));
   return {
     close: () => {
       debounced.cancel();
@@ -67,7 +70,9 @@ function startCredentialsWatcher(onChange, opts = {}) {
     ignoreInitial: true, // 기동 시 pushLimits가 이미 1회 조회 — 워처는 이후 변경만.
     awaitWriteFinish: { stabilityThreshold: 300, pollInterval: 100 },
   });
-  w.on('add', debounced).on('change', debounced).on('unlink', debounced);
+  // error 핸들러 필수(§11): startWatcher와 동일 — 자격파일 워처 'error' 미처리 시 메인 프로세스 크래시 방지.
+  w.on('add', debounced).on('change', debounced).on('unlink', debounced)
+    .on('error', (e) => console.error('자격파일 워처 오류:', (e && e.message) || e));
   return {
     close: () => {
       debounced.cancel();
