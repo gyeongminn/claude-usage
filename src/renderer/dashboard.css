@@ -52,6 +52,8 @@ body {
   font-size: 14px;
   font-weight: 600;
 }
+/* hidden 속성 존중: display:flex가 UA의 [hidden]{display:none}을 덮으므로 명시적으로 끈다(modal-overlay 동일 패턴). */
+.update-banner[hidden] { display: none; }
 .btn-update {
   border: 0;
   border-radius: 999px; /* pill(§5.1 칩 허용) */
