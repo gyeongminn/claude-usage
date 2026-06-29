@@ -41,12 +41,20 @@ const SET_KEYS = [
   'set_autolaunch', 'set_check_updates', 'set_save', 'set_cancel',
   // BL-02: 실제 사용 한도(oauth /usage) 조회 토글.
   'set_accurate',
+  // A11Y-010: 설정 닫기(X) 버튼 접근 이름(aria-label/title) — 하드코딩 영어 제거(§10).
+  'set_close',
 ];
 test('UI040_설정키_10로케일_모두존재', () => {
   for (const lc of LOCALES) {
     const cat = loadCatalog(lc);
     for (const k of SET_KEYS) assert.ok(k in cat && cat[k], `${lc} 누락/빈값: ${k}`);
   }
+});
+
+test('A11Y010_설정닫기_접근이름_en_ko', () => {
+  // 설정 모달 닫기(X) 버튼의 접근 이름(data-i18n-title=set_close → applyI18n이 title+aria-label 현지화).
+  assert.equal(tFor('en')('set_close'), 'Close');
+  assert.equal(tFor('ko')('set_close'), '닫기');
 });
 
 test('AUDIT010_프로젝트_빈상태_키_en_ko_비어있지않음', () => {
