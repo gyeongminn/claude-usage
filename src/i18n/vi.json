@@ -28,6 +28,7 @@
   "usage_reset": "Đặt lại {t}",
   "usage_eta": "Cạn lúc {t}",
   "usage_reauth": "Đăng nhập Claude Code để cập nhật mức sử dụng",
+  "model_share": "Tỷ lệ sử dụng mô hình",
   "detail_token_comp": "Thành phần token",
   "tok_input": "Đầu vào",
   "tok_output": "Đầu ra",

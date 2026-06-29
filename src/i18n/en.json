@@ -28,6 +28,7 @@
   "usage_reset": "Resets {t}",
   "usage_eta": "Runs out {t}",
   "usage_reauth": "Sign in to Claude Code to refresh usage",
+  "model_share": "Model usage share",
   "detail_token_comp": "Token composition",
   "tok_input": "Input",
   "tok_output": "Output",

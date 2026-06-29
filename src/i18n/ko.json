@@ -28,6 +28,7 @@
   "usage_reset": "재시작 {t}",
   "usage_eta": "소진 예상 {t}",
   "usage_reauth": "사용량을 갱신하려면 Claude Code에 다시 로그인하세요",
+  "model_share": "모델 사용 비중",
   "detail_token_comp": "토큰 구성",
   "tok_input": "입력",
   "tok_output": "출력",

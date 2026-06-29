@@ -17,6 +17,8 @@ const DASH_KEYS = [
   'usage_reauth',
   // BL-05: 상세 탭 토큰 구성·캐시 효율.
   'detail_token_comp', 'tok_input', 'tok_output', 'tok_cache_create', 'tok_cache_read', 'cache_efficiency',
+  // MODELSHARE: 상세 탭 모델 사용 비중(도넛+범례).
+  'model_share',
 ];
 
 test('INT020_대시보드키_10로케일_모두존재', () => {

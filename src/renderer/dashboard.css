@@ -252,6 +252,12 @@ body {
 .kpi-val { font-size: 28px; font-weight: 700; color: var(--text-1); }
 .kpi-cap { font-size: 13px; color: var(--text-2); }
 .donut-slot { min-height: 180px; }
+/* MODELSHARE: 도넛 우측 하단 범례(색·모델명·비중%). 오른쪽 정렬, tabular 퍼센트. */
+.model-legend { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; margin-top: var(--space-2); }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.legend-name { color: var(--text-1); }
+.legend-pct { color: var(--text-2); font-variant-numeric: tabular-nums; min-width: 46px; text-align: right; }
 
 /* 설정 모달(UI-040) — 토스풍: 흰 카드·소프트 그림자·큰 반경. 토큰 사용으로 다크 테마 자동 대응. */
 .modal-overlay {

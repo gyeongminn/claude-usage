@@ -35,7 +35,20 @@
     };
   }
 
-  const api = { buildDonutOption, shortModelName };
+  // 도넛 범례(MODELSHARE) — 슬라이스별 {색·가독 모델명·비용 비중%}. 색은 도넛 팔레트(theme.color)와 같은 순서
+  // (ECharts가 데이터 순서대로 팔레트 색을 배정하므로 i % len로 동일 매핑). 총합 0·빈 입력 안전.
+  function legendItems(breakdowns, colors) {
+    const list = Array.isArray(breakdowns) ? breakdowns : [];
+    const pal = Array.isArray(colors) && colors.length ? colors : ['#000'];
+    const total = list.reduce((s, b) => s + (Number(b.cost) || 0), 0);
+    return list.map((b, i) => ({
+      name: shortModelName(b.modelName),
+      pct: total > 0 ? Math.round(((Number(b.cost) || 0) / total) * 1000) / 10 : 0, // 0.1% 단위
+      color: pal[i % pal.length],
+    }));
+  }
+
+  const api = { buildDonutOption, shortModelName, legendItems };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.ModelDonut = api;
 })(typeof window !== 'undefined' ? window : globalThis);

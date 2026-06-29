@@ -105,8 +105,9 @@
     <!-- 상세 탭 — 모델별 비중 / 프로젝트 Top 5 -->
     <main id="view-detail" class="grid-detail" hidden>
       <section class="card" aria-label="models">
-        <div class="card-label" data-i18n="dash_today">오늘</div>
+        <div class="card-label" data-i18n="model_share">모델 사용 비중</div>
         <div id="model-donut" class="donut-slot"></div>
+        <div id="model-legend" class="model-legend"></div>
       </section>
       <section class="card" aria-label="token composition">
         <div class="card-label" data-i18n="detail_token_comp">토큰 구성</div>
@@ -284,7 +285,32 @@
       ];
       let currentModels = sampleModels; // 토글 재테마 시 재사용(onAggregate가 실데이터로 갱신).
       const donut = echarts.init(document.getElementById('model-donut'));
-      donut.setOption(window.ModelDonut.buildDonutOption(currentModels, theme));
+      // MODELSHARE: 도넛 우측 하단 범례(색·모델명·비중%). 모델명은 textContent로(임의 문자열 안전).
+      function renderLegend(models) {
+        const el = document.getElementById('model-legend');
+        if (!el) return;
+        el.textContent = '';
+        for (const it of window.ModelDonut.legendItems(models, theme.color || [])) {
+          const row = document.createElement('div');
+          row.className = 'legend-item';
+          const dot = document.createElement('span');
+          dot.className = 'legend-dot';
+          dot.style.background = it.color;
+          const name = document.createElement('span');
+          name.className = 'legend-name';
+          name.textContent = it.name;
+          const pct = document.createElement('span');
+          pct.className = 'legend-pct';
+          pct.textContent = it.pct + '%';
+          row.append(dot, name, pct);
+          el.appendChild(row);
+        }
+      }
+      function drawDonut() {
+        donut.setOption(window.ModelDonut.buildDonutOption(currentModels, theme));
+        renderLegend(currentModels);
+      }
+      drawDonut();
 
       // 프로젝트 카드: ccusage v20은 프로젝트 축 미노출(--instances 부재, OPEN[08]) → 빈상태 표시(AUDIT-010).
       // 가짜 샘플 데이터를 사용자에게 보여주지 않는다(§2). 데이터원 생기면 차트 복원.
@@ -295,7 +321,7 @@
           window.EChartsTheme.tokensFor(document.documentElement.dataset.theme)
         );
         drawTrend();
-        donut.setOption(window.ModelDonut.buildDonutOption(currentModels, theme));
+        drawDonut(); // 재테마 시 도넛 색·범례 색 동기.
       }
       const btnTheme = document.getElementById('btn-theme');
       if (btnTheme) {
@@ -461,9 +487,9 @@
             agg.krwPerUsd > 0 ? window.Fmt.fmtKrw(agg.today.totalCost * agg.krwPerUsd) : '';
           document.getElementById('today-tok').textContent = fmtTok(agg.today.totalTokens);
           if (agg.today.models && agg.today.models.length) {
-            // (모델 도넛은 상세 탭) — currentModels 갱신은 아래 블록에서.
+            // (모델 도넛·범례는 상세 탭) — 실데이터로 갱신.
             currentModels = agg.today.models; // 테마 토글 재테마 시 실데이터 유지.
-            donut.setOption(window.ModelDonut.buildDonutOption(currentModels, theme));
+            drawDonut();
           }
         }
         if (agg.last7) {

@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { buildDonutOption, shortModelName } = require('../src/renderer/modelDonut');
+const { buildDonutOption, shortModelName, legendItems } = require('../src/renderer/modelDonut');
 const { makeEchartsTheme, TOKENS } = require('../src/renderer/echartsTheme');
 
 const theme = makeEchartsTheme(TOKENS);
@@ -46,6 +46,32 @@ test('DSH040_빈breakdown_안전', () => {
 test('DSH040_cost누락_0', () => {
   const opt = buildDonutOption([{ modelName: 'claude-opus-4-8' }], theme);
   assert.equal(opt.series[0].data[0].value, 0); // undefined cost → 0
+});
+
+// MODELSHARE: 도넛 범례(색·가독 모델명·비용 비중%). 색은 도넛 팔레트와 같은 순서.
+test('MODELSHARE_legendItems_색이름퍼센트', () => {
+  const items = legendItems(
+    [{ modelName: 'claude-opus-4-8', cost: 75 }, { modelName: 'claude-haiku-4-5-20251001', cost: 25 }],
+    ['#aaa', '#bbb', '#ccc']
+  );
+  assert.equal(items.length, 2);
+  assert.deepEqual(items[0], { name: 'Opus 4.8', pct: 75, color: '#aaa' });
+  assert.deepEqual(items[1], { name: 'Haiku 4.5', pct: 25, color: '#bbb' });
+});
+
+test('MODELSHARE_legendItems_팔레트순환_0나눗셈_빈안전', () => {
+  // 색이 데이터보다 적으면 i % len 순환.
+  const items = legendItems(
+    [{ modelName: 'a', cost: 1 }, { modelName: 'b', cost: 1 }, { modelName: 'c', cost: 1 }],
+    ['#x', '#y']
+  );
+  assert.equal(items[2].color, '#x'); // 2 % 2 = 0
+  assert.equal(items[0].name, 'a'); // 미매칭 모델명 원본
+  // 총합 0 → pct 0(0 나눗셈 안전).
+  assert.equal(legendItems([{ modelName: 'claude-opus-4-8', cost: 0 }], ['#a'])[0].pct, 0);
+  // 빈/null 안전.
+  assert.deepEqual(legendItems([], ['#a']), []);
+  assert.deepEqual(legendItems(null, null), []);
 });
 
 // UX-031: 도넛 툴팁 비용 $ 표기(trend·바와 일관). 호버 시 모델별 비용 가독.

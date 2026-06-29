@@ -28,6 +28,7 @@
   "usage_reset": "重置 {t}",
   "usage_eta": "预计耗尽 {t}",
   "usage_reauth": "登录 Claude Code 以刷新用量",
+  "model_share": "模型使用占比",
   "detail_token_comp": "令牌构成",
   "tok_input": "输入",
   "tok_output": "输出",
