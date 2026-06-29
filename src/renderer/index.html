@@ -350,6 +350,10 @@
       }
       drawDonut();
 
+      // 차트 리사이즈를 다음 틱으로 미룸(AUTO-010): 타일 이동/탭 전환으로 바뀐 컨테이너 폭을 반영.
+      // 숨김 뷰(0폭) resize의 echarts 내부 throw는 try/catch로 삼킴(turn-1 fix). renderMain·setupTabs.show 공용(중복 제거).
+      const deferResize = () => setTimeout(() => { try { chart.resize(); } catch (e) {} try { donut.resize(); } catch (e) {} }, 0);
+
       // 프로젝트 카드: ccusage v20은 프로젝트 축 미노출(--instances 부재, OPEN[08]) → 빈상태 표시(AUDIT-010).
       // 가짜 샘플 데이터를 사용자에게 보여주지 않는다(§2). 데이터원 생기면 차트 복원.
 
@@ -651,7 +655,7 @@
           else if (detail) detail.appendChild(node);
         }
         // 이동으로 컨테이너 폭이 바뀌므로 차트 크기 재계산(숨김 뷰는 다음 탭 전환서 재계산).
-        setTimeout(() => { try { chart.resize(); } catch (e) {} try { donut.resize(); } catch (e) {} }, 0);
+        deferResize();
       }
       // TILE-030(§12): 상세 '메인 타일' 구성 카드 — 카탈로그 타일별 추가/제거 토글(애플 위젯식).
       // Lucide pin 정적 상수 SVG(사용자 데이터 아님 — innerHTML 주입 위험 없음).
@@ -720,7 +724,7 @@
           tDetail.classList.toggle('active', !main);
           // 타일 이동(TILE-020)으로 추세·도넛 중 어느 쪽이든 반대 탭에 있을 수 있음 → 표시 후 둘 다 재계산
           // (보이는 쪽만 실효, 숨김 쪽은 0폭→다음 표시 때 재보정). renderMain·window resize와 동일 try/catch 패턴.
-          setTimeout(() => { try { chart.resize(); } catch (e) {} try { donut.resize(); } catch (e) {} }, 0);
+          deferResize();
         }
         tMain.onclick = () => show(true);
         tDetail.onclick = () => show(false);
