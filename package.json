@@ -1,6 +1,6 @@
 {
   "name": "claude-usage",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "ccusage 데이터를 실시간 시각화하고 월별 PDF 보고서를 자동 생성하는 트레이 상주 데스크톱 앱",
   "main": "src/main.js",
   "author": "gyeongmin",
