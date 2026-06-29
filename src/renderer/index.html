@@ -94,6 +94,10 @@
           </div>
           <div class="kpi"><div class="kpi-val" id="today-tok">0</div><div class="kpi-cap" data-i18n="dash_tokens">토큰</div></div>
         </div>
+        <div class="last7">
+          <span class="last7-label" data-i18n="dash_last7">최근 7일</span>
+          <span class="last7-vals"><span id="last7-cost">$0.00</span> · <span id="last7-tok">0</span></span>
+        </div>
       </section>
     </main>
 
@@ -439,9 +443,15 @@
             agg.krwPerUsd > 0 ? window.Fmt.fmtKrw(agg.today.totalCost * agg.krwPerUsd) : '';
           document.getElementById('today-tok').textContent = fmtTok(agg.today.totalTokens);
           if (agg.today.models && agg.today.models.length) {
+            // (모델 도넛은 상세 탭) — currentModels 갱신은 아래 블록에서.
             currentModels = agg.today.models; // 테마 토글 재테마 시 실데이터 유지.
             donut.setOption(window.ModelDonut.buildDonutOption(currentModels, theme));
           }
+        }
+        if (agg.last7) {
+          // 최근 7일 통계(메인 탭): 총 비용 · 총 토큰.
+          document.getElementById('last7-cost').textContent = window.Fmt.fmtUsd(agg.last7.totalCost);
+          document.getElementById('last7-tok').textContent = fmtTok(agg.last7.totalTokens);
         }
       }
       window.usage.onAggregate(renderAgg);

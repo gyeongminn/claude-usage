@@ -53,6 +53,27 @@ function gaugePct(burn) {
   return { pct: (burn && burn.timePct) || 0, mode: 'time' };
 }
 
+// 최근 n일(달력) 합계 — daily(오름차순 period 'YYYY-MM-DD')에서 최신 날짜 기준 n일 이내 합산.
+// 데이터 최신일 기준(시스템 now 아님)이라 표시 TZ와 무관·안전. 문자열 사전식 비교 = 시간순.
+function sumRecentDays(daily, n) {
+  const arr = Array.isArray(daily) ? daily : [];
+  if (!arr.length) return { totalCost: 0, totalTokens: 0 };
+  const last = String(arr[arr.length - 1].period);
+  const d = new Date(last + 'T00:00:00Z');
+  if (isNaN(d.getTime())) return { totalCost: 0, totalTokens: 0 };
+  d.setUTCDate(d.getUTCDate() - (n - 1));
+  const cutoff = d.toISOString().slice(0, 10);
+  return arr
+    .filter((x) => String(x.period) >= cutoff)
+    .reduce(
+      (a, x) => ({
+        totalCost: a.totalCost + (Number(x.totalCost) || 0),
+        totalTokens: a.totalTokens + (Number(x.totalTokens) || 0),
+      }),
+      { totalCost: 0, totalTokens: 0 }
+    );
+}
+
 // ccusage 실데이터 → 렌더러용 집계 shape. runCcusage 주입(테스트), timezone 전달(§10/OPEN[05]).
 // ponytail: 프로젝트 축은 ccusage v20이 노출 안 함(--instances 없음) → 여기 미포함(OPEN).
 async function buildAggregate(runCcusage, opts = {}) {
@@ -67,8 +88,10 @@ async function buildAggregate(runCcusage, opts = {}) {
   // 순수 비-Claude(Codex 전용) 활성 블록은 제외 — 히어로 게이지에 타 에이전트 burn이 섞이지 않게(§2/AUDIT-020).
   const blocks = ((blocksRaw && blocksRaw.blocks) || []).filter(blockHasClaude);
   const block = blocks.find((b) => b.isActive) || blocks[0] || null;
+  const dailyShaped = daily.map((d) => ({ period: d.period, totalCost: d.totalCost, totalTokens: d.totalTokens }));
   return {
-    daily: daily.map((d) => ({ period: d.period, totalCost: d.totalCost, totalTokens: d.totalTokens })),
+    daily: dailyShaped,
+    last7: sumRecentDays(dailyShaped, 7), // 메인 탭 최근 7일 통계.
     today: last
       ? { totalCost: last.totalCost, totalTokens: last.totalTokens, models: last.modelBreakdowns }
       : { totalCost: 0, totalTokens: 0, models: [] },
@@ -89,4 +112,4 @@ async function buildBurn(runCcusage, opts = {}) {
   return { burn: shapeBurn(block, nowMs, opts.planTokenLimit) };
 }
 
-module.exports = { buildAggregate, buildBurn, shapeBurn, blockTimePct, gaugePct, blockHasClaude };
+module.exports = { buildAggregate, buildBurn, shapeBurn, blockTimePct, gaugePct, blockHasClaude, sumRecentDays };

@@ -20,6 +20,7 @@
   "dash_zoom_out": "Verkleinern",
   "dash_per_hour": "/h",
   "dash_tok_per_hour": "tok/h",
+  "dash_last7": "Letzte 7 Tage",
   "tab_main": "Haupt",
   "tab_detail": "Details",
   "usage_5h": "5-Stunden-Limit",

@@ -143,6 +143,19 @@ body {
 .cost-usd { font-size: 28px; font-weight: 700; color: var(--text-1); }
 .cost-krw { font-size: 16px; font-weight: 600; color: var(--text-2); }
 
+/* 최근 7일 통계(메인 탭) — '오늘' 아래 간단 1줄(라벨 좌 / 값 우). */
+.last7 {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--track);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.last7-label { color: var(--text-2); font-size: 13px; }
+.last7-vals { color: var(--text-1); font-size: 15px; font-weight: 600; }
+
 /* 카드 — 테두리 대신 부드러운 그림자, 큰 반경, 넉넉한 패딩(§5.1) */
 .card {
   background: var(--card);

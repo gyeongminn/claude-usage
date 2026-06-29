@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { buildAggregate, buildBurn, shapeBurn, gaugePct, blockHasClaude } = require('../src/main/aggregate');
+const { buildAggregate, buildBurn, shapeBurn, gaugePct, blockHasClaude, sumRecentDays } = require('../src/main/aggregate');
 
 test('DSH060_shapeBurn_활성블록_정규화', () => {
   const block = {
@@ -148,6 +148,38 @@ test('PERF010_buildBurn_빈블록_0안전', async () => {
   const r = await buildBurn(async () => ({ blocks: [] }));
   assert.equal(r.burn.pct, 0);
   assert.equal(r.burn.tokenPct, null);
+});
+
+// 최근 7일 통계(메인 탭): 최신 날짜 기준 n일 이내 합산. period 'YYYY-MM-DD' 사전식 비교.
+test('STAT7_sumRecentDays_최근7일합', () => {
+  const daily = [
+    { period: '2026-06-20', totalCost: 10, totalTokens: 100 }, // 7일 밖(컷오프 06-23)
+    { period: '2026-06-23', totalCost: 5, totalTokens: 50 },
+    { period: '2026-06-26', totalCost: 7, totalTokens: 70 },
+    { period: '2026-06-29', totalCost: 3, totalTokens: 30 }, // 최신
+  ];
+  // 최신 06-29 기준 7일 = 06-23~06-29 → 5+7+3=15, 50+70+30=150 (06-20 제외)
+  const r = sumRecentDays(daily, 7);
+  assert.equal(r.totalCost, 15);
+  assert.equal(r.totalTokens, 150);
+});
+
+test('STAT7_sumRecentDays_빈배열_0', () => {
+  assert.deepEqual(sumRecentDays([], 7), { totalCost: 0, totalTokens: 0 });
+  assert.deepEqual(sumRecentDays(null, 7), { totalCost: 0, totalTokens: 0 });
+});
+
+test('STAT7_buildAggregate_last7_포함', async () => {
+  const run = fakeRun({
+    daily: { daily: [
+      { period: '2026-06-28', totalCost: 4, totalTokens: 40, modelBreakdowns: [{ modelName: 'claude-opus-4-8', cost: 4, inputTokens: 40, outputTokens: 0, cacheCreationTokens: 0, cacheReadTokens: 0 }] },
+      { period: '2026-06-29', totalCost: 6, totalTokens: 60, modelBreakdowns: [{ modelName: 'claude-opus-4-8', cost: 6, inputTokens: 60, outputTokens: 0, cacheCreationTokens: 0, cacheReadTokens: 0 }] },
+    ] },
+    blocks: { blocks: [] },
+  });
+  const agg = await buildAggregate(run);
+  assert.equal(agg.last7.totalCost, 10);
+  assert.equal(agg.last7.totalTokens, 100);
 });
 
 test('DSH060_buildAggregate_빈데이터_안전', async () => {

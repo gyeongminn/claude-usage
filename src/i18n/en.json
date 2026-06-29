@@ -20,6 +20,7 @@
   "dash_zoom_out": "Zoom out",
   "dash_per_hour": "/h",
   "dash_tok_per_hour": "tok/h",
+  "dash_last7": "Last 7 days",
   "tab_main": "Main",
   "tab_detail": "Details",
   "usage_5h": "5-hour limit",
