@@ -187,10 +187,7 @@ body {
   margin-bottom: var(--space-2);
 }
 
-/* 히어로 burn 게이지(DSH-020) — $/h·토큰/h 동급, 임계 색전환은 JS(burnGauge.js) */
-.hero-rates { display: flex; gap: var(--space-4); margin-bottom: var(--space-2); }
-.rate { display: flex; align-items: baseline; gap: 4px; }
-.rate-val { font-size: 40px; font-weight: 700; color: var(--text-1); }
+/* burn rate 단위(/h·tok/h) — usage-burn 캡션에서 사용(DSH-020). 옛 .hero-rates/.rate/.rate-val 레이아웃은 5h·7d 분할 재설계로 폐기. */
 .rate-unit { font-size: 16px; color: var(--text-2); }
 .gauge-track {
   height: 14px;
@@ -359,5 +356,4 @@ body {
     padding: var(--space-2);
     gap: var(--space-2);
   }
-  .rate-val { font-size: 32px; } /* 좁은 폭에서 숫자 줄바꿈 방지 */
 }
