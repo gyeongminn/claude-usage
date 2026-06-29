@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { buildAggregate, buildBurn, shapeBurn, gaugePct, blockHasClaude, sumRecentDays, recentDays } = require('../src/main/aggregate');
+const { buildAggregate, buildBurn, shapeBurn, gaugePct, blockHasClaude, sumRecentDays, recentDays, weeklyBuckets } = require('../src/main/aggregate');
 
 test('DSH060_shapeBurn_활성블록_정규화', () => {
   const block = {
@@ -231,6 +231,51 @@ test('TREND7_buildAggregate_daily_최근7일만', async () => {
   assert.equal(agg.daily[6].period, '2026-06-29');
   // last7 KPI·tokens 구성은 여전히 전체 기간 기준(트렌드 창과 무관).
   assert.equal(agg.tokens.input, 100); // 10일 × 10
+});
+
+// WEEK5: 메인 최근 5주 주차별 사용량(이번 주 포함). 월요일 시작(UTC) 달력 주, nowMs 주입(Clock).
+test('WEEK5_weeklyBuckets_최근5주_이번주포함_빈주0', () => {
+  const now = Date.parse('2026-06-24T12:00:00Z'); // 수요일 → 이번 주 시작 월요일 06-22
+  const daily = [
+    { period: '2026-05-25', totalCost: 1, totalTokens: 10 }, // 05-25 주
+    { period: '2026-06-02', totalCost: 2, totalTokens: 20 }, // 06-01 주
+    { period: '2026-06-16', totalCost: 4, totalTokens: 40 }, // 06-15 주
+    { period: '2026-06-22', totalCost: 5, totalTokens: 50 }, // 이번 주(월)
+    { period: '2026-06-24', totalCost: 6, totalTokens: 60 }, // 이번 주(수, 부분)
+    // 06-08 주는 데이터 없음 → 0
+  ];
+  const w = weeklyBuckets(daily, 5, now);
+  assert.equal(w.length, 5);
+  assert.deepEqual(w.map((x) => x.weekStart), ['2026-05-25', '2026-06-01', '2026-06-08', '2026-06-15', '2026-06-22']);
+  assert.equal(w[0].totalCost, 1);
+  assert.equal(w[1].totalCost, 2);
+  assert.equal(w[2].totalCost, 0); // 빈 주 → 0
+  assert.equal(w[3].totalCost, 4);
+  assert.equal(w[4].totalCost, 11); // 이번 주 부분합 06-22(5)+06-24(6)
+  assert.equal(w[4].totalTokens, 110);
+});
+
+test('WEEK5_weeklyBuckets_범위밖제외_빈null안전', () => {
+  const now = Date.parse('2026-06-24T12:00:00Z');
+  // 5주 창(05-25~) 이전(05-18 주)은 제외 → 전부 0.
+  const w = weeklyBuckets([{ period: '2026-05-18', totalCost: 99, totalTokens: 990 }], 5, now);
+  assert.equal(w.length, 5);
+  assert.equal(w.reduce((s, x) => s + x.totalCost, 0), 0);
+  assert.equal(weeklyBuckets([], 5, now).length, 5);
+  assert.equal(weeklyBuckets(null, 5, now).length, 5);
+});
+
+test('WEEK5_buildAggregate_weekly_포함', async () => {
+  const run = fakeRun({
+    daily: { daily: [
+      { period: '2026-06-29', totalCost: 7, totalTokens: 70, modelBreakdowns: [{ modelName: 'claude-opus-4-8', cost: 7, inputTokens: 70, outputTokens: 0, cacheCreationTokens: 0, cacheReadTokens: 0 }] },
+    ] },
+    blocks: { blocks: [] },
+  });
+  const agg = await buildAggregate(run, { nowMs: Date.parse('2026-06-29T12:00:00Z') });
+  assert.equal(agg.weekly.length, 5);
+  assert.equal(agg.weekly[4].weekStart, '2026-06-29'); // 이번 주(06-29 월요일)
+  assert.equal(agg.weekly[4].totalCost, 7);
 });
 
 test('DSH060_buildAggregate_빈데이터_안전', async () => {

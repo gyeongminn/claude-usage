@@ -78,6 +78,33 @@ function sumRecentDays(daily, n) {
   );
 }
 
+// 주 시작(월요일 00:00 UTC) ms. ISO 주 표준(월요일 시작). ponytail: 일요일/Anthropic 리셋 정렬 필요 시 교체.
+function weekStartMs(ms) {
+  const d = new Date(ms);
+  const diff = (d.getUTCDay() + 6) % 7; // 월=0..일=6 만큼 거슬러 월요일로
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - diff);
+}
+
+// 최근 n주(이번 주 포함) 주차별 합계 — daily(period 'YYYY-MM-DD') 기준, nowMs 기준 이번 주(Clock 주입).
+// 데이터 없는 주는 0(연속 n주 보장). 각 주 [weekStart, +7) 반열린 구간 매칭. 오래된→최신 순.
+function weeklyBuckets(daily, n, nowMs) {
+  const arr = Array.isArray(daily) ? daily : [];
+  const thisWeek = weekStartMs(nowMs);
+  const weeks = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const ws = thisWeek - i * 7 * 86400000;
+    const wsStr = new Date(ws).toISOString().slice(0, 10);
+    const weStr = new Date(ws + 7 * 86400000).toISOString().slice(0, 10);
+    const rows = arr.filter((x) => { const p = String(x.period); return p >= wsStr && p < weStr; });
+    weeks.push({
+      weekStart: wsStr,
+      totalCost: rows.reduce((s, x) => s + (Number(x.totalCost) || 0), 0),
+      totalTokens: rows.reduce((s, x) => s + (Number(x.totalTokens) || 0), 0),
+    });
+  }
+  return weeks;
+}
+
 // ccusage 실데이터 → 렌더러용 집계 shape. runCcusage 주입(테스트), timezone 전달(§10/OPEN[05]).
 // ponytail: 프로젝트 축은 ccusage v20이 노출 안 함(--instances 없음) → 여기 미포함(OPEN).
 async function buildAggregate(runCcusage, opts = {}) {
@@ -96,6 +123,7 @@ async function buildAggregate(runCcusage, opts = {}) {
   return {
     daily: recentDays(dailyShaped, 7), // 일자별 추세: 최근 7일만(날짜 과다 방지, 사용자 요청). last7/tokens는 전체 기간.
     last7: sumRecentDays(dailyShaped, 7), // 메인 탭 최근 7일 통계.
+    weekly: weeklyBuckets(dailyShaped, 5, nowMs), // 메인 탭 최근 5주 주차별(이번 주 포함, 사용자 요청).
     today: last
       ? { totalCost: last.totalCost, totalTokens: last.totalTokens, models: last.modelBreakdowns }
       : { totalCost: 0, totalTokens: 0, models: [] },
@@ -118,4 +146,4 @@ async function buildBurn(runCcusage, opts = {}) {
   return { burn: shapeBurn(block, nowMs, opts.planTokenLimit) };
 }
 
-module.exports = { buildAggregate, buildBurn, shapeBurn, blockTimePct, gaugePct, blockHasClaude, sumRecentDays, recentDays };
+module.exports = { buildAggregate, buildBurn, shapeBurn, blockTimePct, gaugePct, blockHasClaude, sumRecentDays, recentDays, weeklyBuckets };

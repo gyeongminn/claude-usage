@@ -19,6 +19,8 @@ const DASH_KEYS = [
   'detail_token_comp', 'tok_input', 'tok_output', 'tok_cache_create', 'tok_cache_read', 'cache_efficiency',
   // MODELSHARE: 상세 탭 모델 사용 비중(도넛+범례).
   'model_share',
+  // WEEK5: 메인 탭 최근 5주 주차별 사용량.
+  'dash_weekly5',
 ];
 
 test('INT020_대시보드키_10로케일_모두존재', () => {

@@ -21,6 +21,7 @@
   "dash_per_hour": "/h",
   "dash_tok_per_hour": "tok/h",
   "dash_last7": "近7天",
+  "dash_weekly5": "近5周",
   "tab_main": "主页",
   "tab_detail": "详情",
   "usage_5h": "5小时额度",

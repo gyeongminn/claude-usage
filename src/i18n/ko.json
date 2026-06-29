@@ -21,6 +21,7 @@
   "dash_per_hour": "/h",
   "dash_tok_per_hour": "tok/h",
   "dash_last7": "최근 7일",
+  "dash_weekly5": "최근 5주",
   "tab_main": "메인",
   "tab_detail": "상세",
   "usage_5h": "5시간 한도",

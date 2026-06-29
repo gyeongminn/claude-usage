@@ -100,6 +100,11 @@
           <span class="last7-vals"><span id="last7-cost">$0.00</span> · <span id="last7-tok">0</span></span>
         </div>
       </section>
+
+      <section class="card weekly" aria-label="weekly">
+        <div class="card-label" data-i18n="dash_weekly5">최근 5주</div>
+        <div id="week-list" class="week-list"></div>
+      </section>
     </main>
 
     <!-- 상세 탭 — 모델별 비중 / 프로젝트 Top 5 -->
@@ -498,6 +503,35 @@
           document.getElementById('last7-tok').textContent = fmtTok(agg.last7.totalTokens);
         }
         if (agg.tokens) renderTokens(agg.tokens);
+        if (agg.weekly) renderWeekly(agg.weekly);
+      }
+
+      // WEEK5: 메인 최근 5주 주차별(이번 주 포함) — 주 라벨·비례 바·비용·토큰. 최신 주 위로(reverse).
+      function renderWeekly(weeks) {
+        const el = document.getElementById('week-list');
+        if (!el) return;
+        el.textContent = '';
+        const arr = Array.isArray(weeks) ? weeks.slice().reverse() : [];
+        const max = Math.max(1, ...arr.map((w) => Number(w.totalCost) || 0)); // 0 나눗셈 방지.
+        for (const w of arr) {
+          const cost = Number(w.totalCost) || 0;
+          const row = document.createElement('div');
+          row.className = 'week-row';
+          const label = document.createElement('span');
+          label.className = 'week-label';
+          label.textContent = String(w.weekStart).slice(5).replace('-', '/'); // MM/DD(주 시작)
+          const bar = document.createElement('div');
+          bar.className = 'week-bar';
+          const fill = document.createElement('div');
+          fill.className = 'week-fill';
+          fill.style.width = (cost / max) * 100 + '%';
+          bar.appendChild(fill);
+          const val = document.createElement('span');
+          val.className = 'week-val';
+          val.textContent = window.Fmt.fmtUsd(cost) + ' · ' + fmtTok(w.totalTokens);
+          row.append(label, bar, val);
+          el.appendChild(row);
+        }
       }
 
       // BL-05: 상세 탭 토큰 구성(입력·출력·캐시생성·캐시읽기) 바 + 캐시 효율(PDF p3와 동일 식).

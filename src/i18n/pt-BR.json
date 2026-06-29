@@ -21,6 +21,7 @@
   "dash_per_hour": "/h",
   "dash_tok_per_hour": "tok/h",
   "dash_last7": "Últimos 7 dias",
+  "dash_weekly5": "Últimas 5 semanas",
   "tab_main": "Principal",
   "tab_detail": "Detalhes",
   "usage_5h": "Limite de 5 h",
