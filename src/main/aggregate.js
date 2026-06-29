@@ -106,6 +106,14 @@ function weeklyBuckets(daily, n, nowMs) {
   return weeks;
 }
 
+// 활성 Claude 블록 선택 — ccusage blocks --active 출력에서 순수 비-Claude(Codex 전용) 블록 제외 후
+// isActive 블록(없으면 첫 블록, 그것도 없으면 null). buildAggregate·buildBurn 공용 — §2/AUDIT-020 Claude 필터+
+// 활성 선택을 한 곳에 모아 cadence 분리(전체 재집계 vs 인터벌 burn-only) 두 경로의 게이지 입력 드리프트 방지.
+function selectActiveClaudeBlock(blocksRaw) {
+  const blocks = ((blocksRaw && blocksRaw.blocks) || []).filter(blockHasClaude);
+  return blocks.find((b) => b.isActive) || blocks[0] || null;
+}
+
 // ccusage 실데이터 → 렌더러용 집계 shape. runCcusage 주입(테스트), timezone 전달(§10/OPEN[05]).
 // ponytail: 프로젝트 축은 ccusage v20이 노출 안 함(--instances 없음) → 여기 미포함(OPEN).
 async function buildAggregate(runCcusage, opts = {}) {
@@ -117,9 +125,7 @@ async function buildAggregate(runCcusage, opts = {}) {
   ]);
   const daily = filterClaude((dailyRaw && dailyRaw.daily) || []);
   const last = daily[daily.length - 1] || null;
-  // 순수 비-Claude(Codex 전용) 활성 블록은 제외 — 히어로 게이지에 타 에이전트 burn이 섞이지 않게(§2/AUDIT-020).
-  const blocks = ((blocksRaw && blocksRaw.blocks) || []).filter(blockHasClaude);
-  const block = blocks.find((b) => b.isActive) || blocks[0] || null;
+  const block = selectActiveClaudeBlock(blocksRaw); // 순수 비-Claude 블록 제외 + 활성 선택(§2/AUDIT-020).
   const dailyShaped = daily.map((d) => ({ period: d.period, totalCost: d.totalCost, totalTokens: d.totalTokens }));
   return {
     daily: recentDays(dailyShaped, 7), // 일자별 추세: 최근 7일만(날짜 과다 방지, 사용자 요청). last7/tokens는 전체 기간.
@@ -142,8 +148,7 @@ async function buildAggregate(runCcusage, opts = {}) {
 async function buildBurn(runCcusage, opts = {}) {
   const nowMs = opts.nowMs != null ? opts.nowMs : Date.now();
   const blocksRaw = await runCcusage('blocks', ['--active']);
-  const blocks = ((blocksRaw && blocksRaw.blocks) || []).filter(blockHasClaude);
-  const block = blocks.find((b) => b.isActive) || blocks[0] || null;
+  const block = selectActiveClaudeBlock(blocksRaw);
   return { burn: shapeBurn(block, nowMs, opts.planTokenLimit) };
 }
 
