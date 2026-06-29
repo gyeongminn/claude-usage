@@ -73,6 +73,20 @@ test('AUTO020_t_보간_프로토타입체인키_미보간_own키만', () => {
   assert.equal(t2('greet', { name: 'Sam' }), 'Hi Sam');
 });
 
+test('AUTO020_t_조회_프로토타입체인키_키반환_own키만', () => {
+  // makeT 룩업이 `key in catalog`(프로토타입 체인)로 판정하면 Object.prototype 멤버명
+  // ('toString'/'constructor'/'valueOf' 등)이 카탈로그에 own 없어도 상속 함수가 끌려와
+  // interpolate가 함수 소스 문자열로 치환 → UI에 가비지. own 키만 조회해야 키 폴백.
+  const t = makeT('en', {}, {});
+  assert.equal(t('toString'), 'toString');
+  assert.equal(t('constructor'), 'constructor');
+  assert.equal(t('hasOwnProperty'), 'hasOwnProperty');
+  // 회귀 가드: own 키는 정상 조회(locale 우선 → en 폴백).
+  const t2 = makeT('ko', { only_en: 'fallback' }, { only_ko: '한글만' });
+  assert.equal(t2('only_ko'), '한글만');
+  assert.equal(t2('only_en'), 'fallback');
+});
+
 test('FND070_loadCatalog_화이트리스트_traversal차단', () => {
   const { loadCatalog } = require('../src/i18n/i18n');
   assert.deepEqual(loadCatalog('../../package'), {}); // 경로 탈출 시도 → 빈 객체

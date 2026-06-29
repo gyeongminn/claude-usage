@@ -23,9 +23,11 @@ function interpolate(str, vars) {
 // t(key, vars): localeCatalog → enCatalog → key 순 폴백 + {var} 보간.
 // ponytail: locale 인자는 향후 복수형/포맷 분기용으로 보존(현재 룩업엔 카탈로그만 사용).
 function makeT(locale, enCatalog = {}, localeCatalog = {}) {
+  // own 키만 조회 — `key in catalog`는 프로토타입 체인까지 봐서 'toString'/'constructor' 등
+  // Object.prototype 멤버명 키가 상속 함수로 끌려와 interpolate가 함수 소스로 치환됨(interpolate AUTO-020 선례와 동일 클래스).
+  const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
   return (key, vars) => {
-    const raw =
-      key in localeCatalog ? localeCatalog[key] : key in enCatalog ? enCatalog[key] : key;
+    const raw = own(localeCatalog, key) ? localeCatalog[key] : own(enCatalog, key) ? enCatalog[key] : key;
     return interpolate(raw, vars);
   };
 }
