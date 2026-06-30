@@ -657,6 +657,12 @@
       if (window.usage.onSysStats) window.usage.onSysStats(renderSysStats);
       // 실제 사용 한도(5h·주간) — Claude 설정창과 동일 소스. main이 5분 주기로 push.
       if (window.usage.onLimits) window.usage.onLimits(renderLimits);
+      // DOC-SHOT-010: 캡처 전용 — main(captureAndQuit, env DASH_SAMPLE)이 대표 샘플 집계를 주입해
+      // 채워진 대시보드 스크린샷(README 다국어)을 만든다. 평소엔 호출 안 됨(실데이터=onAggregate).
+      window.__captureSample = (s) => {
+        if (s && s.limits) renderLimits(s.limits);
+        if (s && s.agg) renderAgg(s.agg);
+      };
 
       // TILE-020(§12): 메인 탭 타일 동적 배치 — settings.mainTiles 순서대로 메인 그리드 구성.
       // 단일 인스턴스 이동 모델: 선택 타일 카드 DOM을 메인으로, 미선택 카탈로그 타일은 상세 라이브러리로 이동(복제 금지).

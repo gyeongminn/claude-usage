@@ -244,6 +244,13 @@ async function captureAndQuit(win, outPath) {
     );
     await sleep(300);
   }
+  // DOC-SHOT-010: 대시보드 캡처에 대표 샘플 집계 주입(README 다국어 스크린샷). 실데이터(현 환경 공백) 위에 덮어써
+  // 채워진 화면을 만든다 — 보고서 __SAMPLE__와 동일 성격의 캡처 전용 데이터(§2 가짜표시 아님·앱 실사용 미사용).
+  if (process.env.DASH_SAMPLE) {
+    const { DASH_SAMPLE } = require('./renderer/dashSample');
+    await win.webContents.executeJavaScript(`window.__captureSample(${JSON.stringify(DASH_SAMPLE)}); true;`);
+    await sleep(400);
+  }
   // 보고서처럼 긴 문서는 CAPTURE_SCROLL(px)로 해당 위치까지 스크롤 후 캡처(페이지별 검증).
   if (process.env.CAPTURE_SCROLL) {
     await win.webContents.executeJavaScript(`window.scrollTo(0, ${Number(process.env.CAPTURE_SCROLL)})`);
@@ -328,14 +335,19 @@ function createWindow() {
     }
     // UI-030: 저장된 UI 배율 적용(차트+글씨 균일 스케일). 0.8~1.5.
     win.webContents.setZoomFactor(effScale);
-    // 환율 먼저 fetch 후 집계 push(병기). 환율 실패해도 집계는 진행.
-    refreshFx().catch(() => {}).finally(() => pushAggregate(win));
-    // 파일 변경 감시(DAT-020) → 변경 시 재집계. 활성 블록 burn 신선도 위해 주기 갱신도 병행(§4.1: 5~10s).
-    const watcher = startWatcher(() => pushAggregate(win));
     // AUTO-010: 모든 인터벌 타이머를 timers에 모아 closed에서 일괄 clear(추가 타이머가 clearInterval 누락돼 누수되는 일 방지).
     const timers = [];
-    // PERF-010/§3: 짧은 간격(8s) 갱신은 활성 블록 burn만(전체 daily 재파싱 X). 전체는 워처/새로고침/기동에서.
-    timers.push(setInterval(() => pushBurn(win), 8000));
+    // DOC-SHOT-010: DASH_SAMPLE 캡처 모드면 실데이터 파이프(환율·집계·워처·burn)를 끈다 — 비동기 ccusage/fetch
+    // 결과가 늦게 도착해 주입 샘플(window.__captureSample)을 덮는 레이스 방지(README 다국어 스크린샷 결정성).
+    let watcher = null;
+    if (!process.env.DASH_SAMPLE) {
+      // 환율 먼저 fetch 후 집계 push(병기). 환율 실패해도 집계는 진행.
+      refreshFx().catch(() => {}).finally(() => pushAggregate(win));
+      // 파일 변경 감시(DAT-020) → 변경 시 재집계. 활성 블록 burn 신선도 위해 주기 갱신도 병행(§4.1: 5~10s).
+      watcher = startWatcher(() => pushAggregate(win));
+      // PERF-010/§3: 짧은 간격(8s) 갱신은 활성 블록 burn만(전체 daily 재파싱 X). 전체는 워처/새로고침/기동에서.
+      timers.push(setInterval(() => pushBurn(win), 8000));
+    }
     // 시스템 리소스(§11/SYS-020): CPU/RAM 2s push, GPU는 6s best-effort(spawn 부담↓). prevCpus 재초기화로 첫 델타 정확.
     prevCpus = os.cpus();
     refreshGpu();
@@ -346,14 +358,19 @@ function createWindow() {
     runUpdateCheck(win).catch(() => {});
     timers.push(setInterval(() => runUpdateCheck(win).catch(() => {}), UPDATE_INTERVAL_MS));
     // 실제 사용 한도(5h·주간): 기동 시 1회 + 5분 주기(엔드포인트 공격적 429라 저빈도). 실패는 캐시 유지.
-    pushLimits(win).catch(() => {});
-    timers.push(setInterval(() => pushLimits(win).catch(() => {}), 5 * 60 * 1000));
-    // BL-04: 계정 전환/토큰 갱신(.credentials.json 변경) 즉시 한도 재조회 — 5분 폴링을 기다리지 않음(현재 계정 기준).
-    // 계정이 바뀌면 이전 계정의 eta 샘플(usagePrev)은 무의미 → 비워 첫폴링 추정(etaFromWindow)으로 재시작.
-    const credWatcher = startCredentialsWatcher(() => {
-      for (const k of Object.keys(usagePrev)) delete usagePrev[k];
+    // DOC-SHOT-010: DASH_SAMPLE 캡처 모드면 실 OAuth 한도 push를 막는다 — 비동기 fetchUsage 결과가
+    // 샘플 게이지(window.__captureSample)를 덮어쓰는 것 + README 스크린샷에 사용자 실계정 한도 박제를 방지.
+    let credWatcher = null;
+    if (!process.env.DASH_SAMPLE) {
       pushLimits(win).catch(() => {});
-    });
+      timers.push(setInterval(() => pushLimits(win).catch(() => {}), 5 * 60 * 1000));
+      // BL-04: 계정 전환/토큰 갱신(.credentials.json 변경) 즉시 한도 재조회 — 5분 폴링을 기다리지 않음(현재 계정 기준).
+      // 계정이 바뀌면 이전 계정의 eta 샘플(usagePrev)은 무의미 → 비워 첫폴링 추정(etaFromWindow)으로 재시작.
+      credWatcher = startCredentialsWatcher(() => {
+        for (const k of Object.keys(usagePrev)) delete usagePrev[k];
+        pushLimits(win).catch(() => {});
+      });
+    }
     // UI-010: 새로고침(재계산) 버튼 → 즉시 재집계. 결과는 usage:aggregate로 렌더러에 push.
     const onRefresh = () => pushAggregate(win);
     ipcMain.on('usage:refresh', onRefresh);
@@ -365,8 +382,8 @@ function createWindow() {
     ipcMain.on('scale:set', onScale);
     win.on('closed', () => {
       timers.forEach(clearInterval);
-      watcher.close();
-      credWatcher.close();
+      if (watcher) watcher.close();
+      if (credWatcher) credWatcher.close();
       ipcMain.removeListener('usage:refresh', onRefresh);
       ipcMain.removeListener('scale:set', onScale);
     });
