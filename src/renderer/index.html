@@ -632,14 +632,13 @@
         }
         paintGauge(pctEl, fill, pct);
       }
-      // bytes → "GB"(이진 GiB, Windows 표기 관례). NaN/0 안전.
-      function fmtGB(bytes) { return (Number(bytes) / (1024 ** 3) || 0).toFixed(1); }
       function renderSysStats(s) {
         if (!s) return;
         setSysGauge('sys-cpu', typeof s.cpu === 'number' ? s.cpu : null);
         setSysGauge('sys-ram', s.mem ? s.mem.pct : null);
         const ramMeta = document.getElementById('sys-ram-meta');
-        if (ramMeta) ramMeta.textContent = s.mem ? fmtGB(s.mem.usedBytes) + ' / ' + fmtGB(s.mem.totalBytes) + ' GB' : '';
+        // SYS-030: GB도 §10 로케일 소수기호(Fmt.fmtGb=Intl). 과거 toFixed(1)=마침표 고정 → de/vi 등 콤마 로케일 불일치 수정.
+        if (ramMeta) ramMeta.textContent = s.mem ? window.Fmt.fmtGb(s.mem.usedBytes) + ' / ' + window.Fmt.fmtGb(s.mem.totalBytes) + ' GB' : '';
         // GPU null = NVIDIA 부재/오류 → N/A·게이지 회색(§11 best-effort). 값이면 일반 게이지.
         if (s.gpu == null) {
           const g = document.getElementById('sys-gpu-pct');

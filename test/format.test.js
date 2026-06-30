@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { fmtUsd, fmtKrw, fmtUsdKrw, fmtTokens, fmtInt, setLocale } = require('../src/renderer/format');
+const { fmtUsd, fmtKrw, fmtUsdKrw, fmtTokens, fmtInt, fmtGb, setLocale } = require('../src/renderer/format');
 
 test('DAT050_fmtUsd_달러_2자리천단위', () => {
   assert.equal(fmtUsd(1234.5), '$1,234.50');
@@ -95,4 +95,16 @@ test('AUDIT030_setLocale_잘못된입력_무시', () => {
   setLocale(null); // 비문자열 → 무시(기존 유지)
   setLocale(''); // 빈 문자열 → 무시
   assert.equal(fmtUsd(1234.5), '$1,234.50'); // en 유지
+});
+
+// SYS-030: 시스템 RAM "used / total GB"도 §10 로케일 소수기호 따라야(콤마소수 로케일서 22,5). 과거 toFixed(1)=마침표 고정 회귀 가드.
+test('SYS030_fmtGb_로케일_소수기호', () => {
+  const USED = 24_159_191_040; // 22.5 GiB
+  setLocale('en-US');
+  assert.equal(fmtGb(USED), '22.5'); // 마침표 소수(en)
+  setLocale('de-DE');
+  assert.equal(fmtGb(USED), '22,5'); // 콤마 소수(de/vi/fr/it/es/pt-BR)
+  setLocale('en-US'); // 다른 테스트 오염 방지(모듈 전역 포맷터 복구)
+  assert.equal(fmtGb(0), '0.0'); // NaN/0 안전(num 가드)
+  assert.equal(fmtGb(undefined), '0.0');
 });

@@ -6,12 +6,14 @@
   // §10: 숫자는 UI 로케일의 Intl 포맷(자리구분·소수기호가 de/fr/it/vi 등에서 다름).
   // §5.1: 통화 글리프($·₩)는 토스 디자인대로 접두 고정 — 로케일은 '숫자 포맷'만 좌우(기호는 브랜드 일관).
   // AUDIT-030: 기존 'en-US' 하드코딩 → setLocale로 주입. 미설정 시 en-US(기존 동작 보존).
-  let usdFmt, intFmt, tokFmt;
+  let usdFmt, intFmt, tokFmt, gbFmt;
   function build(locale) {
     usdFmt = new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     intFmt = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
     // 토큰 큰수 표기: 로케일별 표준 컴팩트(ko 만/억, ja 万/億, zh 万/亿, en K/M/B, de Mio./Mrd. …).
     tokFmt = new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 });
+    // SYS-030: 시스템 RAM GB(소수 1자리) — §10 로케일 소수기호(de/vi/fr… 콤마). toFixed=마침표 고정이라 미사용.
+    gbFmt = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   }
   build('en-US');
 
@@ -51,7 +53,12 @@
     return tokFmt.format(Math.round(num(v)));
   }
 
-  const api = { fmtUsd, fmtKrw, fmtUsdKrw, fmtTokens, fmtInt, setLocale };
+  // SYS-030: bytes → GB(소수 1자리) 로케일 포맷. num 가드로 NaN/undefined→0. 단위 'GB'는 호출부가 붙임.
+  function fmtGb(bytes) {
+    return gbFmt.format(num(bytes) / 1024 ** 3);
+  }
+
+  const api = { fmtUsd, fmtKrw, fmtUsdKrw, fmtTokens, fmtInt, fmtGb, setLocale };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Fmt = api;
 })(typeof window !== 'undefined' ? window : globalThis);
