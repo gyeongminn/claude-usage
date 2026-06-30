@@ -662,6 +662,7 @@
       window.__captureSample = (s) => {
         if (s && s.limits) renderLimits(s.limits);
         if (s && s.agg) renderAgg(s.agg);
+        if (s && s.sys) renderSysStats(s.sys); // DOC-SHOT: 상세 시스템 카드도 대표 sys로 채워 번역본 스크린샷 충실도(영어 원본과 동일).
       };
 
       // TILE-020(§12): 메인 탭 타일 동적 배치 — settings.mainTiles 순서대로 메인 그리드 구성.

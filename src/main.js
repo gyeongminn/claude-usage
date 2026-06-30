@@ -349,11 +349,15 @@ function createWindow() {
       timers.push(setInterval(() => pushBurn(win), 8000));
     }
     // 시스템 리소스(§11/SYS-020): CPU/RAM 2s push, GPU는 6s best-effort(spawn 부담↓). prevCpus 재초기화로 첫 델타 정확.
-    prevCpus = os.cpus();
-    refreshGpu();
-    pushSysStats(win);
-    timers.push(setInterval(() => pushSysStats(win), 2000));
-    timers.push(setInterval(refreshGpu, 6000));
+    // DOC-SHOT-010: DASH_SAMPLE 캡처 모드면 실 sysStats 샘플러도 끈다 — 라이브 머신 CPU/RAM/GPU가 주입 샘플
+    // (__captureSample sys)을 덮어 비결정 스크린샷이 되는 것 방지(환율·집계·한도 가드와 동일 취지, 누락분 보강).
+    if (!process.env.DASH_SAMPLE) {
+      prevCpus = os.cpus();
+      refreshGpu();
+      pushSysStats(win);
+      timers.push(setInterval(() => pushSysStats(win), 2000));
+      timers.push(setInterval(refreshGpu, 6000));
+    }
     // 업데이트 확인(FEAT-010): 기동 시 1회 + 6h 주기. 토글 꺼지면 runUpdateCheck가 즉시 반환(체크 0).
     runUpdateCheck(win).catch(() => {});
     timers.push(setInterval(() => runUpdateCheck(win).catch(() => {}), UPDATE_INTERVAL_MS));

@@ -23,7 +23,13 @@ const DASH_SAMPLE = {
       period: '2026-06-29',
       totalCost: 272.31,
       totalTokens: 385_000_000,
-      models: [{ name: 'claude-opus-4-8', cost: 272.31 }],
+      // 모델 도넛(상세 탭)은 modelName 키를 읽는다(modelDonut.legendItems/buildDonutOption).
+      // 영어 assets/detail.png 재현: Opus 4.8 98.9% · Haiku 4.5 1.1%(합=272.31=totalCost).
+      // (과거 `name` 키 버그 → shortModelName(undefined)로 범례 모델명 빈칸이던 것 수정.)
+      models: [
+        { modelName: 'claude-opus-4-8', cost: 269.31 },
+        { modelName: 'claude-haiku-4-5-20251001', cost: 3.0 },
+      ],
     },
     last7: { totalCost: 1427.01, totalTokens: 1_900_000_000 },
     // 최근 5주(weeklyBuckets 형태, 오래된→최신). renderWeekly가 reverse해 최신을 위로.
@@ -42,6 +48,9 @@ const DASH_SAMPLE = {
     fiveHour: { utilization: 67, resetsAt: '2026-06-30T18:49:00Z', etaMinutes: 43 },
     sevenDay: { utilization: 7, resetsAt: '2026-07-06T13:59:00Z', etaMinutes: 3600 },
   },
+  // 상세 탭 시스템 카드(SYS-030, renderSysStats 형태). 영어 assets/detail.png 재현(CPU 51%·RAM 71% 22.5/31.8GB·GPU 1%).
+  // captureAndQuit이 DASH_SAMPLE일 때 실 sysStats 푸시를 끄므로(레이스 방지) 캡처용 대표 sys를 주입한다.
+  sys: { cpu: 51, mem: { pct: 71, usedBytes: 24_159_191_040, totalBytes: 34_144_990_003 }, gpu: 1 },
 };
 
 module.exports = { DASH_SAMPLE };
