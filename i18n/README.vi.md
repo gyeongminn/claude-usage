@@ -8,7 +8,7 @@
 Xây dựng bằng Electron + ECharts. Đa máy và tự chứa — không cần cài sẵn Node, ccusage hay phông chữ trên máy đích.
 
 <p align="center">
-  <img src="../assets/dashboard.png" alt="Claude Usage — live dashboard" width="380">
+  <img src="../assets/vi/dashboard.png" alt="Claude Usage — live dashboard" width="380">
 </p>
 
 <details>
@@ -16,12 +16,12 @@ Xây dựng bằng Electron + ECharts. Đa máy và tự chứa — không cần
 
 <table>
   <tr>
-    <td width="50%"><img src="../assets/dashboard-dark.png" alt="Dark theme"></td>
-    <td width="50%"><img src="../assets/detail.png" alt="Details — model usage share and token composition"></td>
+    <td width="50%"><img src="../assets/vi/dashboard-dark.png" alt="Dark theme"></td>
+    <td width="50%"><img src="../assets/vi/detail.png" alt="Details — model usage share and token composition"></td>
   </tr>
   <tr>
-    <td width="50%"><img src="../assets/detail-dark.png" alt="Details (dark theme)"></td>
-    <td width="50%"><img src="../assets/responsive.png" alt="Responsive layout at a narrow width"></td>
+    <td width="50%"><img src="../assets/vi/detail-dark.png" alt="Details (dark theme)"></td>
+    <td width="50%"><img src="../assets/vi/responsive.png" alt="Responsive layout at a narrow width"></td>
   </tr>
 </table>
 

@@ -8,7 +8,7 @@ Um app de desktop nativo, residente na bandeja, que **visualiza seus dados do [c
 Feito com Electron + ECharts. Multiplataforma e autônomo: não é preciso pré-instalar Node, ccusage ou fontes na máquina de destino.
 
 <p align="center">
-  <img src="../assets/dashboard.png" alt="Claude Usage — live dashboard" width="380">
+  <img src="../assets/pt-BR/dashboard.png" alt="Claude Usage — live dashboard" width="380">
 </p>
 
 <details>
@@ -16,12 +16,12 @@ Feito com Electron + ECharts. Multiplataforma e autônomo: não é preciso pré-
 
 <table>
   <tr>
-    <td width="50%"><img src="../assets/dashboard-dark.png" alt="Dark theme"></td>
-    <td width="50%"><img src="../assets/detail.png" alt="Details — model usage share and token composition"></td>
+    <td width="50%"><img src="../assets/pt-BR/dashboard-dark.png" alt="Dark theme"></td>
+    <td width="50%"><img src="../assets/pt-BR/detail.png" alt="Details — model usage share and token composition"></td>
   </tr>
   <tr>
-    <td width="50%"><img src="../assets/detail-dark.png" alt="Details (dark theme)"></td>
-    <td width="50%"><img src="../assets/responsive.png" alt="Responsive layout at a narrow width"></td>
+    <td width="50%"><img src="../assets/pt-BR/detail-dark.png" alt="Details (dark theme)"></td>
+    <td width="50%"><img src="../assets/pt-BR/responsive.png" alt="Responsive layout at a narrow width"></td>
   </tr>
 </table>
 

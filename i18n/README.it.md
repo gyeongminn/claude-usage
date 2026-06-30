@@ -8,7 +8,7 @@ Un’app desktop nativa, residente nella tray, che **visualizza i tuoi dati [ccu
 Realizzata con Electron + ECharts. Cross-machine e autonoma: nessun Node, ccusage o font da preinstallare sulla macchina di destinazione.
 
 <p align="center">
-  <img src="../assets/dashboard.png" alt="Claude Usage — live dashboard" width="380">
+  <img src="../assets/it/dashboard.png" alt="Claude Usage — live dashboard" width="380">
 </p>
 
 <details>
@@ -16,12 +16,12 @@ Realizzata con Electron + ECharts. Cross-machine e autonoma: nessun Node, ccusag
 
 <table>
   <tr>
-    <td width="50%"><img src="../assets/dashboard-dark.png" alt="Dark theme"></td>
-    <td width="50%"><img src="../assets/detail.png" alt="Details — model usage share and token composition"></td>
+    <td width="50%"><img src="../assets/it/dashboard-dark.png" alt="Dark theme"></td>
+    <td width="50%"><img src="../assets/it/detail.png" alt="Details — model usage share and token composition"></td>
   </tr>
   <tr>
-    <td width="50%"><img src="../assets/detail-dark.png" alt="Details (dark theme)"></td>
-    <td width="50%"><img src="../assets/responsive.png" alt="Responsive layout at a narrow width"></td>
+    <td width="50%"><img src="../assets/it/detail-dark.png" alt="Details (dark theme)"></td>
+    <td width="50%"><img src="../assets/it/responsive.png" alt="Responsive layout at a narrow width"></td>
   </tr>
 </table>
 

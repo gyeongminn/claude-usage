@@ -8,7 +8,7 @@
 Electron + ECharts로 제작. 크로스 머신 · 자립형 — 대상 머신에 Node, ccusage, 폰트를 미리 설치할 필요가 없습니다.
 
 <p align="center">
-  <img src="../assets/dashboard.png" alt="Claude Usage — live dashboard" width="380">
+  <img src="../assets/ko/dashboard.png" alt="Claude Usage — live dashboard" width="380">
 </p>
 
 <details>
@@ -16,12 +16,12 @@ Electron + ECharts로 제작. 크로스 머신 · 자립형 — 대상 머신에
 
 <table>
   <tr>
-    <td width="50%"><img src="../assets/dashboard-dark.png" alt="Dark theme"></td>
-    <td width="50%"><img src="../assets/detail.png" alt="Details — model usage share and token composition"></td>
+    <td width="50%"><img src="../assets/ko/dashboard-dark.png" alt="Dark theme"></td>
+    <td width="50%"><img src="../assets/ko/detail.png" alt="Details — model usage share and token composition"></td>
   </tr>
   <tr>
-    <td width="50%"><img src="../assets/detail-dark.png" alt="Details (dark theme)"></td>
-    <td width="50%"><img src="../assets/responsive.png" alt="Responsive layout at a narrow width"></td>
+    <td width="50%"><img src="../assets/ko/detail-dark.png" alt="Details (dark theme)"></td>
+    <td width="50%"><img src="../assets/ko/responsive.png" alt="Responsive layout at a narrow width"></td>
   </tr>
 </table>
 

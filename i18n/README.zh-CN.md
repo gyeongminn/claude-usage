@@ -8,7 +8,7 @@
 基于 Electron + ECharts 构建。跨机器、自包含——目标机器无需预装 Node、ccusage 或字体。
 
 <p align="center">
-  <img src="../assets/dashboard.png" alt="Claude Usage — live dashboard" width="380">
+  <img src="../assets/zh-CN/dashboard.png" alt="Claude Usage — live dashboard" width="380">
 </p>
 
 <details>
@@ -16,12 +16,12 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="../assets/dashboard-dark.png" alt="Dark theme"></td>
-    <td width="50%"><img src="../assets/detail.png" alt="Details — model usage share and token composition"></td>
+    <td width="50%"><img src="../assets/zh-CN/dashboard-dark.png" alt="Dark theme"></td>
+    <td width="50%"><img src="../assets/zh-CN/detail.png" alt="Details — model usage share and token composition"></td>
   </tr>
   <tr>
-    <td width="50%"><img src="../assets/detail-dark.png" alt="Details (dark theme)"></td>
-    <td width="50%"><img src="../assets/responsive.png" alt="Responsive layout at a narrow width"></td>
+    <td width="50%"><img src="../assets/zh-CN/detail-dark.png" alt="Details (dark theme)"></td>
+    <td width="50%"><img src="../assets/zh-CN/responsive.png" alt="Responsive layout at a narrow width"></td>
   </tr>
 </table>
 

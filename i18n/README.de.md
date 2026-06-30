@@ -8,7 +8,7 @@ Eine native, im Tray laufende Desktop-App, die **deine [ccusage](https://github.
 Mit Electron + ECharts gebaut. Rechnerübergreifend und eigenständig – kein Node, ccusage oder Schriftarten auf dem Zielrechner vorzuinstallieren.
 
 <p align="center">
-  <img src="../assets/dashboard.png" alt="Claude Usage — live dashboard" width="380">
+  <img src="../assets/de/dashboard.png" alt="Claude Usage — live dashboard" width="380">
 </p>
 
 <details>
@@ -16,12 +16,12 @@ Mit Electron + ECharts gebaut. Rechnerübergreifend und eigenständig – kein N
 
 <table>
   <tr>
-    <td width="50%"><img src="../assets/dashboard-dark.png" alt="Dark theme"></td>
-    <td width="50%"><img src="../assets/detail.png" alt="Details — model usage share and token composition"></td>
+    <td width="50%"><img src="../assets/de/dashboard-dark.png" alt="Dark theme"></td>
+    <td width="50%"><img src="../assets/de/detail.png" alt="Details — model usage share and token composition"></td>
   </tr>
   <tr>
-    <td width="50%"><img src="../assets/detail-dark.png" alt="Details (dark theme)"></td>
-    <td width="50%"><img src="../assets/responsive.png" alt="Responsive layout at a narrow width"></td>
+    <td width="50%"><img src="../assets/de/detail-dark.png" alt="Details (dark theme)"></td>
+    <td width="50%"><img src="../assets/de/responsive.png" alt="Responsive layout at a narrow width"></td>
   </tr>
 </table>
 

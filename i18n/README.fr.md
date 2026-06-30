@@ -8,7 +8,7 @@ Une application de bureau native, résidente dans la barre d’état système, q
 Conçue avec Electron + ECharts. Multiplateforme et autonome : aucun Node, ccusage ni police à préinstaller sur la machine cible.
 
 <p align="center">
-  <img src="../assets/dashboard.png" alt="Claude Usage — live dashboard" width="380">
+  <img src="../assets/fr/dashboard.png" alt="Claude Usage — live dashboard" width="380">
 </p>
 
 <details>
@@ -16,12 +16,12 @@ Conçue avec Electron + ECharts. Multiplateforme et autonome : aucun Node, ccusa
 
 <table>
   <tr>
-    <td width="50%"><img src="../assets/dashboard-dark.png" alt="Dark theme"></td>
-    <td width="50%"><img src="../assets/detail.png" alt="Details — model usage share and token composition"></td>
+    <td width="50%"><img src="../assets/fr/dashboard-dark.png" alt="Dark theme"></td>
+    <td width="50%"><img src="../assets/fr/detail.png" alt="Details — model usage share and token composition"></td>
   </tr>
   <tr>
-    <td width="50%"><img src="../assets/detail-dark.png" alt="Details (dark theme)"></td>
-    <td width="50%"><img src="../assets/responsive.png" alt="Responsive layout at a narrow width"></td>
+    <td width="50%"><img src="../assets/fr/detail-dark.png" alt="Details (dark theme)"></td>
+    <td width="50%"><img src="../assets/fr/responsive.png" alt="Responsive layout at a narrow width"></td>
   </tr>
 </table>
 
