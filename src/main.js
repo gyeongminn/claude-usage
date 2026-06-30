@@ -238,9 +238,11 @@ async function captureAndQuit(win, outPath) {
     await sleep(300);
   }
   // RPT-010 빈상태 검증: REPORT_EMPTY면 projects·sessions를 프로덕션처럼 빈 배열로 재렌더(OPEN[08] 데이터원 부재 재현).
+  // REPORT_LOCALE 동반 시 빈상태도 그 로케일로(EN/KO §10) — locale 누락하면 직전 REPORT_LOCALE 렌더가 __SAMPLE__ 기본(en)으로 덮여 ko 빈상태 검증 불가.
   if (process.env.REPORT_EMPTY) {
+    const emptyLoc = process.env.REPORT_LOCALE ? `, locale: ${JSON.stringify(process.env.REPORT_LOCALE)}` : '';
     await win.webContents.executeJavaScript(
-      `window.renderReport(Object.assign({}, window.__SAMPLE__, { projects: [], sessions: [] })); true;`
+      `window.renderReport(Object.assign({}, window.__SAMPLE__, { projects: [], sessions: []${emptyLoc} })); true;`
     );
     await sleep(300);
   }
