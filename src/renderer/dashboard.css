@@ -64,7 +64,7 @@ body {
   margin: var(--space-2) auto 0;
   padding: var(--space-2) var(--space-3);
   background: var(--accent-light);
-  color: var(--accent);
+  color: var(--text-1); /* AUTO-030: accent(#3182F6) on accent-light은 3.31:1로 WCAG AA(4.5:1) 미달 — charcoal로 대비 확보(~13:1)+토스 톤(정보면 dark 텍스트+accent CTA). */
   border-radius: 12px;
   font-size: 14px;
   font-weight: 600;
