@@ -60,6 +60,7 @@
   "sys_ram": "RAM",
   "sys_gpu": "GPU",
   "sys_gpu_na": "N/A",
+  "sys_collecting": "Wird erfasst…",
   "tile_customize": "Haupt-Kacheln",
   "tile_add": "Zur Hauptseite hinzufügen",
   "tile_remove": "Von Hauptseite entfernen",

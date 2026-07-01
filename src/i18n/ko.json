@@ -60,6 +60,7 @@
   "sys_ram": "RAM",
   "sys_gpu": "GPU",
   "sys_gpu_na": "N/A",
+  "sys_collecting": "수집 중…",
   "tile_customize": "메인 타일",
   "tile_add": "메인에 추가",
   "tile_remove": "메인에서 제거",

@@ -263,11 +263,18 @@ body {
 
 /* SYS-030: 상세 탭 시스템 리소스 카드(CPU·RAM·GPU 게이지, burnGauge 톤·tabular %). */
 .sys-list { display: flex; flex-direction: column; gap: var(--space-4); margin-top: var(--space-2); }
+/* WIDGET-030: 그래프 모드 시 게이지 숨김 — display:flex가 UA [hidden]{display:none}을 덮으므로 명시(.grid[hidden] 선례). */
+.sys-list[hidden] { display: none; }
 .sys-item { min-width: 0; }
 .sys-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--space-2); }
 .sys-name { font-size: 14px; color: var(--text-2); }
 .sys-pct { font-size: 28px; font-weight: 700; color: var(--text-1); font-variant-numeric: tabular-nums; line-height: 1; }
 .sys-meta { margin-top: var(--space-2); font-size: 13px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+/* WIDGET-030(§13): system 타일 lg 시계열 그래프(게이지 대체). 고정 높이(lg 카드 min-height 300에 라벨+그래프 수용). */
+.sys-graph-wrap { margin-top: var(--space-3); position: relative; }
+.sys-graph { width: 100%; height: 240px; }
+.sys-graph-wrap .empty-state { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.sys-graph-wrap .empty-state[hidden] { display: none; } /* 샘플 도착 시 캡션 숨김(display:flex가 UA hidden 덮음). */
 
 /* TILE-030: 상세 '메인 타일' 구성 카드 — 타일별 추가/제거 토글(애플 위젯식). */
 .tile-cz-list { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-2); }

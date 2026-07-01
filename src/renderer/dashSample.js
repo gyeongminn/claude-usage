@@ -51,6 +51,13 @@ const DASH_SAMPLE = {
   // 상세 탭 시스템 카드(SYS-030, renderSysStats 형태). 영어 assets/detail.png 재현(CPU 51%·RAM 71% 22.5/31.8GB·GPU 1%).
   // captureAndQuit이 DASH_SAMPLE일 때 실 sysStats 푸시를 끄므로(레이스 방지) 캡처용 대표 sys를 주입한다.
   sys: { cpu: 51, mem: { pct: 71, usedBytes: 24_159_191_040, totalBytes: 34_144_990_003 }, gpu: 1 },
+  // WIDGET-030 캡처 검증용: system lg 그래프 모드의 지연 ring-buffer 대표 히스토리(결정적 사인 곡선, 40샘플).
+  // 실 앱은 2s마다 실측 sys:stats로 채움 — 이건 그래프 스크린샷 전용(§2 홍보 데이터·앱 미사용).
+  sysHistory: Array.from({ length: 40 }, (_, i) => ({
+    cpu: Math.round(45 + 25 * Math.sin(i / 4)),
+    ram: Math.round(70 + 6 * Math.sin(i / 7 + 1)),
+    gpu: Math.round(Math.max(0, 15 + 20 * Math.sin(i / 3 + 2))),
+  })),
 };
 
 module.exports = { DASH_SAMPLE };

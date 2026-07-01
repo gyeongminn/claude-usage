@@ -150,6 +150,11 @@
             <div class="gauge-track"><div class="gauge-fill" id="sys-gpu-fill"></div></div>
           </div>
         </div>
+        <!-- WIDGET-030(§13): 큰 크기(lg)면 게이지 대신 Task Manager식 시계열 그래프(지연 ring-buffer). 평소 hidden. -->
+        <div class="sys-graph-wrap" id="sys-graph-wrap" hidden>
+          <div id="sys-graph" class="sys-graph"></div>
+          <div id="sys-graph-empty" class="empty-state" data-i18n="sys_collecting" hidden>Collecting…</div>
+        </div>
       </section>
       <section class="card" aria-label="projects">
         <div class="card-label" data-i18n="dash_projects">프로젝트 Top 5</div>
@@ -205,6 +210,7 @@
     <script src="modelDonut.js"></script>
     <script src="burnGauge.js"></script>
     <script src="tiles.js"></script>
+    <script src="sysHistory.js"></script>
     <script src="format.js"></script>
     <script src="chartResize.js"></script>
     <script>
@@ -377,9 +383,57 @@
       drawDonut();
       renderWeekly([]); // boot 빈상태: agg 도착 전(또는 ccusage 미가용)에도 추세/도넛처럼 weekly 빈상태 표시(hoisted 함수 선언).
 
+      // WIDGET-030(§13): system 타일 반응형 그래프 — 작은 크기=게이지(현행), 큰 크기(lg)=시계열 그래프.
+      // 단일 인스턴스(§12): sysChart는 그래프 모드에서만 존재(lazy init·이탈 시 dispose)·sysRing도 그때만 채움(지연 ring-buffer·상시 점유0).
+      let sysChart = null;
+      let sysRing = [];
+      let sysGraphMode = false;
+      function ensureSysChart() {
+        const el = document.getElementById('sys-graph');
+        if (el && !sysChart) sysChart = echarts.init(el);
+      }
+      // ring → CPU/RAM/GPU 3선 시계열(accent 팔레트·모델 도넛 선례). 축/범례색은 현재 테마 토큰.
+      function drawSysGraph() {
+        if (!sysChart || !window.SysHistory) return;
+        const H = window.SysHistory;
+        const has = sysRing.length > 0;
+        const empty = document.getElementById('sys-graph-empty');
+        if (empty) empty.hidden = has; // 콜드스타트: 샘플 0이면 '수집 중' 캡션(Task Manager 유사 빈→흐름).
+        const colors = theme.color || [];
+        const tok = window.EChartsTheme.tokensFor(document.documentElement.dataset.theme);
+        const mk = (key, nameKey, ci) => ({
+          name: t(nameKey), type: 'line', smooth: true, showSymbol: false, connectNulls: false,
+          lineStyle: { color: colors[ci], width: 2 }, itemStyle: { color: colors[ci] },
+          areaStyle: { color: window.EChartsTheme.hexToRgba(colors[ci], 0.1) },
+          data: H.toSeries(sysRing, key),
+        });
+        sysChart.setOption({
+          grid: { left: 38, right: 12, top: 34, bottom: 16 },
+          legend: { top: 4, icon: 'roundRect', itemHeight: 8, itemWidth: 12, textStyle: { color: tok['text-2'] } },
+          tooltip: { trigger: 'axis', valueFormatter: (v) => (v == null ? '—' : v + '%') },
+          xAxis: { type: 'category', boundaryGap: false, show: false, data: sysRing.map((_, i) => i) },
+          yAxis: { type: 'value', min: 0, max: 100, axisLabel: { formatter: '{value}%', color: tok['text-2'] }, splitLine: { lineStyle: { color: tok.track } } },
+          series: [mk('cpu', 'sys_cpu', 0), mk('ram', 'sys_ram', 1), mk('gpu', 'sys_gpu', 2)],
+        }, true);
+      }
+      // 크기 임계로 게이지↔그래프 전환. system이 메인에 있고 lg일 때만 그래프(라이브러리·sm·md는 게이지).
+      function updateSysMode() {
+        const onMain = window.Tiles && currentMainTiles.includes('system');
+        const size = onMain ? window.Tiles.sizeOf('system', currentMainTileSizes) : 'sm';
+        const graph = size === 'lg';
+        const list = document.querySelector('[data-tile="system"] .sys-list');
+        const wrap = document.getElementById('sys-graph-wrap');
+        if (graph === sysGraphMode) { if (graph) drawSysGraph(); return; } // 모드 유지 → 리렌더만
+        sysGraphMode = graph;
+        if (list) list.hidden = graph;
+        if (wrap) wrap.hidden = !graph;
+        if (graph) { ensureSysChart(); drawSysGraph(); }
+        else { if (sysChart) { try { sysChart.dispose(); } catch (e) {} sysChart = null; } sysRing = []; } // 이탈: dispose + ring 비움(점유0).
+      }
+
       // 차트 리사이즈를 다음 틱으로 미룸(AUTO-010): 타일 이동/탭 전환으로 바뀐 컨테이너 폭을 반영.
       // 숨김 뷰(0폭) resize의 echarts 내부 throw는 try/catch로 삼킴(turn-1 fix). renderMain·setupTabs.show 공용(중복 제거).
-      const deferResize = () => setTimeout(() => { try { chart.resize(); } catch (e) {} try { donut.resize(); } catch (e) {} }, 0);
+      const deferResize = () => setTimeout(() => { try { chart.resize(); } catch (e) {} try { donut.resize(); } catch (e) {} try { if (sysChart) sysChart.resize(); } catch (e) {} }, 0);
 
       // 프로젝트 카드: ccusage v20은 프로젝트 축 미노출(--instances 부재, OPEN[08]) → 빈상태 표시(AUDIT-010).
       // 가짜 샘플 데이터를 사용자에게 보여주지 않는다(§2). 데이터원 생기면 차트 복원.
@@ -389,6 +443,7 @@
         theme = makeTheme();
         drawTrend();
         drawDonut(); // 재테마 시 도넛 색·범례 색 동기.
+        if (sysGraphMode) drawSysGraph(); // WIDGET-030: 시스템 그래프도 재테마(축/범례/라인 색).
       }
       const btnTheme = document.getElementById('btn-theme');
       if (btnTheme) {
@@ -508,10 +563,11 @@
         };
       })();
 
-      // UX-010: 창 크기 변경 시 차트(추세·도넛)를 따라 리사이즈(디바운스). 미동작 시 레이아웃이 안 따라옴.
+      // UX-010: 창 크기 변경 시 차트(추세·도넛·시스템 그래프)를 따라 리사이즈(디바운스). 미동작 시 레이아웃이 안 따라옴.
+      // WIDGET-030: sysChart도 포함 — resizeAll이 항목별 null-guard, 배열은 콜마다 재구성돼 라이브 sysChart를 읽음(그래프 모드 아니면 null=무시).
       window.addEventListener(
         'resize',
-        window.ChartResize.makeDebounced(() => window.ChartResize.resizeAll([chart, donut]), 150)
+        window.ChartResize.makeDebounced(() => window.ChartResize.resizeAll([chart, donut, sysChart]), 150)
       );
 
       // 통화·숫자 포맷(DAT-050). 토큰은 K/M/B 축약, 비용은 $ (₩ 병기).
@@ -648,6 +704,11 @@
         } else {
           setSysGauge('sys-gpu', s.gpu);
         }
+        // WIDGET-030: 그래프 모드면 이 샘플을 지연 ring-buffer에 넣고 시계열 갱신(게이지 모드면 ring 미사용=점유0).
+        if (sysGraphMode && window.SysHistory) {
+          sysRing = window.SysHistory.pushSample(sysRing, { cpu: typeof s.cpu === 'number' ? s.cpu : null, ram: s.mem ? s.mem.pct : null, gpu: typeof s.gpu === 'number' ? s.gpu : null }, window.SysHistory.CAP);
+          drawSysGraph();
+        }
       }
       window.usage.onAggregate(renderAgg);
       // PERF-010: 8s 인터벌의 활성 블록 burn-only 갱신(전체 daily 재파싱 없이 게이지·burn rates만).
@@ -662,6 +723,8 @@
         if (s && s.limits) renderLimits(s.limits);
         if (s && s.agg) renderAgg(s.agg);
         if (s && s.sys) renderSysStats(s.sys); // DOC-SHOT: 상세 시스템 카드도 대표 sys로 채워 번역본 스크린샷 충실도(영어 원본과 동일).
+        // WIDGET-030 캡처 검증용: 그래프 모드(system lg)면 대표 히스토리를 ring에 시드해 시계열 그래프 스크린샷.
+        if (s && Array.isArray(s.sysHistory) && sysGraphMode && window.SysHistory) { sysRing = s.sysHistory.slice(); drawSysGraph(); }
       };
 
       // TILE-020(§12)/WIDGET-020(§13): 메인 탭 타일 동적 배치 — mainTiles 순서 + mainTileSizes 크기로 메인 그리드 구성.
@@ -803,6 +866,7 @@
         currentMainTileSizes = window.Tiles.normalizeTileSizes(sizes === undefined ? currentMainTileSizes : sizes);
         renderMain(currentMainTiles, currentMainTileSizes);
         renderCustomize(currentMainTiles, currentMainTileSizes);
+        updateSysMode(); // WIDGET-030: system 크기(lg=그래프·그 외=게이지) 반영(dispose/init 규율).
       }
       // 토글: 추가(끝에 append)/제거 → saveSettings(main이 {...settings,...partial} 머지로 다른 설정 보존).
       async function toggleTile(id) {

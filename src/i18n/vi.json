@@ -60,6 +60,7 @@
   "sys_ram": "RAM",
   "sys_gpu": "GPU",
   "sys_gpu_na": "N/A",
+  "sys_collecting": "Đang thu thập…",
   "tile_customize": "Ô chính",
   "tile_add": "Thêm vào chính",
   "tile_remove": "Xóa khỏi chính",

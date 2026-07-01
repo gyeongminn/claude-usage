@@ -25,6 +25,8 @@ const DASH_KEYS = [
   'dash_weekly5',
   // SYS-030: 상세 탭 시스템 리소스(CPU·RAM·GPU) 카드.
   'sys_title', 'sys_cpu', 'sys_ram', 'sys_gpu', 'sys_gpu_na',
+  // WIDGET-030: system 타일 lg 시계열 그래프 콜드스타트 캡션(범례는 sys_cpu/ram/gpu 재사용).
+  'sys_collecting',
   // TILE-030: 메인 탭 타일 구성(상세 '메인 타일' 카드 + 추가/제거 토글).
   'tile_customize', 'tile_add', 'tile_remove',
   // WIDGET-020: 타일 크기 사이클(리사이즈) + 드래그 재배치 접근 이름.

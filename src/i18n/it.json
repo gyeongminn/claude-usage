@@ -60,6 +60,7 @@
   "sys_ram": "RAM",
   "sys_gpu": "GPU",
   "sys_gpu_na": "N/A",
+  "sys_collecting": "Raccolta…",
   "tile_customize": "Riquadri principali",
   "tile_add": "Aggiungi alla principale",
   "tile_remove": "Rimuovi dalla principale",

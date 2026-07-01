@@ -60,6 +60,7 @@
   "sys_ram": "RAM",
   "sys_gpu": "GPU",
   "sys_gpu_na": "N/A",
+  "sys_collecting": "Collecte…",
   "tile_customize": "Tuiles principales",
   "tile_add": "Ajouter à l’accueil",
   "tile_remove": "Retirer de l’accueil",
