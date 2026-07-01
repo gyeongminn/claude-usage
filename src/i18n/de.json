@@ -62,5 +62,7 @@
   "sys_gpu_na": "N/A",
   "tile_customize": "Haupt-Kacheln",
   "tile_add": "Zur Hauptseite hinzufügen",
-  "tile_remove": "Von Hauptseite entfernen"
+  "tile_remove": "Von Hauptseite entfernen",
+  "tile_resize": "Größe ändern",
+  "tile_drag": "Zum Neuordnen ziehen"
 }

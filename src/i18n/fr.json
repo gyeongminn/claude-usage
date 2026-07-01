@@ -62,5 +62,7 @@
   "sys_gpu_na": "N/A",
   "tile_customize": "Tuiles principales",
   "tile_add": "Ajouter à l’accueil",
-  "tile_remove": "Retirer de l’accueil"
+  "tile_remove": "Retirer de l’accueil",
+  "tile_resize": "Redimensionner",
+  "tile_drag": "Glisser pour réorganiser"
 }

@@ -62,5 +62,7 @@
   "sys_gpu_na": "N/A",
   "tile_customize": "Ô chính",
   "tile_add": "Thêm vào chính",
-  "tile_remove": "Xóa khỏi chính"
+  "tile_remove": "Xóa khỏi chính",
+  "tile_resize": "Đổi kích thước",
+  "tile_drag": "Kéo để sắp xếp lại"
 }

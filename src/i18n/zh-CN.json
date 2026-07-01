@@ -62,5 +62,7 @@
   "sys_gpu_na": "N/A",
   "tile_customize": "主页磁贴",
   "tile_add": "添加到主页",
-  "tile_remove": "从主页移除"
+  "tile_remove": "从主页移除",
+  "tile_resize": "调整大小",
+  "tile_drag": "拖动以重新排序"
 }

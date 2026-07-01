@@ -295,6 +295,8 @@ function createWindow() {
   const effScale = clampScale(Number(process.env.UI_SCALE) || (settings && settings.uiScale) || 1);
   // TILE-020 캡처 검증용: UI_MAIN_TILES env(쉼표구분 타일 id)면 메인 타일 순서 오버라이드. 평소 빈 문자열(설정값 사용).
   const uiMainTiles = process.env.UI_MAIN_TILES || '';
+  // WIDGET-020 캡처 검증용: UI_MAIN_TILE_SIZES env("id:size,id:size")면 타일 크기 오버라이드. 평소 빈 문자열.
+  const uiMainTileSizes = process.env.UI_MAIN_TILE_SIZES || '';
   const win = new BrowserWindow({
     width: 1100,
     height: 720,
@@ -310,7 +312,7 @@ function createWindow() {
       // preload가 i18n 카탈로그(node:fs)를 읽어 t/locale를 노출하려면 sandbox 해제 필요.
       // contextIsolation:true가 핵심 경계는 유지 — 렌더러엔 노출 API만 전달(OPEN[07]).
       sandbox: false,
-      additionalArguments: [`--ui-locale=${uiLocale}`, `--ui-theme=${uiTheme}`, `--ui-scale=${effScale}`, `--ui-main-tiles=${uiMainTiles}`],
+      additionalArguments: [`--ui-locale=${uiLocale}`, `--ui-theme=${uiTheme}`, `--ui-scale=${effScale}`, `--ui-main-tiles=${uiMainTiles}`, `--ui-main-tile-sizes=${uiMainTileSizes}`],
     },
   });
   mainWindow = win; // UI-040 설정 핸들러가 참조하는 현재 창.

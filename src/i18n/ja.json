@@ -62,5 +62,7 @@
   "sys_gpu_na": "N/A",
   "tile_customize": "メインのタイル",
   "tile_add": "メインに追加",
-  "tile_remove": "メインから削除"
+  "tile_remove": "メインから削除",
+  "tile_resize": "サイズ変更",
+  "tile_drag": "ドラッグして並べ替え"
 }

@@ -62,5 +62,7 @@
   "sys_gpu_na": "N/A",
   "tile_customize": "메인 타일",
   "tile_add": "메인에 추가",
-  "tile_remove": "메인에서 제거"
+  "tile_remove": "메인에서 제거",
+  "tile_resize": "크기 조절",
+  "tile_drag": "드래그해서 순서 변경"
 }

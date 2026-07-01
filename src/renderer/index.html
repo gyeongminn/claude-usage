@@ -664,27 +664,26 @@
         if (s && s.sys) renderSysStats(s.sys); // DOC-SHOT: 상세 시스템 카드도 대표 sys로 채워 번역본 스크린샷 충실도(영어 원본과 동일).
       };
 
-      // TILE-020(§12): 메인 탭 타일 동적 배치 — settings.mainTiles 순서대로 메인 그리드 구성.
+      // TILE-020(§12)/WIDGET-020(§13): 메인 탭 타일 동적 배치 — mainTiles 순서 + mainTileSizes 크기로 메인 그리드 구성.
       // 단일 인스턴스 이동 모델: 선택 타일 카드 DOM을 메인으로, 미선택 카탈로그 타일은 상세 라이브러리로 이동(복제 금지).
-      function renderMain(mainTiles) {
+      const SIZE_CLASSES = ['tile-sm', 'tile-md', 'tile-lg'];
+      function renderMain(mainTiles, sizes) {
         if (!window.Tiles) return;
         const order = window.Tiles.normalizeMainTiles(mainTiles);
         const main = document.getElementById('view-main');
         const detail = document.getElementById('view-detail');
         const projects = detail && detail.querySelector('[aria-label="projects"]');
-        const spanOf = {};
-        for (const tdef of window.Tiles.TILES) spanOf[tdef.id] = tdef.span;
-        // AUTO-010: 타일 노드 조회 + span 클래스 리셋(양 루프 공유·재배치 전 정리). 없으면 null.
+        // AUTO-010: 타일 노드 조회 + 크기/구 span 클래스 리셋(양 루프 공유·재배치 전 정리). 없으면 null.
         const findTile = (id) => {
           const n = document.querySelector('[data-tile="' + id + '"]');
-          if (n) n.classList.remove('tile-full', 'tile-wide', 'tile-narrow');
+          if (n) n.classList.remove('tile-full', 'tile-wide', 'tile-narrow', 'tile-sm', 'tile-md', 'tile-lg');
           return n;
         };
-        // 선택 타일 → 메인(순서대로) + span 클래스. 전체를 순서대로 append하므로 최종 순서 = order.
+        // 선택 타일 → 메인(순서대로) + 크기 클래스(sizeOf: 맵 부재=기본 크기 투명 마이그레이션). 순서대로 append=최종 순서=order.
         for (const id of order) {
           const node = findTile(id);
           if (!node) continue;
-          node.classList.add('tile-' + (spanOf[id] || 'narrow'));
+          node.classList.add('tile-' + window.Tiles.sizeOf(id, sizes));
           main.appendChild(node);
         }
         // 미선택 카탈로그 타일 → 상세 라이브러리(카탈로그 순서, projects 카드 앞) + span 클래스 제거.
@@ -698,39 +697,112 @@
         // 이동으로 컨테이너 폭이 바뀌므로 차트 크기 재계산(숨김 뷰는 다음 탭 전환서 재계산).
         deferResize();
       }
-      // TILE-030(§12): 상세 '메인 타일' 구성 카드 — 카탈로그 타일별 추가/제거 토글(애플 위젯식).
-      // Lucide pin 정적 상수 SVG(사용자 데이터 아님 — innerHTML 주입 위험 없음).
+      // TILE-030(§12)/WIDGET-020(§13): 상세 '메인 타일' 구성 카드 — 메인 타일(순서·크기·드래그·핀) + 라이브러리(추가).
+      // Lucide 정적 상수 SVG(사용자 데이터 아님 — innerHTML 주입 위험 없음): pin=추가/제거, grip=드래그 핸들.
       const PIN_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>';
+      const GRIP_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="15" cy="18" r="1.4"/></svg>';
       let currentMainTiles = window.Tiles ? window.Tiles.DEFAULT_MAIN_TILES.slice() : [];
-      function renderCustomize(order) {
+      let currentMainTileSizes = {}; // {id:size} — 미지정=기본 크기(sizeOf 투명 마이그레이션).
+      let dragTileId = null; // 드래그 중인 타일 id(구성 카드 행 재배치).
+      // 구성 행 하나 생성. onMain=메인 타일(그립·크기·제거) / false=라이브러리(추가만).
+      function makeCzRow(tdef, onMain, size) {
+        const row = document.createElement('div');
+        row.className = 'tile-cz-row';
+        row.setAttribute('data-cz', tdef.id);
+        const left = document.createElement('div');
+        left.className = 'tile-cz-left';
+        if (onMain) {
+          const grip = document.createElement('span');
+          grip.className = 'tile-cz-grip';
+          grip.setAttribute('aria-hidden', 'true');
+          grip.innerHTML = GRIP_SVG; // 정적 상수.
+          left.appendChild(grip);
+        }
+        const name = document.createElement('span');
+        name.className = 'tile-cz-name';
+        name.textContent = t(tdef.labelKey); // i18n 문자열 — textContent 안전.
+        left.appendChild(name);
+        const right = document.createElement('div');
+        right.className = 'tile-cz-right';
+        // 리사이즈: 허용 크기 2종 이상일 때만 크기 사이클 버튼(S/M/L). 이산 스냅(§13).
+        if (onMain && window.Tiles.sizesFor(tdef.id).length > 1) {
+          const rz = document.createElement('button');
+          rz.type = 'button';
+          rz.className = 'tile-cz-size';
+          rz.textContent = String(size || '').charAt(0).toUpperCase();
+          const rzLabel = t('tile_resize');
+          rz.title = rzLabel;
+          rz.setAttribute('aria-label', rzLabel);
+          rz.onclick = () => resizeTile(tdef.id);
+          right.appendChild(rz);
+        }
+        const pin = document.createElement('button');
+        pin.type = 'button';
+        pin.className = 'tile-cz-toggle' + (onMain ? ' active' : '');
+        const pinLabel = t(onMain ? 'tile_remove' : 'tile_add');
+        pin.title = pinLabel;
+        pin.setAttribute('aria-label', pinLabel);
+        pin.innerHTML = PIN_SVG; // 정적 상수만.
+        pin.onclick = () => toggleTile(tdef.id);
+        right.appendChild(pin);
+        row.append(left, right);
+        if (onMain) wireDrag(row, tdef.id); // 순서 = mainTiles reorder(네이티브 HTML5 DnD).
+        return row;
+      }
+      // 네이티브 드래그 재배치(§8 표준 우선): 그립 행을 끌어 대상 앞에 삽입 → reorderTiles → 저장.
+      function wireDrag(row, id) {
+        row.setAttribute('draggable', 'true');
+        row.title = t('tile_drag');
+        row.addEventListener('dragstart', (e) => {
+          dragTileId = id;
+          row.classList.add('dragging');
+          if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', id); } catch (_) {} }
+        });
+        row.addEventListener('dragend', () => {
+          dragTileId = null;
+          row.classList.remove('dragging');
+          // 취소(Esc)로 drop 미발생 시 대상 행에 남은 표시 정리(dragend는 소스에만 발화).
+          const list = document.getElementById('tile-customize-list');
+          if (list) list.querySelectorAll('.drop-target').forEach((el) => el.classList.remove('drop-target'));
+        });
+        row.addEventListener('dragover', (e) => {
+          if (dragTileId && dragTileId !== id) { e.preventDefault(); row.classList.add('drop-target'); }
+        });
+        row.addEventListener('dragleave', () => row.classList.remove('drop-target'));
+        row.addEventListener('drop', (e) => {
+          e.preventDefault();
+          row.classList.remove('drop-target');
+          const from = dragTileId; dragTileId = null;
+          if (!from || from === id) return;
+          const next = window.Tiles.reorderTiles(currentMainTiles, from, id);
+          applyTiles(next, currentMainTileSizes);
+          // .catch로 비동기 거부 흡수(try/catch는 동기만) — 저장 실패해도 로컬 반영 유지(다음 기동 재로드).
+          Promise.resolve(window.usage.saveSettings({ mainTiles: next })).catch(() => {});
+        });
+      }
+      function renderCustomize(order, sizes) {
         const list = document.getElementById('tile-customize-list');
         if (!list || !window.Tiles) return;
         list.textContent = '';
+        const byId = {};
+        for (const tdef of window.Tiles.TILES) byId[tdef.id] = tdef;
+        // 1) 메인 타일 — mainTiles 순서대로(드래그/리사이즈/제거).
+        for (const id of order) {
+          const tdef = byId[id];
+          if (tdef) list.appendChild(makeCzRow(tdef, true, window.Tiles.sizeOf(id, sizes)));
+        }
+        // 2) 라이브러리(미선택) — 카탈로그 순서(추가만).
         for (const tdef of window.Tiles.TILES) {
-          const on = order.includes(tdef.id);
-          const row = document.createElement('div');
-          row.className = 'tile-cz-row';
-          const name = document.createElement('span');
-          name.className = 'tile-cz-name';
-          name.textContent = t(tdef.labelKey); // i18n 문자열 — textContent 안전.
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'tile-cz-toggle' + (on ? ' active' : '');
-          const label = t(on ? 'tile_remove' : 'tile_add');
-          btn.title = label;
-          btn.setAttribute('aria-label', label);
-          btn.innerHTML = PIN_SVG; // 정적 상수만.
-          btn.onclick = () => toggleTile(tdef.id);
-          row.append(name, btn);
-          list.appendChild(row);
+          if (!order.includes(tdef.id)) list.appendChild(makeCzRow(tdef, false, null));
         }
       }
-      // 메인 그리드(renderMain) + 구성 카드(renderCustomize)를 mainTiles로 일괄 반영.
-      function applyTiles(mainTiles) {
+      // 메인 그리드(renderMain) + 구성 카드(renderCustomize)를 순서·크기로 일괄 반영.
+      function applyTiles(mainTiles, sizes) {
         if (!window.Tiles) return;
         currentMainTiles = window.Tiles.normalizeMainTiles(mainTiles);
-        renderMain(currentMainTiles);
-        renderCustomize(currentMainTiles);
+        currentMainTileSizes = window.Tiles.normalizeTileSizes(sizes === undefined ? currentMainTileSizes : sizes);
+        renderMain(currentMainTiles, currentMainTileSizes);
+        renderCustomize(currentMainTiles, currentMainTileSizes);
       }
       // 토글: 추가(끝에 append)/제거 → saveSettings(main이 {...settings,...partial} 머지로 다른 설정 보존).
       async function toggleTile(id) {
@@ -740,17 +812,27 @@
         // AUTO-020: 낙관적 즉시 반영 — currentMainTiles를 await '전'에 갱신(applyTiles가 갱신)해 연속 토글이
         // 최신 base를 보게 한다(stale 스냅샷 lost-update 레이스 방지). applyTiles의 normalize는 main
         // saveSettings(settings.js)와 동일 tiles.js 단일출처(§12)라 권위 저장값과 항상 일치 → 재반영 불필요.
-        applyTiles(next);
+        applyTiles(next, currentMainTileSizes);
         try {
           await window.usage.saveSettings({ mainTiles: next });
         } catch (e) { /* 저장 실패해도 로컬 반영 유지(다음 기동 재로드) */ }
       }
-      // 초기 1회: captureMainTiles(검증용 env) 우선, 없으면 설정의 mainTiles(기본 현행4=거동 보존).
+      // 리사이즈: 허용 이산 크기 순환 → mainTileSizes 갱신 → 저장(순서와 분리·§13 2필드).
+      async function resizeTile(id) {
+        const cur = window.Tiles.sizeOf(id, currentMainTileSizes);
+        const sizes = { ...currentMainTileSizes, [id]: window.Tiles.cycleSize(id, cur) };
+        applyTiles(currentMainTiles, sizes);
+        try {
+          await window.usage.saveSettings({ mainTileSizes: sizes });
+        } catch (e) { /* 저장 실패해도 로컬 반영 유지 */ }
+      }
+      // 초기 1회: captureMainTiles/Sizes(검증용 env) 우선, 없으면 설정의 mainTiles·mainTileSizes(기본 현행4=거동 보존).
       if (window.usage && window.Tiles) {
         const override = window.usage.captureMainTiles;
-        if (override) applyTiles(override);
-        else if (window.usage.loadSettings) window.usage.loadSettings().then((s) => applyTiles(s && s.mainTiles)).catch(() => applyTiles(null));
-        else applyTiles(null);
+        const sizeOverride = window.usage.captureMainTileSizes;
+        if (override) applyTiles(override, sizeOverride || {});
+        else if (window.usage.loadSettings) window.usage.loadSettings().then((s) => applyTiles(s && s.mainTiles, s && s.mainTileSizes)).catch(() => applyTiles(null, {}));
+        else applyTiles(null, {});
       }
 
       // 메인/상세 탭 전환. 상세 탭의 도넛은 표시될 때 resize(숨김 중 init은 크기 0이라).

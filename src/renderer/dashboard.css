@@ -103,11 +103,13 @@ body {
 .tab:hover { background: var(--track); }
 .tab.active { background: var(--accent-light); color: var(--accent); }
 
-/* TILE-020(§12): 고정 grid-template-areas → auto-flow 2열. 타일은 mainTiles 순서대로 렌더(renderMain). */
+/* TILE-020(§12)/WIDGET-020(§13): 고정 grid-template-areas → auto-flow 2열. 타일은 mainTiles 순서대로 렌더(renderMain).
+   grid-auto-flow:row(비-dense) — dense 팩킹은 뒤 타일을 앞 구멍에 당겨 순서≠위치가 되므로 제거.
+   비-dense면 항목이 배열 순서대로 엄격 배치돼 순서=위치(아이폰식 스냅). 기본4는 구멍이 없어 거동 동일. */
 .grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  grid-auto-flow: row dense;
+  grid-auto-flow: row;
   gap: var(--space-3);
   padding: var(--space-3);
   max-width: 1100px;
@@ -126,8 +128,11 @@ body {
 }
 .grid-detail[hidden] { display: none; }
 
-/* TILE-020(§12): 타일 span — full=전폭(1/-1), wide/narrow는 auto-flow가 2fr/1fr 열에 순서대로 배치(위치 기반·v1 천장). 기본 set(hero full·trend wide·today narrow·weekly full)은 현행 레이아웃 보존. */
-.tile-full { grid-column: 1 / -1; }
+/* WIDGET-020(§13): 2D 이산 크기 클래스(renderMain이 sizeOf로 tile-{sm|md|lg} 부여).
+   sm=1칸(auto-flow가 2fr 또는 1fr 열에 순서대로 배치)·md=전폭 1행(구 tile-full 거동)·lg=전폭 2행(키 큰 — 시스템 그래프 등, WIDGET-030).
+   기본4(hero md·trend sm·today sm·weekly md)는 구 span 배치와 픽셀 동일(md=full·sm=흐름). */
+.tile-md { grid-column: 1 / -1; }
+.tile-lg { grid-column: 1 / -1; grid-row: span 2; min-height: 300px; }
 
 /* WEEK5: 최근 5주 주차별(이번 주 포함) — 주 라벨·비례 바·비용·토큰 한 줄(최신 위). */
 .week-list { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-2); }
@@ -267,10 +272,20 @@ body {
 /* TILE-030: 상세 '메인 타일' 구성 카드 — 타일별 추가/제거 토글(애플 위젯식). */
 .tile-cz-list { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-2); }
 .tile-cz-row { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
+.tile-cz-left { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.tile-cz-right { display: flex; align-items: center; gap: var(--space-2); }
 .tile-cz-name { font-size: 14px; color: var(--text-1); }
 .tile-cz-toggle { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--track); background: var(--card); color: var(--text-3); cursor: pointer; transition: background var(--motion), color var(--motion), border-color var(--motion); }
 .tile-cz-toggle:hover { background: var(--track); }
 .tile-cz-toggle.active { background: var(--accent-light); color: var(--accent); border-color: transparent; } /* 메인에 있음(핀됨) */
+/* WIDGET-020(§13): 드래그 재배치(그립) + 이산 크기 사이클(리사이즈). 메인 타일 행에만 노출. */
+.tile-cz-row[draggable="true"] { cursor: grab; }
+.tile-cz-row.dragging { opacity: 0.5; }
+.tile-cz-row.drop-target { box-shadow: inset 0 2px 0 var(--accent); } /* 드롭 위치 표시(대상 앞) */
+.tile-cz-grip { display: inline-flex; color: var(--text-3); cursor: grab; }
+.tile-cz-grip:active { cursor: grabbing; }
+.tile-cz-size { min-width: 30px; height: 32px; padding: 0 8px; border-radius: 10px; border: 1px solid var(--track); background: var(--card); color: var(--text-2); font-size: 12px; font-weight: 700; cursor: pointer; font-variant-numeric: tabular-nums; transition: background var(--motion), color var(--motion), border-color var(--motion); }
+.tile-cz-size:hover { background: var(--accent-light); color: var(--accent); border-color: transparent; }
 
 /* 오늘 KPI(비용·토큰 동급) + 도넛 */
 /* Today KPI(비용·토큰) — §5.1 "KPI 38–56px". 세로 스택(각 KPI 전폭)이라 긴 로케일 값(de "341,1 Mio.")도 1fr 열에서 오버플로 없음(UX-080). */

@@ -62,5 +62,7 @@
   "sys_gpu_na": "N/A",
   "tile_customize": "Blocos principais",
   "tile_add": "Adicionar ao início",
-  "tile_remove": "Remover do início"
+  "tile_remove": "Remover do início",
+  "tile_resize": "Redimensionar",
+  "tile_drag": "Arraste para reordenar"
 }

@@ -67,9 +67,29 @@
     return out.length ? out : DEFAULT_MAIN_TILES.slice();
   }
 
+  // WIDGET-020(§13): 드래그 재배치 = 순서 배열 reorder. fromId를 toId 위치(대상 앞)에 삽입.
+  // 원본 불변(복사본 반환)·from/to 미존재·동일 → 무변경 복사. 비배열 → []. 아이폰식 스냅(순서=위치).
+  function reorderTiles(order, fromId, toId) {
+    const arr = Array.isArray(order) ? order.slice() : [];
+    if (fromId === toId) return arr;
+    const from = arr.indexOf(fromId);
+    if (from < 0 || arr.indexOf(toId) < 0) return arr;
+    arr.splice(from, 1);
+    arr.splice(arr.indexOf(toId), 0, fromId);
+    return arr;
+  }
+  // 리사이즈 = 허용 이산 크기 순환(다음 크기·마지막→처음 wrap). 무효 현재 → 최소(첫). 허용 없음(미지 타일) → current.
+  function cycleSize(id, current) {
+    const allowed = sizesFor(id);
+    if (!allowed.length) return current;
+    const i = allowed.indexOf(current);
+    return i < 0 ? allowed[0] : allowed[(i + 1) % allowed.length];
+  }
+
   const api = {
     TILES, TILE_IDS, DEFAULT_MAIN_TILES, normalizeMainTiles,
     SIZES, SIZE_IDS, sizesFor, defaultSizeFor, minSizeFor, normalizeTileSizes, sizeOf,
+    reorderTiles, cycleSize,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Tiles = api;

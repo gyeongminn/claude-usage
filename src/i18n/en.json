@@ -62,5 +62,7 @@
   "sys_gpu_na": "N/A",
   "tile_customize": "Main tiles",
   "tile_add": "Add to main",
-  "tile_remove": "Remove from main"
+  "tile_remove": "Remove from main",
+  "tile_resize": "Resize",
+  "tile_drag": "Drag to reorder"
 }

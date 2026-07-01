@@ -62,5 +62,7 @@
   "sys_gpu_na": "N/A",
   "tile_customize": "Paneles principales",
   "tile_add": "Añadir al inicio",
-  "tile_remove": "Quitar del inicio"
+  "tile_remove": "Quitar del inicio",
+  "tile_resize": "Redimensionar",
+  "tile_drag": "Arrastrar para reordenar"
 }

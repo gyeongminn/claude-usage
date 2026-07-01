@@ -62,5 +62,7 @@
   "sys_gpu_na": "N/A",
   "tile_customize": "Riquadri principali",
   "tile_add": "Aggiungi alla principale",
-  "tile_remove": "Rimuovi dalla principale"
+  "tile_remove": "Rimuovi dalla principale",
+  "tile_resize": "Ridimensiona",
+  "tile_drag": "Trascina per riordinare"
 }

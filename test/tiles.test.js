@@ -2,6 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { TILES, TILE_IDS, DEFAULT_MAIN_TILES, normalizeMainTiles } = require('../src/renderer/tiles');
 const { SIZES, SIZE_IDS, sizesFor, defaultSizeFor, minSizeFor, normalizeTileSizes, sizeOf } = require('../src/renderer/tiles');
+const { reorderTiles, cycleSize } = require('../src/renderer/tiles');
 
 // TILE-010(§12): 메인 탭 타일 카탈로그 + mainTiles 정규화(화이트리스트·중복제거·미지 드롭·빈/무효→기본).
 
@@ -126,4 +127,41 @@ test('WIDGET010_sizeOf_기본폴백_구형마이그레이션', () => {
   assert.equal(sizeOf('system', { system: 'lg' }), 'lg'); // 지정
   assert.equal(sizeOf('hero', undefined), 'md'); // 맵 없음→기본
   assert.equal(sizeOf('today', { today: 'lg' }), 'sm'); // 비허용→기본
+});
+
+// WIDGET-020(§13): 드래그 재배치(순서 reorder·대상 앞 삽입·원본 불변) + 이산 크기 사이클(리사이즈).
+
+test('WIDGET020_reorderTiles_뒤타일_대상앞으로_새배열', () => {
+  const a = ['hero', 'trend', 'today', 'weekly'];
+  assert.deepEqual(reorderTiles(a, 'weekly', 'trend'), ['hero', 'weekly', 'trend', 'today']);
+  assert.deepEqual(a, ['hero', 'trend', 'today', 'weekly']); // 원본 불변
+});
+
+test('WIDGET020_reorderTiles_앞타일_전진_대상앞', () => {
+  assert.deepEqual(reorderTiles(['hero', 'trend', 'today', 'weekly'], 'hero', 'today'), ['trend', 'hero', 'today', 'weekly']);
+});
+
+test('WIDGET020_reorderTiles_동일_또는_미존재_무변경복사본', () => {
+  const a = ['hero', 'trend'];
+  assert.deepEqual(reorderTiles(a, 'hero', 'hero'), ['hero', 'trend']); // from===to
+  assert.deepEqual(reorderTiles(a, 'bogus', 'trend'), ['hero', 'trend']); // from 미존재
+  assert.deepEqual(reorderTiles(a, 'hero', 'bogus'), ['hero', 'trend']); // to 미존재
+  assert.notEqual(reorderTiles(a, 'hero', 'hero'), a); // 새 배열(원본 아님)
+  assert.deepEqual(reorderTiles(null, 'a', 'b'), []); // 비배열 안전
+});
+
+test('WIDGET020_cycleSize_허용크기_순환_마지막에서_wrap', () => {
+  // system 허용 [sm,md,lg]
+  assert.equal(cycleSize('system', 'sm'), 'md');
+  assert.equal(cycleSize('system', 'md'), 'lg');
+  assert.equal(cycleSize('system', 'lg'), 'sm'); // wrap
+  // hero 허용 [md,lg]
+  assert.equal(cycleSize('hero', 'md'), 'lg');
+  assert.equal(cycleSize('hero', 'lg'), 'md'); // wrap
+});
+
+test('WIDGET020_cycleSize_무효현재_최소로_미지타일_current', () => {
+  assert.equal(cycleSize('today', 'lg'), 'sm'); // today 허용 [sm,md], lg 무효 → 최소 sm
+  assert.equal(cycleSize('hero', undefined), 'md'); // 무효 → 최소 md
+  assert.equal(cycleSize('bogus', 'sm'), 'sm'); // 미지 타일(허용 없음) → current 반환
 });

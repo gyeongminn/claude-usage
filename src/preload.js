@@ -22,6 +22,12 @@ const uiScale = isFinite(scaleVal) ? scaleVal : 1;
 const mtVal = argv('ui-main-tiles') || '';
 const captureMainTiles = mtVal ? mtVal.split(',').filter(Boolean) : null;
 
+// WIDGET-020 캡처 검증용(UI_MAIN_TILE_SIZES): "id:size,id:size" → {id:size} 맵. 비면 null. 렌더러 normalize가 재검증(비허용 드롭).
+const mtsVal = argv('ui-main-tile-sizes') || '';
+const captureMainTileSizes = mtsVal
+  ? mtsVal.split(',').reduce((m, p) => { const kv = p.split(':'); if (kv.length === 2 && kv[0] && kv[1]) m[kv[0]] = kv[1]; return m; }, {})
+  : null;
+
 // 메인 → 렌더러 push 구독 한 줄 헬퍼(AUTO-010): 채널만 다르고 (on 등록→2번째 인자를 cb로 포워딩→removeListener 언섭스크라이브)
 // 가 동일하던 5중복을 묶음. payload는 항상 두 번째 인자 그대로 전달(거동 불변).
 const onIpc = (channel) => (cb) => {
@@ -50,8 +56,9 @@ contextBridge.exposeInMainWorld('usage', {
   // UI-030: UI 배율 — 초기값 + 변경(main이 clamp·영속·setZoomFactor).
   uiScale: uiScale,
   setScale: (scale) => ipcRenderer.send('scale:set', scale),
-  // TILE-020: 캡처 검증용 메인 타일 오버라이드(평소 null → renderMain이 settings.mainTiles 사용).
+  // TILE-020/WIDGET-020: 캡처 검증용 메인 타일 순서·크기 오버라이드(평소 null → 렌더러가 settings 사용).
   captureMainTiles: captureMainTiles,
+  captureMainTileSizes: captureMainTileSizes,
   // UI-040: 설정 화면 — 전체 설정 load/save(즉시 반영). main이 검증·영속·라이브 적용 후 결과 반환.
   loadSettings: () => ipcRenderer.invoke('settings:load'),
   saveSettings: (partial) => ipcRenderer.invoke('settings:save', partial),
