@@ -9,6 +9,7 @@ const { cpuPercent, memUsage, parseNvidiaSmi } = require('./main/sysStats');
 const { startWatcher, startCredentialsWatcher } = require('./main/watcher');
 const { fetchKrwPerUsd, fxOptsFor } = require('./main/fxRate');
 const { renderReportToPdf, reportPath } = require('./main/reportPdf');
+const { summarizeMetrics, formatReport } = require('./main/memProfile');
 const { buildReportInput } = require('./main/reportAssembler');
 const { buildTrayMenuTemplate, trayIconBitmap } = require('./main/tray');
 const { setAutoLaunch } = require('./main/autoLaunch');
@@ -396,6 +397,18 @@ function createWindow() {
       ipcMain.removeListener('scale:set', onScale);
     });
     if (process.env.CAPTURE_PATH) captureAndQuit(win, process.env.CAPTURE_PATH);
+    // MEM-010(Phase 18): MEM_PROFILE env면 steady-state 후 프로세스별 RSS를 로그하고 종료(측정 계측·프로덕션 무영향).
+    if (process.env.MEM_PROFILE) {
+      const delay = Number(process.env.MEM_PROFILE_DELAY) || 4000;
+      setTimeout(() => {
+        try {
+          console.log(formatReport(summarizeMetrics(app.getAppMetrics())));
+          const mu = process.memoryUsage();
+          console.log(`[MEM] main rss=${(mu.rss / 1048576).toFixed(1)}MB heapUsed=${(mu.heapUsed / 1048576).toFixed(1)}MB`);
+        } catch (e) { console.log('[MEM] error', e && e.message); }
+        app.exit(0); // 측정 계측 — close 핸들러 협상 없이 강제 종료(트레이 스킵과 함께 hang 방지).
+      }, delay);
+    }
   });
   return win;
 }
@@ -535,8 +548,8 @@ app.whenReady().then(() => {
     return { settings, uiLocale: resolveLocale(settings.locale || app.getLocale()) };
   });
   const win = createWindow();
-  // 캡처/검증 모드가 아니면 트레이 상주 + 로그인 자동실행 등록.
-  if (!process.env.CAPTURE_PATH) {
+  // 캡처/측정/검증 모드가 아니면 트레이 상주 + 로그인 자동실행 등록. (MEM_PROFILE도 트레이 스킵 — 측정 후 즉시 종료.)
+  if (!process.env.CAPTURE_PATH && !process.env.MEM_PROFILE) {
     setupTray();
     // 자동실행(OPS-020/050): 설정값 우선, AUTO_LAUNCH=0 env면 강제 해제(검증용).
     // ponytail: getLoginItemSettings 비교로 idempotent — 매 기동 레지스트리 재기록 안 함.
