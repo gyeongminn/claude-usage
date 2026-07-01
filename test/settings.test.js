@@ -148,3 +148,29 @@ test('TILE010_validate_mainTiles_빈_비배열_무효_미지정_기본폴백', (
   assert.deepEqual(validateSettings({ mainTiles: ['nope'] }).mainTiles, DEFAULTS.mainTiles);
   assert.deepEqual(validateSettings({}).mainTiles, DEFAULTS.mainTiles); // 미지정 → 기본
 });
+
+// WIDGET-010(§13): 타일 크기 맵(settings.mainTileSizes) — 2D 크기 클래스 영속. 순서(mainTiles)와 분리, 카탈로그·허용크기 검증·미지 드롭·구형 마이그레이션(맵 없으면 기본 크기).
+test('WIDGET010_DEFAULTS_mainTileSizes_빈맵', () => {
+  assert.ok('mainTileSizes' in DEFAULTS);
+  assert.deepEqual(DEFAULTS.mainTileSizes, {}); // 빈 맵 = 전부 기본 크기(거동 보존)
+});
+
+test('WIDGET010_validate_mainTileSizes_유효만_남김', () => {
+  assert.deepEqual(
+    validateSettings({ mainTileSizes: { system: 'lg', today: 'md', bogus: 'lg', hero: 'sm' } }).mainTileSizes,
+    { system: 'lg', today: 'md' }
+  ); // bogus=미지 id·hero:sm=비허용(min md) 드롭
+});
+
+test('WIDGET010_validate_mainTileSizes_비객체_미지정_빈맵', () => {
+  assert.deepEqual(validateSettings({ mainTileSizes: null }).mainTileSizes, {});
+  assert.deepEqual(validateSettings({ mainTileSizes: 'x' }).mainTileSizes, {});
+  assert.deepEqual(validateSettings({}).mainTileSizes, {}); // 미지정 → 기본 빈 맵
+});
+
+test('WIDGET010_validate_구형mainTiles만_마이그레이션_순서보존_기본크기', () => {
+  // 구형 설정(mainTiles=[id], mainTileSizes 없음) → 순서 보존 + 빈 크기 맵(각 타일 기본 크기=투명 마이그레이션).
+  const v = validateSettings({ mainTiles: ['system', 'hero'] });
+  assert.deepEqual(v.mainTiles, ['system', 'hero']); // 기존 [id] 계약 불변
+  assert.deepEqual(v.mainTileSizes, {}); // 크기 미지정 → 기본
+});
